@@ -639,20 +639,21 @@ function parseCSV(csvText) {
       else { current += ch; }
     }
     obj[headers[fieldIdx]] = current;
-    // 规范化键名
+    // 规范化键名（同时支持中文表头和英文表头）
     const normalized = {};
     Object.keys(obj).forEach(k => {
       const nk = k.trim().toLowerCase()
         .replace(/（/g, '(').replace(/）/g, ')')
         .replace(/\s+/g, '');
-      if (nk === '姓名' || nk === '角色' || nk === '角色名' || nk === '名称') normalized.name = obj[k];
+      if (nk === '姓名' || nk === '角色' || nk === '角色名' || nk === '名称' || nk === 'name') normalized.name = obj[k];
       else if (nk === '强度' || nk === 'tier') normalized.tier = obj[k];
-      else if (nk === '阵营' || nk === '势力') normalized.faction = obj[k];
-      else if (nk === '限定技') normalized.limit = obj[k];
-      else if (nk === '固有技' || nk === '天赋技') normalized.innate = obj[k];
-      else if (nk === '被动技' || nk === '被动') normalized.passive = obj[k];
-      else if (nk === '附加技' || nk === '额外技' || nk === '额外') normalized.extra = obj[k];
+      else if (nk === '阵营' || nk === '势力' || nk === 'faction') normalized.faction = obj[k];
+      else if (nk === '限定技' || nk === 'limit') normalized.limit = obj[k];
+      else if (nk === '固有技' || nk === '天赋技' || nk === 'innate') normalized.innate = obj[k];
+      else if (nk === '被动技' || nk === '被动' || nk === 'passive') normalized.passive = obj[k];
+      else if (nk === '附加技' || nk === '额外技' || nk === '额外' || nk === 'extra') normalized.extra = obj[k];
       else if (nk === '保留' || nk === 'retain') normalized.retain = (obj[k] && (obj[k].toLowerCase() === 'true' || obj[k] === '1' || obj[k] === '是' || obj[k] === 'yes'));
+      else if (nk === '备注' || nk === 'note') normalized.note = obj[k];
     });
     result.push(normalized);
   }
@@ -660,11 +661,18 @@ function parseCSV(csvText) {
 }
 
 // CSV 上传
-app.post('/api/upload-csv', express.text({ type: ['text/csv', 'text/plain'] }), (req, res) => {
+app.post('/api/upload-csv', express.text({ type: ['text/csv', 'text/plain'], limit: '5mb' }), (req, res) => {
   try {
     const result = parseCSV(req.body);
-    fs.writeFileSync(CHARS_FILE, JSON.stringify(result, null, 2), 'utf8');
-    res.json({ success: true, count: result.length });
+    // 合并头像映射
+    let imgMap = {};
+    try { imgMap = JSON.parse(fs.readFileSync(IMG_MAP_FILE, 'utf8')); } catch (e) { /* ignore */ }
+    const withImages = result.map(c => ({ ...c, image: imgMap[c.name] || null }));
+    fs.writeFileSync(CHARS_FILE, JSON.stringify(withImages, null, 2), 'utf8');
+    // 同时备份 CSV 到 data 目录
+    fs.writeFileSync(CSV_FILE, req.body, 'utf8');
+    console.log('✅ CSV 上传成功，共 ' + withImages.length + ' 个角色（含头像映射）');
+    res.json({ success: true, count: withImages.length });
   } catch (e) {
     res.json({ success: false, msg: e.message });
   }
