@@ -1,0 +1,594 @@
+/* ══════════════════════════════════════════
+   超能力立直麻将 — 全局样式
+   ══════════════════════════════════════════ */
+
+/* ── CSS 变量 ── */
+:root {
+  --bg: #f0f4f8;
+  --card: #ffffff;
+  --card-secondary: #f8f9fa;
+  --text: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --accent: #e74c3c;
+  --accent-hover: #c0392b;
+  --accent-light: rgba(231, 76, 60, 0.08);
+  --gold: #d4a017;
+  --gold-bg: #fff8e1;
+  --green: #27ae60;
+  --green-hover: #219a52;
+  --green-bg: #e8f5e9;
+  --cyan: #2980b9;
+  --cyan-hover: #1f6f9f;
+  --border: #dce1e6;
+  --border-strong: #c0c7cf;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+
+  /* 技能标签色 */
+  --skill-passive: #2980b9;
+  --skill-passive-bg: #e3f2fd;
+  --skill-innate: #e67e22;
+  --skill-innate-bg: #fff3e0;
+  --skill-extra: #8e44ad;
+  --skill-extra-bg: #f3e5f5;
+}
+
+/* ── 基础重置 ── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── 工具类 ── */
+.hidden { display: none !important; }
+
+/* ── 导航栏 ── */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: var(--card);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--border);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  z-index: 100;
+  height: 56px;
+}
+.navbar .logo {
+  color: var(--gold);
+  font-size: 18px;
+  font-weight: 800;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+.navbar .nav-links {
+  display: flex;
+  gap: 6px;
+}
+.navbar .nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  transition: all .2s;
+  font-weight: 500;
+}
+.navbar .nav-links a:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+.navbar .nav-links a.active {
+  color: var(--accent);
+  background: var(--accent-light);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.navbar .nav-user {
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ── 内容容器 ── */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 20px 40px;
+}
+
+/* ── 区块卡片 ── */
+.section {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.section h2 {
+  color: var(--gold);
+  font-size: 18px;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+/* ── 通用按钮 ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 22px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all .2s;
+  text-decoration: none;
+  white-space: nowrap;
+  outline: none;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+}
+.btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 主按钮（红色） */
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* 绿色按钮 */
+.btn-green {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+.btn-green:hover:not(:disabled) {
+  background: var(--green-hover);
+  border-color: var(--green-hover);
+}
+
+/* 青色按钮 */
+.btn-cyan {
+  background: var(--cyan);
+  color: #fff;
+  border-color: var(--cyan);
+}
+.btn-cyan:hover:not(:disabled) {
+  background: var(--cyan-hover);
+  border-color: var(--cyan-hover);
+}
+
+/* 轮廓按钮 */
+.btn-outline {
+  background: var(--card-secondary);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: #fff;
+}
+
+/* ── 表单输入 ── */
+.input {
+  padding: 12px 16px;
+  background: var(--card-secondary);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border .2s;
+  width: 100%;
+}
+.input:focus {
+  border-color: var(--accent);
+  background: #fff;
+}
+.input::placeholder {
+  color: var(--text-secondary);
+}
+
+/* ── 表单行 ── */
+.form-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.form-row .input {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* ── 标签页切换 ── */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  background: var(--card-secondary);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1.5px solid var(--border);
+}
+.tab-bar button {
+  flex: 1;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.tab-bar button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.tab-bar button:not(.active):hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* ── 技能标签按钮 ── */
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  border: 2px solid transparent;
+  outline: none;
+  background: #fff;
+}
+.skill-tag:hover {
+  transform: scale(1.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.skill-tag:active {
+  transform: scale(0.97);
+}
+.skill-tag .tag-icon {
+  font-size: 14px;
+}
+.skill-tag .tag-preview {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.skill-tag.passive {
+  background: var(--skill-passive-bg);
+  color: var(--skill-passive);
+  border-color: #90caf9;
+}
+.skill-tag.passive:hover {
+  background: #bbdefb;
+  border-color: var(--skill-passive);
+}
+.skill-tag.innate {
+  background: var(--skill-innate-bg);
+  color: var(--skill-innate);
+  border-color: #ffcc80;
+}
+.skill-tag.innate:hover {
+  background: #ffe0b2;
+  border-color: var(--skill-innate);
+}
+.skill-tag.extra {
+  background: var(--skill-extra-bg);
+  color: var(--skill-extra);
+  border-color: #ce93d8;
+}
+.skill-tag.extra:hover {
+  background: #e1bee7;
+  border-color: var(--skill-extra);
+}
+
+/* ── 弹窗 / Modal ── */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn .25s;
+}
+.modal-dialog {
+  background: var(--card);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  animation: scaleIn .3s;
+}
+.modal-dialog .dialog-header {
+  padding: 20px 24px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.modal-dialog .dialog-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+.modal-dialog .dialog-char {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.modal-dialog .dialog-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--card-secondary);
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  transition: all .2s;
+}
+.modal-dialog .dialog-close:hover {
+  background: #ffebee;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.modal-dialog .dialog-body {
+  padding: 20px 24px 24px;
+}
+.modal-dialog .dialog-skill-type {
+  display: inline-block;
+  padding: 5px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  border: 2px solid transparent;
+}
+.modal-dialog .dialog-skill-type.passive {
+  background: var(--skill-passive-bg);
+  color: var(--skill-passive);
+  border-color: #90caf9;
+}
+.modal-dialog .dialog-skill-type.innate {
+  background: var(--skill-innate-bg);
+  color: var(--skill-innate);
+  border-color: #ffcc80;
+}
+.modal-dialog .dialog-skill-type.extra {
+  background: var(--skill-extra-bg);
+  color: var(--skill-extra);
+  border-color: #ce93d8;
+}
+.modal-dialog .dialog-desc {
+  font-size: 18px;
+  line-height: 1.8;
+  color: var(--text);
+  word-break: break-word;
+}
+.modal-dialog .dialog-faction {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Toast 提示 ── */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 999;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: slideDown .3s;
+  border: 2px solid var(--text);
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── 角色卡片 ── */
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.char-card {
+  background: var(--card-secondary);
+  border-radius: 14px;
+  padding: 16px;
+  border: 2px solid var(--border);
+  cursor: default;
+  transition: box-shadow .25s, transform .2s;
+  position: relative;
+}
+.char-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+}
+.char-card .faction-badge {
+  display: inline-block;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--gold-bg);
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border: 1px solid #f0d78c;
+}
+.char-card .char-name {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.char-card .char-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.char-card .char-meta .tier {
+  color: var(--accent);
+  font-weight: 600;
+}
+.char-card .char-meta .limit-tag {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* ── 状态徽章 ── */
+.status-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  margin-left: 8px;
+  font-weight: 700;
+  border: 1.5px solid transparent;
+}
+.status-waiting  { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+.status-playing  { background: #ffebee; color: var(--accent); border-color: var(--accent); }
+.status-ready    { background: var(--gold-bg); color: #b8860b; border-color: #d4a017; }
+
+/* ── 无数据占位 ── */
+.no-data {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 40px 20px;
+  font-size: 15px;
+}
+
+/* ══════════════════════════════════════════
+   移动端响应式
+   ══════════════════════════════════════════ */
+
+/* 平板 */
+@media (max-width: 900px) {
+  .char-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+/* 手机横屏 / 小平板 */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 14px;
+    height: 50px;
+  }
+  .navbar .logo { font-size: 15px; }
+  .navbar .nav-links a { font-size: 12px; padding: 4px 10px; }
+  .navbar .nav-user { font-size: 12px; }
+
+  .container { padding: 14px 12px 30px; }
+  .section { padding: 18px 14px; border-radius: 12px; }
+
+  .btn { padding: 10px 16px; font-size: 13px; }
+
+  .modal-dialog .dialog-desc { font-size: 16px; }
+}
+
+/* 手机竖屏 */
+@media (max-width: 540px) {
+  .char-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .char-card { padding: 14px; }
+  .char-card .char-name { font-size: 15px; }
+
+  .form-row { flex-direction: column; }
+  .form-row .input { min-width: auto; }
+  .form-row .btn { width: 100%; }
+
+  .section { padding: 14px 12px; }
+  .section h2 { font-size: 16px; }
+
+  .modal-overlay { padding: 12px; }
+  .modal-dialog { border-radius: 14px; }
+}

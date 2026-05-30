@@ -4,121 +4,41 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>对局中 - 超能力立直麻将</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    :root {
-      --bg: #f0f4f8;
-      --card: #ffffff;
-      --card-secondary: #f8f9fa;
-      --text: #2c3e50;
-      --text-secondary: #7f8c8d;
-      --accent: #e74c3c;
-      --gold: #d4a017;
-      --green: #27ae60;
-      --border: #e8ecf1;
-      --shadow: 0 2px 12px rgba(0,0,0,0.06);
-      --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    body { padding-top: 56px; }
 
-      /* 技能标签色 */
-      --skill-passive: #2980b9;
-      --skill-innate: #e67e22;
-      --skill-extra: #8e44ad;
+    .container { max-width: 960px; }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 28px;
     }
-    *{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif}
-    body{background:var(--bg);color:var(--text);min-height:100vh;padding-top:56px}
-
-    /* 导航栏 */
-    .navbar{position:fixed;top:0;left:0;right:0;background:var(--card);padding:0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.04);z-index:100;height:56px}
-    .navbar .logo{color:var(--gold);font-size:18px;font-weight:bold;text-decoration:none;letter-spacing:0.5px}
-    .navbar .nav-links{display:flex;gap:8px}
-    .navbar .nav-links a{color:var(--text-secondary);text-decoration:none;font-size:14px;padding:6px 14px;border-radius:8px;transition:all .2s;font-weight:500}
-    .navbar .nav-links a:hover,.navbar .nav-links a.active{color:var(--accent);background:rgba(231,76,60,0.08)}
-    .navbar .nav-user{color:var(--accent);font-size:14px;font-weight:600}
-
-    .container{max-width:960px;margin:0 auto;padding:24px 20px 40px}
-
-    /* 页头 */
-    .header{text-align:center;margin-bottom:28px}
-    .header h1{font-size:30px;color:var(--accent);font-weight:800;margin-bottom:6px}
-    .header .info{color:var(--text-secondary);font-size:15px;line-height:1.6}
-    .header .info strong{color:var(--text)}
-
-    /* 角色区 */
-    .section{background:var(--card);border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:var(--shadow)}
-    .section h2{color:var(--gold);font-size:18px;margin-bottom:18px;font-weight:700}
-    .char-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-
-    /* 角色卡片 */
-    .char-card{background:var(--card-secondary);border-radius:14px;padding:16px;border:1.5px solid var(--border);cursor:default;transition:box-shadow .25s,transform .2s;position:relative}
-    .char-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.1);transform:translateY(-2px)}
-    .char-card .faction-badge{display:inline-block;color:var(--gold);font-size:11px;font-weight:700;background:#fff8e1;padding:3px 10px;border-radius:12px;margin-bottom:8px}
-    .char-card .char-name{font-size:17px;font-weight:800;margin-bottom:4px;color:var(--text)}
-    .char-card .char-meta{font-size:12px;color:var(--text-secondary);margin-bottom:12px}
-    .char-card .char-meta .tier{color:var(--accent);font-weight:600}
-    .char-card .char-meta .limit-tag{color:var(--gold);font-weight:600}
-
-    /* 技能标签 */
-    .skill-tags{display:flex;flex-wrap:wrap;gap:6px}
-    .skill-tag{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;border:none;outline:none}
-    .skill-tag:hover{transform:scale(1.06);box-shadow:0 2px 8px rgba(0,0,0,0.15)}
-    .skill-tag:active{transform:scale(0.97)}
-
-    .skill-tag.passive{background:#e3f2fd;color:var(--skill-passive)}
-    .skill-tag.passive:hover{background:#bbdefb}
-    .skill-tag.innate{background:#fff3e0;color:var(--skill-innate)}
-    .skill-tag.innate:hover{background:#ffe0b2}
-    .skill-tag.extra{background:#f3e5f5;color:var(--skill-extra)}
-    .skill-tag.extra:hover{background:#e1bee7}
-
-    .skill-tag .tag-icon{font-size:14px}
-    .skill-tag .tag-preview{max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400;font-size:10px;opacity:0.8}
-
-    .no-chars{text-align:center;color:var(--text-secondary);padding:40px;font-size:15px}
-
-    /* 技能放大弹窗 */
-    .skill-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .25s}
-    .skill-dialog{background:var(--card);border-radius:18px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:scaleIn .3s}
-    .skill-dialog .dialog-header{padding:20px 24px 0;display:flex;justify-content:space-between;align-items:flex-start}
-    .skill-dialog .dialog-title{font-size:20px;font-weight:800;color:var(--text)}
-    .skill-dialog .dialog-char{font-size:13px;color:var(--text-secondary);margin-top:2px}
-    .skill-dialog .dialog-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--card-secondary);color:var(--text-secondary);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
-    .skill-dialog .dialog-close:hover{background:#ffebee;color:var(--accent)}
-    .skill-dialog .dialog-body{padding:20px 24px 24px}
-    .skill-dialog .dialog-skill-type{display:inline-block;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:12px}
-    .skill-dialog .dialog-skill-type.passive{background:#e3f2fd;color:var(--skill-passive)}
-    .skill-dialog .dialog-skill-type.innate{background:#fff3e0;color:var(--skill-innate)}
-    .skill-dialog .dialog-skill-type.extra{background:#f3e5f5;color:var(--skill-extra)}
-    .skill-dialog .dialog-desc{font-size:18px;line-height:1.8;color:var(--text);word-break:break-word}
-    .skill-dialog .dialog-faction{font-size:12px;color:var(--text-secondary);margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
-
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    @keyframes scaleIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
-
-    /* 移动端适配 */
-    @media (max-width:900px) {
-      .char-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+    .page-header h1 {
+      font-size: 30px;
+      color: var(--accent);
+      font-weight: 800;
+      margin-bottom: 6px;
     }
-    @media (max-width:768px) {
-      .navbar{padding:0 14px;height:50px}
-      .navbar .logo{font-size:15px}
-      .navbar .nav-links a{font-size:12px;padding:4px 10px}
-      .navbar .nav-user{font-size:12px}
-      .container{padding:16px 12px 30px}
-      .header h1{font-size:24px}
-      .section{padding:16px 14px;border-radius:14px}
+    .page-header .info {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.6;
     }
-    @media (max-width:540px) {
-      .char-grid{grid-template-columns:1fr;gap:8px}
-      .char-card{padding:14px}
-      .char-card .char-name{font-size:15px}
-      .header h1{font-size:22px}
-      .header .info{font-size:13px}
-      .skill-dialog .dialog-desc{font-size:16px}
+    .page-header .info strong { color: var(--text); }
+
+    /* 手机适配 */
+    @media (max-width: 768px) {
+      .page-header h1 { font-size: 24px; }
+    }
+    @media (max-width: 540px) {
+      .page-header h1 { font-size: 22px; }
+      .page-header .info { font-size: 13px; }
     }
   </style>
 </head>
 <body>
 
-<!-- 导航栏 -->
 <nav class="navbar">
   <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
   <div class="nav-links">
@@ -129,7 +49,7 @@
 </nav>
 
 <div class="container">
-  <div class="header">
+  <div class="page-header">
     <h1>🎴 对局进行中</h1>
     <div class="info">房间：<strong id="roomDisplay"></strong> | 玩家：<strong id="nameDisplay"></strong></div>
   </div>
@@ -137,14 +57,14 @@
   <div class="section">
     <h2>🎯 你的角色（6选1出战）</h2>
     <div class="char-grid" id="charGrid">
-      <div class="no-chars">加载中...</div>
+      <div class="no-data">加载中...</div>
     </div>
   </div>
 </div>
 
 <!-- 技能放大弹窗 -->
-<div class="skill-overlay hidden" id="skillOverlay" onclick="closeSkillOverlay(event)">
-  <div class="skill-dialog" id="skillDialog" onclick="event.stopPropagation()">
+<div class="modal-overlay hidden" id="skillOverlay" onclick="closeSkillOverlay(event)">
+  <div class="modal-dialog" id="skillDialog" onclick="event.stopPropagation()">
     <div class="dialog-header">
       <div>
         <div class="dialog-title" id="skillDialogTitle"></div>
@@ -171,20 +91,24 @@ document.getElementById('nameDisplay').innerText = username;
 
 const SKILL_TYPES = {
   passive: { label: '被动', icon: '🛡️', cls: 'passive' },
-  innate: { label: '天赋', icon: '⚡', cls: 'innate' },
-  extra:  { label: '额外', icon: '✨', cls: 'extra' }
+  innate:  { label: '天赋', icon: '⚡', cls: 'innate' },
+  extra:   { label: '额外', icon: '✨', cls: 'extra' }
 };
 
-// 加载选角结果
+function escHTML(s) {
+  if (!s) return '';
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 async function loadChars() {
   const chars = await fetch(`/api/my-draft?roomId=${roomId}&username=${encodeURIComponent(username)}`).then(r => r.json());
   const grid = document.getElementById('charGrid');
   if (!chars || chars.length === 0) {
-    grid.innerHTML = '<div class="no-chars">暂无角色数据，请先在房间内完成选角</div>';
+    grid.innerHTML = '<div class="no-data">暂无角色数据，请先在房间内完成选角</div>';
     return;
   }
 
-  grid.innerHTML = chars.map((c, i) => {
+  grid.innerHTML = chars.map(c => {
     const skills = [];
     if (c.passive) skills.push({ key: 'passive', text: c.passive });
     if (c.innate)  skills.push({ key: 'innate', text: c.innate });
@@ -193,13 +117,18 @@ async function loadChars() {
     const skillTags = skills.map(s => {
       const st = SKILL_TYPES[s.key];
       const preview = s.text.length > 8 ? s.text.substring(0, 8) + '…' : s.text;
-      return `<button class="skill-tag ${st.cls}" onclick="openSkill(event, '${escHTML(c.name)}', '${escHTML(c.faction||'')}', '${escHTML(st.label)}', '${escHTML(s.text)}', '${st.cls}')" title="点击放大查看详情">
-        <span class="tag-icon">${st.icon}</span>${st.label}<span class="tag-preview">${escHTML(preview)}</span>
-      </button>`;
+      return `<button class="skill-tag ${st.cls}"
+        data-char="${escHTML(c.name)}"
+        data-faction="${escHTML(c.faction || '')}"
+        data-label="${escHTML(st.label)}"
+        data-desc="${escHTML(s.text)}"
+        data-cls="${st.cls}"
+        onclick="openSkill(this)"
+        title="点击放大查看详情"
+      ><span class="tag-icon">${st.icon}</span>${st.label}<span class="tag-preview">${escHTML(preview)}</span></button>`;
     }).join('');
 
-    return `
-    <div class="char-card">
+    return `<div class="char-card">
       <div class="faction-badge">${escHTML(c.faction || '无阵营')}</div>
       <div class="char-name">${escHTML(c.name)}</div>
       <div class="char-meta">
@@ -211,35 +140,32 @@ async function loadChars() {
   }).join('');
 }
 
-// HTML 转义
-function escHTML(s) {
-  if (!s) return '';
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
 // 打开技能放大弹窗
-function openSkill(e, charName, faction, skillLabel, skillDesc, typeCls) {
-  e.stopPropagation();
-  document.getElementById('skillDialogTitle').innerText = skillLabel + '技能';
-  document.getElementById('skillDialogChar').innerText = '角色：' + charName;
-  document.getElementById('skillDialogType').textContent = skillLabel;
-  document.getElementById('skillDialogType').className = 'dialog-skill-type ' + typeCls;
-  document.getElementById('skillDialogDesc').innerText = skillDesc;
-  document.getElementById('skillDialogFaction').innerText = faction ? '阵营：' + faction : '';
+function openSkill(btn) {
+  document.getElementById('skillDialogTitle').innerText = btn.dataset.label + '技能';
+  document.getElementById('skillDialogChar').innerText = '角色：' + btn.dataset.char;
+  const typeEl = document.getElementById('skillDialogType');
+  typeEl.textContent = btn.dataset.label;
+  typeEl.className = 'dialog-skill-type ' + btn.dataset.cls;
+  document.getElementById('skillDialogDesc').innerText = btn.dataset.desc;
+  document.getElementById('skillDialogFaction').innerText = btn.dataset.faction ? '阵营：' + btn.dataset.faction : '';
   document.getElementById('skillOverlay').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
 
 // 关闭弹窗
 function closeSkillOverlay(e) {
+  // 如果传入了事件对象且点击的不是遮罩本身，则不关闭
   if (e && e.target !== document.getElementById('skillOverlay')) return;
   document.getElementById('skillOverlay').classList.add('hidden');
   document.body.style.overflow = '';
 }
 
-// ESC 关闭弹窗
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeSkillOverlay();
+// ESC 关闭
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !document.getElementById('skillOverlay').classList.contains('hidden')) {
+    closeSkillOverlay();
+  }
 });
 
 loadChars();

@@ -4,130 +4,152 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>超能力立直麻将 - 对局房间</title>
+<link rel="stylesheet" href="style.css">
 <style>
-  :root {
-    --bg: #f0f4f8;
-    --card: #ffffff;
-    --card-secondary: #f8f9fa;
-    --text: #2c3e50;
-    --text-secondary: #7f8c8d;
-    --accent: #e74c3c;
-    --accent-hover: #c0392b;
-    --gold: #d4a017;
-    --green: #27ae60;
-    --green-hover: #219a52;
-    --cyan: #2980b9;
-    --cyan-hover: #1f6f9f;
-    --border: #e8ecf1;
-    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  body { padding-top: 56px; }
+
+  .room-header {
+    background: var(--card);
+    padding: 18px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--border);
   }
-  *{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif}
-  body{background:var(--bg);color:var(--text);min-height:100vh;padding-top:56px}
-  .hidden{display:none!important}
+  .room-header h2 { color: var(--gold); font-size: 18px; }
+  .room-id { color: var(--text-secondary); font-size: 13px; }
+  .room-id strong { color: var(--text); }
 
-  /* 导航栏 */
-  .navbar{position:fixed;top:0;left:0;right:0;background:var(--card);padding:0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.04);z-index:100;height:56px}
-  .navbar .logo{color:var(--gold);font-size:18px;font-weight:bold;text-decoration:none;letter-spacing:0.5px}
-  .navbar .nav-links{display:flex;gap:8px}
-  .navbar .nav-links a{color:var(--text-secondary);text-decoration:none;font-size:14px;padding:6px 14px;border-radius:8px;transition:all .2s;font-weight:500}
-  .navbar .nav-links a:hover,.navbar .nav-links a.active{color:var(--accent);background:rgba(231,76,60,0.08)}
-  .navbar .nav-user{color:var(--accent);font-size:14px;font-weight:600}
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
 
-  /* 房间头部 */
-  .room-header{background:var(--card);padding:18px 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
-  .room-header h2{color:var(--gold);font-size:18px}
-  .room-id{color:var(--text-secondary);font-size:13px}
-  .room-id strong{color:var(--text)}
-  .user-info{color:var(--accent);font-weight:600}
-
-  /* 主体 */
-  .container{max-width:800px;margin:0 auto;padding:20px 20px 40px}
-
-  /* 玩家列表 */
-  .section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px}
-  .player-card{background:var(--card);border-radius:12px;padding:14px 20px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow)}
-  .player-card.self{border:2px solid var(--accent);background:#fff5f5}
-  .player-name{font-size:16px;font-weight:bold}
-  .player-status{font-size:13px;color:var(--text-secondary)}
-  .player-status .ready{color:var(--green);font-weight:600}
-  .player-status .unready{color:var(--accent);font-weight:600}
-
-  /* 按钮 */
-  .btn{padding:11px 22px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold;transition:all .2s}
-  .btn-ready{background:var(--green);color:#fff}
-  .btn-ready:hover{background:var(--green-hover)}
-  .btn-unready{background:var(--accent);color:#fff}
-  .btn-unready:hover{background:var(--accent-hover)}
-  .btn-primary{background:var(--accent);color:#fff;width:100%;padding:14px;margin-top:12px;font-size:15px;border-radius:10px}
-  .btn-primary:disabled{opacity:0.45;cursor:not-allowed}
-  .btn-secondary{background:var(--cyan);color:#fff}
-  .btn-secondary:hover{background:var(--cyan-hover)}
+  .player-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--border);
+  }
+  .player-card.self {
+    border-color: var(--accent);
+    background: #fff5f5;
+  }
+  .player-name { font-size: 16px; font-weight: 700; }
+  .player-status { font-size: 13px; color: var(--text-secondary); }
+  .player-status .ready { color: var(--green); font-weight: 600; }
+  .player-status .unready { color: var(--accent); font-weight: 600; }
 
   /* 投票区 */
-  #voteArea{margin-top:20px;background:var(--card);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
-  #voteArea h3{color:var(--gold);margin-bottom:12px;font-size:16px}
-  .vote-btns{display:flex;gap:10px}
-  .vote-btns button{flex:1;padding:14px;border-radius:10px;background:var(--card-secondary);color:var(--text);border:2px solid var(--border);cursor:pointer;font-size:15px;font-weight:600;transition:all .2s}
-  .vote-btns button:hover{border-color:var(--accent);color:var(--accent)}
-  .vote-btns button:disabled{opacity:0.4;cursor:not-allowed}
-  #voteTip{margin-top:10px;font-size:13px;color:var(--text-secondary)}
-  #voteResult{margin-top:8px;font-size:14px;color:var(--gold);font-weight:600}
+  #voteArea {
+    margin-top: 20px;
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  #voteArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; }
+  .vote-btns { display: flex; gap: 10px; }
+  .vote-btns button {
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    background: var(--card-secondary);
+    color: var(--text);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all .2s;
+  }
+  .vote-btns button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .vote-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #voteTip { margin-top: 10px; font-size: 13px; color: var(--text-secondary); }
+  #voteResult { margin-top: 8px; font-size: 14px; color: var(--gold); font-weight: 600; }
 
-  /* 选角结果区 */
-  #draftArea{margin-top:20px;background:var(--card);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
-  #draftArea h3{color:var(--gold);margin-bottom:12px;font-size:16px}
-  .draft-player{margin-bottom:20px}
-  .draft-player .dp-name{color:var(--accent);font-size:17px;margin-bottom:10px;font-weight:bold}
-  .char-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .char-card{background:var(--card-secondary);padding:12px 14px;border-radius:10px;border:1px solid var(--border)}
-  .char-card .char-name{font-weight:bold;font-size:14px}
-  .char-card .faction-badge{color:var(--gold);font-size:12px;font-weight:600;margin-bottom:2px}
-  .char-card .char-tier{font-size:11px;color:var(--text-secondary)}
-  .char-card .char-skill{font-size:11px;color:var(--text-secondary);margin-top:2px;line-height:1.4}
-  .char-card .char-skill strong{color:var(--text)}
+  /* 选角结果 */
+  #draftArea {
+    margin-top: 20px;
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  #draftArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; }
+  .draft-player { margin-bottom: 20px; }
+  .draft-player .dp-name { color: var(--accent); font-size: 17px; margin-bottom: 10px; font-weight: 700; }
+  .draft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .draft-char {
+    background: var(--card-secondary);
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+  }
+  .draft-char .faction-badge { color: var(--gold); font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .draft-char .char-tier { font-size: 11px; color: var(--text-secondary); }
+  .draft-char .char-skill { font-size: 11px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
+  .draft-char .char-skill strong { color: var(--text); }
 
-  .redirect-hint{text-align:center;color:var(--text-secondary);font-size:13px;margin-top:20px;padding:10px;background:var(--card-secondary);border-radius:8px}
-
-  /* 底部操作 */
-  .actions{margin:20px 0 40px;display:flex;gap:10px;flex-wrap:wrap}
-  .actions button{flex:1;min-width:120px}
-
-  /* CSV上传 */
-  .admin-section{margin-top:20px;background:var(--card);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
-  .admin-section h3{color:var(--text-secondary);margin-bottom:8px;font-size:14px}
-  #csvDrop{border:2px dashed #ccc;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s}
-  #csvDrop:hover{border-color:var(--accent);background:#fff5f5}
-  .char-count{font-size:13px;color:var(--text-secondary);margin-top:8px}
-  .char-count span{color:var(--gold);font-weight:bold}
-
-  /* Toast */
-  .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.2);animation:slideDown .3s}
-  @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-
-  /* 移动端 */
-  @media (max-width:768px) {
-    .navbar{padding:0 14px;height:50px}
-    .navbar .logo{font-size:15px}
-    .navbar .nav-links a{font-size:12px;padding:4px 10px}
-    .navbar .nav-user{font-size:12px}
-    .room-header{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:4px}
-    .container{padding:16px 12px 30px}
-    .char-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-    .player-card{padding:12px 14px}
-    .vote-btns{flex-direction:column}
+  .redirect-hint {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-top: 20px;
+    padding: 12px;
+    background: var(--card-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border);
   }
 
-  @media (max-width:480px) {
-    .char-grid{grid-template-columns:1fr}
-    .player-card{flex-direction:column;align-items:flex-start;gap:6px}
-    .actions{flex-direction:column}
-    .actions button{min-width:auto}
+  /* CSV */
+  .admin-section {
+    margin-top: 20px;
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .admin-section h3 { color: var(--text-secondary); margin-bottom: 8px; font-size: 14px; }
+  #csvDrop {
+    border: 2px dashed var(--border-strong);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  #csvDrop:hover { border-color: var(--accent); background: #fff5f5; }
+  .char-count { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+  .char-count span { color: var(--gold); font-weight: 700; }
+
+  /* 移动端 */
+  @media (max-width: 768px) {
+    .room-header { padding: 14px 16px; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .draft-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .player-card { padding: 12px 14px; }
+    .vote-btns { flex-direction: column; }
+  }
+  @media (max-width: 480px) {
+    .draft-grid { grid-template-columns: 1fr; }
+    .player-card { flex-direction: column; align-items: flex-start; gap: 6px; }
   }
 </style>
 </head>
 <body>
 
-<!-- 导航栏 -->
 <nav class="navbar">
   <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
   <div class="nav-links">
@@ -137,7 +159,6 @@
   <span class="nav-user" id="navUser"></span>
 </nav>
 
-<!-- 房间头部 -->
 <div class="room-header">
   <div>
     <h2>对局房间</h2>
@@ -146,14 +167,11 @@
 </div>
 
 <div class="container">
-  <!-- 玩家列表 -->
   <div class="section-title">房间玩家（最多4人）</div>
   <div id="playerList"></div>
 
-  <!-- 准备按钮 -->
-  <button class="btn-primary" id="readyBtn" disabled onclick="toggleReady()">准备游戏</button>
+  <button class="btn btn-primary" id="readyBtn" disabled onclick="toggleReady()" style="width:100%;margin-top:12px">准备游戏</button>
 
-  <!-- 投票区 -->
   <div id="voteArea" class="hidden">
     <h3>选择角色抽取方式</h3>
     <div class="vote-btns">
@@ -164,28 +182,21 @@
     <div id="voteResult"></div>
   </div>
 
-  <!-- 选角结果区 -->
   <div id="draftArea" class="hidden">
     <h3>🎯 角色分配结果</h3>
     <div id="draftContent"></div>
-    <div class="redirect-hint" id="redirectHint">
-      ⏳ 即将自动跳转到对局页面...
-    </div>
+    <div class="redirect-hint" id="redirectHint">⏳ 即将自动跳转到对局页面...</div>
   </div>
 
-  <!-- CSV角色管理 -->
   <div class="admin-section">
     <h3>📂 角色数据管理（点击上传CSV覆盖服务器角色池）</h3>
-    <div id="csvDrop">
-      <p>📁 点击或拖放 CSV 文件</p>
-    </div>
+    <div id="csvDrop"><p>📁 点击或拖放 CSV 文件</p></div>
     <div class="char-count">服务器角色总数：<span id="charCount">0</span></div>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-// ── 初始化 ──
 const username = localStorage.user;
 const roomId = localStorage.roomId;
 if (!username || !roomId) location.href = '/login.html';
@@ -196,7 +207,6 @@ document.getElementById('navUser').innerText = '👤 ' + username;
 const socket = io();
 let myVote = '';
 
-// Toast 提示
 function showToast(msg) {
   const t = document.createElement('div');
   t.className = 'toast'; t.textContent = msg;
@@ -204,22 +214,11 @@ function showToast(msg) {
   setTimeout(() => t.remove(), 2500);
 }
 
-// 页面加载时自动加入房间
 socket.emit('joinRoom', { roomId, playerName: username });
 
-// ── Socket 事件 ──
-socket.on('joinSuccess', (msg) => {
-  document.getElementById('readyBtn').disabled = false;
-});
-
-socket.on('joinFailed', (msg) => {
-  alert('加入房间失败：' + msg);
-  location.href = '/lobby.html';
-});
-
-socket.on('roomPlayersUpdate', (data) => {
-  renderPlayers(data.players);
-});
+socket.on('joinSuccess', () => { document.getElementById('readyBtn').disabled = false; });
+socket.on('joinFailed', msg => { alert('加入房间失败：' + msg); location.href = '/lobby.html'; });
+socket.on('roomPlayersUpdate', data => renderPlayers(data.players));
 
 function renderPlayers(players) {
   let html = '';
@@ -233,22 +232,17 @@ function renderPlayers(players) {
       </span>
     </div>`;
   });
-  document.getElementById('playerList').innerHTML = html || '<p style="color:var(--text-secondary);text-align:center;padding:20px">暂无玩家</p>';
+  document.getElementById('playerList').innerHTML = html || '<p class="no-data">暂无玩家</p>';
 }
 
-// ── 准备 ──
-function toggleReady() {
-  socket.emit('toggleReady', roomId);
-}
+function toggleReady() { socket.emit('toggleReady', roomId); }
 
-// ── 全员准备 ──
-socket.on('allReady', (msg) => {
+socket.on('allReady', msg => {
   document.getElementById('voteArea').classList.remove('hidden');
   document.getElementById('readyBtn').disabled = true;
   document.getElementById('voteTip').innerText = msg;
 });
 
-// ── 投票 ──
 function vote(type) {
   myVote = type;
   socket.emit('voteSelect', { roomId, type });
@@ -256,22 +250,17 @@ function vote(type) {
   document.getElementById('voteTip').innerText = `你已投票：${type === 'random' ? '随机抽取' : '正常抽取'}`;
 }
 
-socket.on('voteUpdate', (data) => {
-  document.getElementById('voteResult').innerText =
-    `当前投票：随机${data.vote.random}票 | 正常${data.vote.normal}票`;
+socket.on('voteUpdate', data => {
+  document.getElementById('voteResult').innerText = `当前投票：随机${data.vote.random}票 | 正常${data.vote.normal}票`;
 });
 
-// ── 投票完成 → 自动选角 → 自动跳转对局页 ──
-socket.on('voteResult', async (data) => {
+socket.on('voteResult', async data => {
   document.getElementById('voteResult').innerText = `投票结束！最终选择：${data.desc}`;
   document.getElementById('draftArea').classList.remove('hidden');
   await doDraft(data.players, data.type);
-
-  // 自动跳转到对局页面
   startRedirectCountdown(3);
 });
 
-// ── 选角逻辑 ──
 async function doDraft(players, draftType) {
   const chars = await fetch('/api/characters').then(r => r.json());
   const pool = [...chars];
@@ -281,22 +270,19 @@ async function doDraft(players, draftType) {
     result[p.name] = [];
     for (let i = 0; i < 6; i++) {
       if (pool.length === 0) break;
-      const idx = draftType === 'random'
-        ? Math.floor(Math.random() * pool.length)
-        : 0;
+      const idx = draftType === 'random' ? Math.floor(Math.random() * pool.length) : 0;
       result[p.name].push(pool.splice(idx, 1)[0]);
     }
   });
 
-  // 渲染结果（包含技能简述）
   let html = '';
   Object.entries(result).forEach(([name, chars]) => {
     html += `<div class="draft-player">
       <div class="dp-name">${name}（${chars.length}个角色）</div>
-      <div class="char-grid">
-        ${chars.map(c => `<div class="char-card">
+      <div class="draft-grid">
+        ${chars.map(c => `<div class="draft-char">
           <div class="faction-badge">${c.faction || '无阵营'}</div>
-          <div class="char-name">${c.name}</div>
+          <div style="font-weight:bold;font-size:14px">${c.name}</div>
           <div class="char-tier">Tier: ${c.tier}${c.limit ? ' | 限' + c.limit : ''}</div>
           ${c.passive ? '<div class="char-skill"><strong>被动</strong> ' + c.passive + '</div>' : ''}
           ${c.innate ? '<div class="char-skill"><strong>天赋</strong> ' + c.innate + '</div>' : ''}
@@ -307,21 +293,16 @@ async function doDraft(players, draftType) {
   });
   document.getElementById('draftContent').innerHTML = html;
 
-  // 回传选角结果，同时标记房间为对局中
   await fetch('/api/draft-results', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ roomId, results: result })
   });
 }
 
-// ── 倒计时提示 ──
 function startRedirectCountdown(seconds) {
   const hint = document.getElementById('redirectHint');
   let remaining = seconds;
-  hint.innerText = `⏳ ${remaining} 秒后自动跳转到对局页面...`;
   const timer = setInterval(() => {
-    remaining--;
     if (remaining <= 0) {
       clearInterval(timer);
       hint.innerText = '🚀 正在跳转...';
@@ -329,46 +310,35 @@ function startRedirectCountdown(seconds) {
     } else {
       hint.innerText = `⏳ ${remaining} 秒后自动跳转到对局页面...`;
     }
+    remaining--;
   }, 1000);
 }
 
-// ── 错误 ──
-socket.on('error', (msg) => alert('错误：' + msg));
+socket.on('error', msg => alert('错误：' + msg));
 
 // ── CSV 上传 ──
 loadCharCount();
 function loadCharCount() {
-  fetch('/api/characters').then(r => r.json()).then(chars => {
-    document.getElementById('charCount').textContent = chars.length;
-  });
+  fetch('/api/characters').then(r => r.json()).then(c => { document.getElementById('charCount').textContent = c.length; });
 }
 
 const drop = document.getElementById('csvDrop');
 const fileInput = document.createElement('input');
-fileInput.type = 'file';
-fileInput.accept = '.csv';
-fileInput.style.display = 'none';
+fileInput.type = 'file'; fileInput.accept = '.csv'; fileInput.style.display = 'none';
 drop.appendChild(fileInput);
 drop.onclick = () => fileInput.click();
 drop.ondragover = e => { e.preventDefault(); drop.style.borderColor = '#e74c3c'; };
-drop.ondragleave = () => { drop.style.borderColor = '#ccc'; };
+drop.ondragleave = () => { drop.style.borderColor = ''; };
 drop.ondrop = e => {
-  e.preventDefault();
-  drop.style.borderColor = '#ccc';
-  const file = e.dataTransfer.files[0];
-  if (file) uploadCSV(file);
+  e.preventDefault(); drop.style.borderColor = '';
+  if (e.dataTransfer.files[0]) uploadCSV(e.dataTransfer.files[0]);
 };
-fileInput.onchange = () => {
-  const file = fileInput.files[0];
-  if (file) uploadCSV(file);
-};
+fileInput.onchange = () => { if (fileInput.files[0]) uploadCSV(fileInput.files[0]); };
 
 async function uploadCSV(file) {
   const text = await file.text();
   const res = await fetch('/api/upload-csv', {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: text
+    method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: text
   }).then(r => r.json());
   alert(res.success ? `上传成功！共${res.count}个角色` : `上传失败：${res.msg}`);
   loadCharCount();
