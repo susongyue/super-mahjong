@@ -523,10 +523,11 @@ io.on('connection', (socket) => {
     socket.join(roomId);
     saveSocketRooms();
 
-    // 附带发送当前作战选将和角色状态
-    const sel = battleSelections[roomId] || {};
+    // 广播玩家列表（不包含出战选择，确保选将阶段保密）
+    io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId });
+    // 单独发送角色休息状态给该玩家
     const cs = (characterStates[roomId] || {})[playerName] || {};
-    io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId, battleSelections: sel, characterStates: cs });
+    socket.emit('characterStatesUpdate', cs);
     socket.emit('joinSuccess', `成功加入房间【${roomId}】`);
   });
 
@@ -570,7 +571,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ── 作战选将：玩家选择出战角色 ──
+  // ── 作战选将：玩家选择出战角色（选择内容保密，仅本人可见） ──
   socket.on('selectBattleCharacter', (data) => {
     const { roomId, characterName, playerName } = data;
     if (!roomId || !characterName || !playerName) return;
@@ -592,16 +593,25 @@ io.on('connection', (socket) => {
     battleSelections[roomId][playerName] = characterName;
     console.log(`⚔️ ${playerName} 在房间 ${roomId} 选择了 ${characterName} 出战`);
 
-    // 通知房间内所有人
     const selections = battleSelections[roomId];
     const room = socketRooms[roomId];
     const totalPlayers = room ? room.players.length : 4;
     const selectedCount = Object.keys(selections).length;
+    const readyPlayerNames = Object.keys(selections); // 仅发送已准备的玩家名，不透露角色
 
-    io.to(roomId).emit('battleSelectionUpdate', {
-      selections,
+    // 仅向选择者本人确认选择
+    socket.emit('battleSelectionConfirm', {
+      characterName,
       selectedCount,
       totalPlayers,
+      readyPlayerNames
+    });
+
+    // 向房间内所有人广播准备状态（不包含具体角色选择）
+    io.to(roomId).emit('battleReadyUpdate', {
+      selectedCount,
+      totalPlayers,
+      readyPlayerNames,
       lastSelector: playerName
     });
 
@@ -622,24 +632,33 @@ io.on('connection', (socket) => {
     if (!roomId || !playerName) return;
     if (battleSelections[roomId]) {
       delete battleSelections[roomId][playerName];
-      io.to(roomId).emit('battleSelectionUpdate', {
-        selections: battleSelections[roomId],
-        selectedCount: Object.keys(battleSelections[roomId]).length,
-        totalPlayers: (socketRooms[roomId] || {}).players ? socketRooms[roomId].players.length : 4
+      const sel = battleSelections[roomId];
+      const readyPlayerNames = Object.keys(sel);
+      // 仅发送准备数量，不透露选择
+      io.to(roomId).emit('battleReadyUpdate', {
+        selectedCount: readyPlayerNames.length,
+        totalPlayers: (socketRooms[roomId] || {}).players ? socketRooms[roomId].players.length : 4,
+        readyPlayerNames
       });
+      // 通知取消者本人
+      socket.emit('battleSelectionCancel');
     }
   });
 
   // ── 查询当前作战选将状态 ──
-  socket.on('getBattleState', (roomId) => {
+  socket.on('getBattleState', (data) => {
+    const roomId = typeof data === 'string' ? data : data.roomId;
+    const playerName = typeof data === 'object' ? data.playerName : null;
     const selections = battleSelections[roomId] || {};
     const room = socketRooms[roomId];
     if (room) {
+      const readyPlayerNames = Object.keys(selections);
       socket.emit('battleState', {
-        selections,
-        selectedCount: Object.keys(selections).length,
+        selectedCount: readyPlayerNames.length,
         totalPlayers: room.players.length,
-        round: room.round || 1
+        round: room.round || 1,
+        readyPlayerNames,
+        mySelection: selections[playerName] || null
       });
     }
   });
@@ -694,8 +713,8 @@ io.on('connection', (socket) => {
         roundEndVotes: room.roundEndVotes ? Object.keys(room.roundEndVotes).length : 0,
         gameEndVotes: room.gameEndVotes ? Object.keys(room.gameEndVotes).length : 0,
         totalPlayers: room.players.length,
-        battleSelections: selections,
-        selectedCount: Object.keys(selections).length
+        selectedCount: Object.keys(selections).length,
+        readyPlayerNames: Object.keys(selections)
       });
     }
   });
@@ -708,12 +727,18 @@ io.on('connection', (socket) => {
         const playerName = room.players[idx].name;
         room.players.splice(idx, 1);
         // 清理该玩家的作战选择
-        if (battleSelections[roomId]) delete battleSelections[roomId][playerName];
+        if (battleSelections[roomId]) {
+          delete battleSelections[roomId][playerName];
+          // 广播更新后的准备状态
+          const readyNames = Object.keys(battleSelections[roomId]);
+          io.to(roomId).emit('battleReadyUpdate', {
+            selectedCount: readyNames.length,
+            totalPlayers: room.players.length,
+            readyPlayerNames: readyNames
+          });
+        }
         saveSocketRooms();
-        io.to(roomId).emit('roomPlayersUpdate', {
-          players: room.players, roomId,
-          battleSelections: battleSelections[roomId] || {}
-        });
+        io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId });
       }
     });
   });

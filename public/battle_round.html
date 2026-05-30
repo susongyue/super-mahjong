@@ -56,12 +56,12 @@
       border-bottom: 2px solid var(--border);
     }
     .player-battle-card .player-avatar {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), #ff6b6b);
       color: #fff;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 800;
       display: flex;
       align-items: center;
@@ -85,16 +85,18 @@
       border-radius: 8px;
     }
 
+    .battle-char-wrapper {
+      cursor: pointer;
+    }
     .battle-char-card {
       background: var(--card-secondary);
       border-radius: 12px;
       padding: 16px;
       border: 2px solid var(--border);
-      cursor: pointer;
       transition: all .2s;
       position: relative;
     }
-    .battle-char-card:hover {
+    .battle-char-wrapper:hover .battle-char-card {
       border-color: var(--accent);
       box-shadow: 0 4px 16px rgba(0,0,0,.08);
       transform: translateY(-1px);
@@ -130,6 +132,7 @@
     .battle-char-card .skill-tag {
       font-size: 10px;
       padding: 3px 8px;
+      cursor: default;
     }
     .battle-char-card .click-hint {
       font-size: 11px;
@@ -147,6 +150,13 @@
       font-weight: 700;
       padding: 3px 8px;
       border-radius: 10px;
+    }
+
+    .no-selection {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-secondary);
+      font-size: 14px;
     }
 
     .vote-section {
@@ -204,6 +214,19 @@
       color: #fff;
       font-size: 24px;
       font-weight: 700;
+    }
+
+    /* 全屏详情中增加保留/轮休状态 */
+    .fs-retain-info {
+      background: var(--gold-bg);
+      color: var(--gold);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      border: 1.5px solid #f0d78c;
+      margin-top: 0;
     }
 
     @media (max-width: 768px) {
@@ -271,8 +294,9 @@
     <button class="fs-close" onclick="closeFullscreen()">✕</button>
   </div>
   <div class="fs-body" id="fsBody"></div>
+  <div id="fsRetainInfo"></div>
   <div class="fs-footer">
-    <span class="fs-footer-hint">👆 将此屏幕展示给其他玩家查看</span>
+    <span class="fs-footer-hint">按 ESC 关闭</span>
   </div>
 </div>
 
@@ -291,7 +315,7 @@ document.getElementById('navUser').innerText = '👤 ' + username;
 document.getElementById('roomDisplay').innerText = roomId;
 document.getElementById('nameDisplay').innerText = username;
 
-let allChars = {}; // { playerName: [char1, char2, ...] }
+let allChars = {}; // { playerName: [ {name, tier, faction, limit, innate, passive, extra, note, retain}, ... ] }
 let battleSelections = {};
 
 const SKILL_TYPES = {
@@ -346,13 +370,19 @@ socket.on('gameEnded', (data) => {
 
 // ══════════ 加载数据 ══════════
 async function loadBattleData() {
-  // 加载当前回合作战选择
-  const sel = await fetch(`/api/battle-selections?roomId=${roomId}`).then(r => r.json());
-  battleSelections = sel || {};
+  try {
+    // 加载当前回合作战选择
+    const sel = await fetch(`/api/battle-selections?roomId=${roomId}`).then(r => r.json());
+    battleSelections = sel || {};
 
-  // 加载所有玩家的角色池
-  const drafts = await fetch(`/api/all-draft?roomId=${roomId}`).then(r => r.json());
-  allChars = drafts || {};
+    // 加载所有玩家的角色池
+    const drafts = await fetch(`/api/all-draft?roomId=${roomId}`).then(r => r.json());
+    allChars = drafts || {};
+
+    console.log('Battle data loaded:', { selections: Object.keys(battleSelections).length, players: Object.keys(allChars).length });
+  } catch (e) {
+    console.error('Failed to load battle data:', e);
+  }
 
   renderBattleGrid();
 }
@@ -367,7 +397,7 @@ function renderBattleGrid() {
   const playerNames = Object.keys(allChars);
 
   if (playerNames.length === 0) {
-    grid.innerHTML = '<div class="no-data">暂无角色数据</div>';
+    grid.innerHTML = '<div class="no-data">暂无对局数据，请返回选择出战页面重新操作</div>';
     return;
   }
 
@@ -392,20 +422,19 @@ function renderBattleGrid() {
 
       const skillTags = skills.map(s => {
         const st = SKILL_TYPES[s.key];
-        const preview = s.text.length > 10 ? s.text.substring(0,10)+'…' : s.text;
-        return `<span class="skill-tag ${st.cls}" style="cursor:default;">
+        return `<span class="skill-tag ${st.cls}">
           <span class="tag-icon">${st.icon}</span>${st.label}
-          <span class="tag-preview">${escHTML(preview)}</span>
         </span>`;
       }).join('');
 
-      charCardHTML = `<div class="battle-char-card" onclick="openFullscreen('${escHTML(pname)}','${escHTML(c.name)}')">
+      // 使用 data 属性存储参数，避免 onclick 中特殊字符问题
+      charCardHTML = `<div class="battle-char-card" data-pname="${escHTML(pname)}" data-cname="${escHTML(c.name)}">
         ${isRetain ? '<div class="retain-badge">🛡️ 保留</div>' : ''}
         <div class="char-faction">${escHTML(c.faction||'无阵营')}</div>
         <div class="char-name">${escHTML(c.name)}</div>
-        <div class="char-tier">Tier ${escHTML(c.tier)}</div>
+        <div class="char-tier">Tier ${escHTML(c.tier||'?')}</div>
         <div class="skill-tags">${skillTags}</div>
-        <div class="click-hint">👆 点击查看完整技能</div>
+        <div class="click-hint">👆 点击查看完整技能详情</div>
       </div>`;
     } else {
       charCardHTML = `<div class="no-selection">⚠️ 未选择出战角色</div>`;
@@ -421,19 +450,33 @@ function renderBattleGrid() {
           ${isSelf ? '<div class="player-tag">我</div>' : ''}
         </div>
       </div>
-      ${charCardHTML}
+      <div class="battle-char-wrapper" onclick="handleCharClick(this)" data-pname="${escHTML(pname)}" data-cname="${escHTML(deployedCharName||'')}">
+        ${charCardHTML}
+      </div>
     </div>`;
   }).join('');
+}
+
+// 使用事件委托处理点击（比 onclick 更安全）
+function handleCharClick(el) {
+  const pname = el.getAttribute('data-pname');
+  const cname = el.getAttribute('data-cname');
+  if (pname && cname) {
+    openFullscreen(pname, cname);
+  }
 }
 
 // ══════════ 全屏角色详情 ══════════
 function openFullscreen(playerName, charName) {
   const playerChars = allChars[playerName] || [];
   const c = playerChars.find(c => c.name === charName);
-  if (!c) return;
+  if (!c) {
+    showToast('⚠️ 未找到角色数据');
+    return;
+  }
 
-  document.getElementById('fsCharName').innerText = c.name + ' (' + playerName + ')';
-  document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?');
+  document.getElementById('fsCharName').innerText = c.name;
+  document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?') + '（' + playerName + '）';
   document.getElementById('fsFaction').innerText = c.faction || '无阵营';
 
   const skills = [];
@@ -442,13 +485,30 @@ function openFullscreen(playerName, charName) {
   if (c.passive) skills.push({ key:'passive', text:c.passive });
   if (c.extra)   skills.push({ key:'extra', text:c.extra });
 
-  document.getElementById('fsBody').innerHTML = skills.map(s => {
+  let bodyHTML = skills.map(s => {
     const st = SKILL_TYPES[s.key];
     return `<div class="fs-skill-block">
       <span class="fs-skill-label ${st.cls}">${st.icon} ${st.label}技能</span>
       <div class="fs-skill-text">${escHTML(s.text)}</div>
     </div>`;
   }).join('');
+
+  if (c.note) {
+    bodyHTML += `<div class="fs-skill-block">
+      <span class="fs-skill-label" style="background:#e8eaf6;color:#3f51b5;border-color:#9fa8da;">📝 备注</span>
+      <div class="fs-skill-text">${escHTML(c.note)}</div>
+    </div>`;
+  }
+
+  document.getElementById('fsBody').innerHTML = bodyHTML;
+
+  // 保留效果提示
+  const retainInfo = document.getElementById('fsRetainInfo');
+  if (c.retain) {
+    retainInfo.innerHTML = '<div class="fs-retain-info">🛡️ 该角色拥有<strong>保留</strong>效果，出战后下回合仍可继续出战</div>';
+  } else {
+    retainInfo.innerHTML = '';
+  }
 
   document.getElementById('charFullscreen').classList.remove('hidden');
   document.body.style.overflow = 'hidden';

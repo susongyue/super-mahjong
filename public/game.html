@@ -115,6 +115,7 @@
       font-weight: 700;
       padding: 3px 8px;
       border-radius: 10px;
+      z-index: 2;
     }
     .char-card .retain-badge {
       position: absolute;
@@ -126,6 +127,7 @@
       font-weight: 700;
       padding: 3px 8px;
       border-radius: 10px;
+      z-index: 2;
     }
     .char-card .faction-badge {
       display: inline-block;
@@ -157,16 +159,63 @@
       display: flex;
       flex-wrap: wrap;
       gap: 4px;
+      margin-bottom: 10px;
     }
     .char-card .skill-tag {
       font-size: 10px;
       padding: 3px 8px;
+      cursor: default;
     }
-    .char-card .card-hint {
-      font-size: 11px;
+    .char-card .card-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .char-card .btn-detail {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 2px solid var(--border-strong);
+      background: var(--card);
       color: var(--text-secondary);
-      margin-top: 8px;
+      transition: all .2s;
       text-align: center;
+    }
+    .char-card .btn-detail:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: #fff;
+    }
+    .char-card .btn-deploy {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 2px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      transition: all .2s;
+      text-align: center;
+    }
+    .char-card .btn-deploy:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+    .char-card .btn-deploy:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .char-card .btn-deploy.deployed {
+      background: var(--green);
+      border-color: var(--green);
+    }
+    .char-card .btn-deploy.deployed:hover {
+      background: var(--green-hover);
     }
 
     .vote-section {
@@ -188,8 +237,6 @@
       white-space: nowrap;
     }
     .vote-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    .vote-btn-round { background:#fff3e0; color:var(--skill-innate); border-color:#ffb74d; }
-    .vote-btn-round:hover:not(:disabled) { background:#ffe0b2; border-color:var(--skill-innate); }
     .vote-btn-game { background:#fce4ec; color:var(--accent); border-color:#ef9a9a; }
     .vote-btn-game:hover:not(:disabled) { background:#ffcdd2; border-color:var(--accent); }
     .vote-count {
@@ -201,7 +248,6 @@
       font-weight: 700;
       font-size: 13px;
     }
-    .vote-count.round { background:#fff3e0; color:var(--skill-innate); border:1.5px solid #ffcc80; }
     .vote-count.game  { background:#fce4ec; color:var(--accent); border:1.5px solid #ef9a9a; }
     .vote-count.done  { background:var(--green-bg); color:var(--green); border:1.5px solid var(--green); }
     .vote-info { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary); font-weight:600; }
@@ -218,6 +264,55 @@
       color: #fff;
       font-size: 24px;
       font-weight: 700;
+    }
+
+    /* 全屏角色详情弹窗中新增出战按钮 */
+    .fs-deploy-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      border: 2px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      transition: all .2s;
+      margin-top: 16px;
+      width: 100%;
+    }
+    .fs-deploy-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+    .fs-deploy-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .fs-deploy-btn.deployed {
+      background: var(--green);
+      border-color: var(--green);
+    }
+    .fs-deploy-btn.deployed:hover {
+      background: var(--green-hover);
+    }
+    .fs-deploy-btn.blocked {
+      background: #999;
+      border-color: #999;
+      cursor: not-allowed;
+    }
+    .fs-retain-info {
+      background: var(--gold-bg);
+      color: var(--gold);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      border: 1.5px solid #f0d78c;
+      margin-top: 12px;
     }
 
     @media (max-width: 900px) { .char-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
@@ -245,7 +340,7 @@
     </div>
   </div>
 
-  <!-- 选择进度 -->
+  <!-- 选择进度（只显示准备人数，不显示具体选择） -->
   <div class="selection-progress">
     <div>
       <div class="progress-text" id="progressText">等待选择... 0/0</div>
@@ -259,7 +354,7 @@
   <!-- 角色选择区 -->
   <div class="section">
     <div class="section-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 style="margin-bottom:0;">🎯 你的角色</h2>
+      <h2 style="margin-bottom:0;">🎯 你的角色（点击查看详情）</h2>
       <span id="mySelectionBadge" style="font-size:13px;color:var(--text-secondary);"></span>
     </div>
     <div class="char-grid" id="charGrid">
@@ -284,6 +379,24 @@
   </div>
 </div>
 
+<!-- 全屏角色详情弹窗 -->
+<div class="char-fullscreen-overlay hidden" id="charFullscreen">
+  <div class="fs-header">
+    <div class="fs-header-left">
+      <div class="fs-char-name" id="fsCharName"></div>
+      <div class="fs-char-tier" id="fsCharTier"></div>
+      <div class="fs-faction-badge" id="fsFaction"></div>
+    </div>
+    <button class="fs-close" onclick="closeFullscreen()">✕</button>
+  </div>
+  <div class="fs-body" id="fsBody"></div>
+  <div id="fsRetainInfo"></div>
+  <button class="fs-deploy-btn" id="fsDeployBtn" onclick="deployFromFullscreen()">⚔️ 出战</button>
+  <div class="fs-footer">
+    <span class="fs-footer-hint">按 ESC 关闭</span>
+  </div>
+</div>
+
 <div class="redirect-overlay hidden" id="redirectOverlay">
   <div style="font-size:18px;text-align:center;" id="redirectText"></div>
 </div>
@@ -301,10 +414,11 @@ document.getElementById('nameDisplay').innerText = username;
 
 // 全局状态
 let myChars = [];
-let charStates = {};      // { charName: {resting:bool} }
-let battleSelections = {}; // { playerName: charName }
-let mySelection = null;
+let charStates = {};         // { charName: {resting:bool} }
+let mySelection = null;      // 当前选择的角色名
 let totalPlayers = 0;
+let readyPlayerNames = [];   // 已准备的玩家名（不包含角色信息）
+let fsCurrentIdx = -1;       // 全屏弹窗中查看的角色索引
 
 // ══════════ Socket ══════════
 const socket = io({ transports: ['polling', 'websocket'] });
@@ -312,59 +426,62 @@ const socket = io({ transports: ['polling', 'websocket'] });
 socket.on('connect', () => {
   socket.emit('joinRoom', { roomId, playerName: username });
   socket.emit('getRoomState', roomId);
-  socket.emit('getBattleState', roomId);
+  socket.emit('getBattleState', { roomId, playerName: username });
 });
 
 // 房间状态
 socket.on('roomState', (data) => {
   document.getElementById('roundNum').innerText = data.round || 1;
   totalPlayers = data.totalPlayers || 0;
-  if (data.battleSelections) {
-    battleSelections = data.battleSelections;
-    updateSelectionUI();
-  }
+  updateSelectionUI();
 });
 
 // 玩家列表更新
 socket.on('roomPlayersUpdate', (data) => {
   totalPlayers = data.players ? data.players.length : totalPlayers;
-  if (data.battleSelections) {
-    battleSelections = data.battleSelections;
-    if (battleSelections[username] && !mySelection) {
-      mySelection = battleSelections[username];
-      document.getElementById('mySelectionBadge').innerHTML = '✅ 已选择：<strong>' + escHTML(mySelection) + '</strong>';
-      renderCharGrid();
-    }
-    updateSelectionUI();
-  }
 });
 
-// 作战选将状态
+// 角色状态更新（仅自己的）
+socket.on('characterStatesUpdate', (data) => {
+  charStates = data || {};
+  renderCharGrid();
+});
+
+// 作战选将状态（页面恢复用）
 socket.on('battleState', (data) => {
   document.getElementById('roundNum').innerText = data.round || 1;
   totalPlayers = data.totalPlayers || 0;
-  if (data.selections) {
-    battleSelections = data.selections;
-    // 恢复已选状态
-    if (battleSelections[username]) {
-      mySelection = battleSelections[username];
-      document.getElementById('mySelectionBadge').innerHTML = '✅ 已选择：<strong>' + escHTML(mySelection) + '</strong>';
-    }
-    updateSelectionUI();
-  }
-});
-
-// 作战选将更新
-socket.on('battleSelectionUpdate', (data) => {
-  battleSelections = data.selections || {};
-  totalPlayers = data.totalPlayers || totalPlayers;
-  // 恢复已选状态（如果页面刷新）
-  if (battleSelections[username] && mySelection !== battleSelections[username]) {
-    mySelection = battleSelections[username];
+  readyPlayerNames = data.readyPlayerNames || [];
+  if (data.mySelection) {
+    mySelection = data.mySelection;
     document.getElementById('mySelectionBadge').innerHTML = '✅ 已选择：<strong>' + escHTML(mySelection) + '</strong>';
     renderCharGrid();
   }
   updateSelectionUI();
+});
+
+// 准备状态更新（仅显示人数和已准备的玩家名，不显示角色选择）
+socket.on('battleReadyUpdate', (data) => {
+  readyPlayerNames = data.readyPlayerNames || [];
+  totalPlayers = data.totalPlayers || totalPlayers;
+  updateSelectionUI();
+});
+
+// 确认自己的选择
+socket.on('battleSelectionConfirm', (data) => {
+  mySelection = data.characterName;
+  document.getElementById('mySelectionBadge').innerHTML = '✅ 已选择：<strong>' + escHTML(mySelection) + '</strong>';
+  renderCharGrid();
+  updateSelectionUI();
+  showToast('✅ 已选择 ' + data.characterName + ' 出战！等待其他玩家...');
+});
+
+// 取消选择
+socket.on('battleSelectionCancel', () => {
+  mySelection = null;
+  document.getElementById('mySelectionBadge').innerText = '';
+  renderCharGrid();
+  showToast('已取消选择');
 });
 
 // 所有人选完 → 跳转到回合界面
@@ -376,10 +493,10 @@ socket.on('allBattleSelected', (data) => {
 // 回合推进
 socket.on('roundAdvanced', (data) => {
   document.getElementById('roundNum').innerText = data.round;
-  battleSelections = {};
   mySelection = null;
+  readyPlayerNames = [];
   document.getElementById('mySelectionBadge').innerText = '';
-  loadChars(); // 重新加载角色状态
+  loadChars();
   updateSelectionUI();
   showToast('🎉 第 ' + data.round + ' 回合开始！请选择出战角色');
 });
@@ -442,8 +559,8 @@ function renderCharGrid() {
     const isResting = state.resting;
     const isRetain = c.retain === true;
     const isSelected = mySelection === c.name;
-    const isBlocked = isResting && !isRetain; // 休息且非保留 → 不可选
-    const isRestingRetain = isResting && isRetain; // 休息但保留 → 仍然可选
+    const isBlocked = isResting && !isRetain;
+    const isRestingRetain = isResting && isRetain;
 
     let extraClasses = '';
     if (isSelected) extraClasses += ' selected';
@@ -463,31 +580,38 @@ function renderCharGrid() {
 
     const skillTags = skills.map(s => {
       const st = SKILL_TYPES[s.key];
-      const preview = s.text.length > 10 ? s.text.substring(0,10)+'…' : s.text;
-      return `<span class="skill-tag ${st.cls}"><span class="tag-icon">${st.icon}</span>${st.label}<span class="tag-preview">${escHTML(preview)}</span></span>`;
+      return `<span class="skill-tag ${st.cls}" onclick="event.stopPropagation()"><span class="tag-icon">${st.icon}</span>${st.label}</span>`;
     }).join('');
 
-    let hintText = '👆 点击选择出战';
-    if (isSelected) hintText = '✅ 已选择（再次点击取消）';
-    else if (isBlocked) hintText = '🔒 休息中，等待其他角色都出战过后恢复';
-    else if (isRestingRetain) hintText = '🛡️ 保留效果：休息中也可出战！';
+    // 出战按钮状态
+    let deployBtnHTML = '';
+    if (isBlocked) {
+      deployBtnHTML = '<button class="btn-detail" onclick="event.stopPropagation();openFullscreen('+idx+')">🔍 查看详情</button>';
+    } else if (isSelected) {
+      deployBtnHTML = '<button class="btn-deploy deployed" onclick="event.stopPropagation();cancelDeploy('+idx+')">✅ 已出战</button>';
+    } else {
+      deployBtnHTML = '<button class="btn-deploy" onclick="event.stopPropagation();deployChar('+idx+')">⚔️ 出战</button>';
+    }
 
-    return `<div class="char-card${extraClasses}" onclick="${isBlocked ? '' : 'selectChar('+idx+')'}">
+    return `<div class="char-card${extraClasses}" onclick="openFullscreen(${idx})">
       ${badges.join('')}
       <div class="faction-badge">${escHTML(c.faction||'无阵营')}</div>
       <div class="char-name">${escHTML(c.name)}</div>
       <div class="char-meta"><span class="tier">Tier ${escHTML(c.tier)}</span></div>
       <div class="skill-tags">${skillTags}</div>
-      <div class="card-hint">${hintText}</div>
+      <div class="card-actions">
+        <button class="btn-detail" onclick="event.stopPropagation();openFullscreen(${idx})">🔍 详情</button>
+        ${deployBtnHTML}
+      </div>
     </div>`;
   }).join('');
 }
 
-function selectChar(idx) {
+// ══════════ 选择/取消/查看详情 ══════════
+function deployChar(idx) {
   const c = myChars[idx];
   if (!c) return;
 
-  // 检查是否在休息且没有保留效果
   const isResting = charStates[c.name] && charStates[c.name].resting;
   const isRetain = c.retain === true;
   if (isResting && !isRetain) {
@@ -498,37 +622,116 @@ function selectChar(idx) {
     showToast('🛡️ 保留效果发动！该角色不受休息限制');
   }
 
-  // 如果已经选择了同一个角色，取消选择
-  if (mySelection === c.name) {
-    mySelection = null;
-    socket.emit('resetBattleSelection', { roomId, playerName: username });
-    document.getElementById('mySelectionBadge').innerText = '';
-    renderCharGrid();
-    updateSelectionUI();
-    return;
-  }
-
-  // 选择新角色
   mySelection = c.name;
   socket.emit('selectBattleCharacter', { roomId, characterName: c.name, playerName: username });
   document.getElementById('mySelectionBadge').innerHTML = '✅ 已选择：<strong>' + escHTML(c.name) + '</strong>';
   renderCharGrid();
+  // 关闭全屏弹窗
+  closeFullscreen();
 }
 
+function cancelDeploy(idx) {
+  const c = myChars[idx];
+  if (!c) return;
+  mySelection = null;
+  socket.emit('resetBattleSelection', { roomId, playerName: username });
+  document.getElementById('mySelectionBadge').innerText = '';
+  renderCharGrid();
+  closeFullscreen();
+}
+
+// ══════════ 全屏角色详情 ══════════
+function openFullscreen(idx) {
+  const c = myChars[idx];
+  if (!c) return;
+  fsCurrentIdx = idx;
+
+  document.getElementById('fsCharName').innerText = c.name;
+  document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?');
+  document.getElementById('fsFaction').innerText = c.faction || '无阵营';
+
+  const skills = [];
+  if (c.limit)   skills.push({ key:'limit', text:c.limit });
+  if (c.innate)  skills.push({ key:'innate', text:c.innate });
+  if (c.passive) skills.push({ key:'passive', text:c.passive });
+  if (c.extra)   skills.push({ key:'extra', text:c.extra });
+
+  document.getElementById('fsBody').innerHTML = skills.map(s => {
+    const st = SKILL_TYPES[s.key];
+    return `<div class="fs-skill-block">
+      <span class="fs-skill-label ${st.cls}">${st.icon} ${st.label}技能</span>
+      <div class="fs-skill-text">${escHTML(s.text)}</div>
+    </div>`;
+  }).join('') + (c.note ? `<div class="fs-skill-block"><span class="fs-skill-label" style="background:#e8eaf6;color:#3f51b5;border-color:#9fa8da;">📝 备注</span><div class="fs-skill-text">${escHTML(c.note)}</div></div>` : '');
+
+  // 出战按钮状态
+  const deployBtn = document.getElementById('fsDeployBtn');
+  const isResting = charStates[c.name] && charStates[c.name].resting;
+  const isRetain = c.retain === true;
+  const isSelected = mySelection === c.name;
+  const isBlocked = isResting && !isRetain;
+
+  deployBtn.classList.remove('deployed', 'blocked');
+  deployBtn.disabled = false;
+
+  if (isBlocked) {
+    deployBtn.innerText = '🔒 休息中，无法出战';
+    deployBtn.classList.add('blocked');
+    deployBtn.disabled = true;
+  } else if (isSelected) {
+    deployBtn.innerText = '✅ 已出战（点击取消）';
+    deployBtn.classList.add('deployed');
+    deployBtn.onclick = () => cancelDeploy(fsCurrentIdx);
+  } else {
+    deployBtn.innerText = '⚔️ 出战';
+    deployBtn.onclick = () => deployChar(fsCurrentIdx);
+  }
+
+  // 保留提示
+  const retainInfo = document.getElementById('fsRetainInfo');
+  if (isResting && isRetain) {
+    retainInfo.innerHTML = '<div class="fs-retain-info">🛡️ 该角色拥有<strong>保留</strong>效果，休息状态下仍可出战！</div>';
+  } else if (isRetain && !isResting) {
+    retainInfo.innerHTML = '<div class="fs-retain-info">🛡️ 该角色拥有<strong>保留</strong>效果，出战后仍可在下回合继续出战</div>';
+  } else {
+    retainInfo.innerHTML = '';
+  }
+
+  document.getElementById('charFullscreen').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function deployFromFullscreen() {
+  if (fsCurrentIdx >= 0) deployChar(fsCurrentIdx);
+}
+
+function closeFullscreen() {
+  document.getElementById('charFullscreen').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !document.getElementById('charFullscreen').classList.contains('hidden')) {
+    closeFullscreen();
+  }
+});
+
+// ══════════ 进度UI（只显示准备人数，不显示他人选择） ══════════
 function updateSelectionUI() {
-  const selectedCount = Object.keys(battleSelections).length;
+  const selectedCount = readyPlayerNames.length;
   const total = totalPlayers || 4;
   const percent = total > 0 ? (selectedCount / total) * 100 : 0;
 
-  document.getElementById('progressText').innerText = '已选择 ' + selectedCount + '/' + total;
+  document.getElementById('progressText').innerText = '已准备 ' + selectedCount + '/' + total + ' 人';
   document.getElementById('progressBar').style.width = percent + '%';
 
-  // 显示已选择的玩家
-  const names = Object.entries(battleSelections).map(([p, c]) => '<span>' + p + ' → ' + c + '</span>');
-  document.getElementById('selectionList').innerHTML = names.length > 0 ? names.join(' | ') : '等待选择...';
-
-  // 高亮已经被其他玩家选择的角色（如果同一个角色被选了，可能需要提示）
-  // 这里不做限制，允许多个玩家选同一个角色
+  // 显示已准备的玩家名（不显示选择了谁）
+  const names = readyPlayerNames.map(p => '<span>' + p + '</span>');
+  const waitingCount = total - selectedCount;
+  if (waitingCount > 0) {
+    names.push('<span style="color:var(--text-secondary);">等待 ' + waitingCount + ' 人...</span>');
+  }
+  document.getElementById('selectionList').innerHTML = names.length > 0 ? names.join(' | ') : '等待所有人准备...';
 }
 
 // ══════════ 投票 ══════════
