@@ -287,9 +287,12 @@
 <div class="char-fullscreen-overlay hidden" id="charFullscreen">
   <div class="fs-header">
     <div class="fs-header-left">
-      <div class="fs-char-name" id="fsCharName"></div>
-      <div class="fs-char-tier" id="fsCharTier"></div>
-      <div class="fs-faction-badge" id="fsFaction"></div>
+      <div id="fsAvatar"></div>
+      <div class="fs-header-text">
+        <div class="fs-char-name" id="fsCharName"></div>
+        <div class="fs-char-tier" id="fsCharTier"></div>
+        <div class="fs-faction-badge" id="fsFaction"></div>
+      </div>
     </div>
     <button class="fs-close" onclick="closeFullscreen()">✕</button>
   </div>
@@ -471,6 +474,22 @@ socket.on('reconnect', () => {
   loadBattleData();
 });
 
+// 获取角色头像 HTML（从角色池中查找 image 字段）
+function getCharImageHTML(name, playerName) {
+  const playerChars = allChars[playerName] || [];
+  const c = playerChars.find(x => x.name === name);
+  const img = c && c.image;
+  if (img) return `<img class="char-avatar" src="/png/${img}" alt="${escHTML(name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`;
+  return `<div class="char-avatar-placeholder">${(name||'').charAt(0)}</div>`;
+}
+function getCharImageHTML_Big(name, playerName) {
+  const playerChars = allChars[playerName] || [];
+  const c = playerChars.find(x => x.name === name);
+  const img = c && c.image;
+  if (img) return `<img class="fs-avatar" src="/png/${img}" alt="${escHTML(name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`;
+  return `<div class="fs-avatar-placeholder">${(name||'').charAt(0)}</div>`;
+}
+
 function escHTML(s) {
   if (!s) return '';
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -525,8 +544,13 @@ function renderBattleGrid() {
       // 使用 data 属性存储参数，避免 onclick 中特殊字符问题
       charCardHTML = `<div class="battle-char-card" data-pname="${escHTML(pname)}" data-cname="${escHTML(c.name)}">
         ${isRetain ? '<div class="retain-badge">🛡️ 保留</div>' : ''}
-        <div class="char-faction">${escHTML(c.faction||'无阵营')}</div>
-        <div class="char-name">${escHTML(c.name)}</div>
+        <div class="char-card-header">
+          ${getCharImageHTML(c.name, pname)}
+          <div class="char-info">
+            <div class="char-faction">${escHTML(c.faction||'无阵营')}</div>
+            <div class="char-name">${escHTML(c.name)}</div>
+          </div>
+        </div>
         <div class="char-tier">Tier ${escHTML(c.tier||'?')}</div>
         <div class="skill-tags">${skillTags}</div>
         <div class="click-hint">👆 点击查看完整技能详情</div>
@@ -570,6 +594,7 @@ function openFullscreen(playerName, charName) {
     return;
   }
 
+  document.getElementById('fsAvatar').innerHTML = getCharImageHTML_Big(c.name, playerName);
   document.getElementById('fsCharName').innerText = c.name;
   document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?') + '（' + playerName + '）';
   document.getElementById('fsFaction').innerText = c.faction || '无阵营';

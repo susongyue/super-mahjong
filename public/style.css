@@ -689,6 +689,113 @@ body {
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* ── 角色头像 ── */
+.char-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 2px solid var(--border-strong);
+  background: var(--card);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.char-avatar-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #bdc3c7, #95a5a6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  border: 2px solid var(--border-strong);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* 全屏详情中的大号头像 */
+.fs-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 18px;
+  object-fit: cover;
+  border: 3px solid var(--accent);
+  margin-right: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.fs-avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #bdc3c7, #7f8c8d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 800;
+  color: #fff;
+  border: 3px solid var(--accent);
+  margin-right: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* fullscreen header 的头像布局 */
+.fs-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.fs-header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 选角结果中的头像 */
+.draft-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid var(--border-strong);
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.draft-avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #bdc3c7, #95a5a6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  border: 2px solid var(--border-strong);
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* 角色卡片头部横向排列 */
+.char-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.char-card-header .char-info {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ── 角色卡片 ── */
 .char-grid {
   display: grid;

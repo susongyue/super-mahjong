@@ -384,9 +384,12 @@
 <div class="char-fullscreen-overlay hidden" id="charFullscreen">
   <div class="fs-header">
     <div class="fs-header-left">
-      <div class="fs-char-name" id="fsCharName"></div>
-      <div class="fs-char-tier" id="fsCharTier"></div>
-      <div class="fs-faction-badge" id="fsFaction"></div>
+      <div id="fsAvatar"></div>
+      <div class="fs-header-text">
+        <div class="fs-char-name" id="fsCharName"></div>
+        <div class="fs-char-tier" id="fsCharTier"></div>
+        <div class="fs-faction-badge" id="fsFaction"></div>
+      </div>
     </div>
     <button class="fs-close" onclick="closeFullscreen()">✕</button>
   </div>
@@ -564,6 +567,19 @@ const SKILL_TYPES = {
   extra:   { label:'附加', icon:'✨', cls:'extra' }
 };
 
+function getCharImageHTML(name) {
+  const c = myChars.find(x => x.name === name);
+  const img = c && c.image;
+  if (img) return `<img class="char-avatar" src="/png/${img}" alt="${escHTML(name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`;
+  return `<div class="char-avatar-placeholder">${name.charAt(0)}</div>`;
+}
+function getCharImageHTML_Big(name) {
+  const c = myChars.find(x => x.name === name);
+  const img = c && c.image;
+  if (img) return `<img class="fs-avatar" src="/png/${img}" alt="${escHTML(name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`;
+  return `<div class="fs-avatar-placeholder">${name.charAt(0)}</div>`;
+}
+
 function escHTML(s) {
   if (!s) return '';
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -613,8 +629,13 @@ function renderCharGrid() {
 
     return `<div class="char-card${extraClasses}" onclick="openFullscreen(${idx})">
       ${badges.join('')}
-      <div class="faction-badge">${escHTML(c.faction||'无阵营')}</div>
-      <div class="char-name">${escHTML(c.name)}</div>
+      <div class="char-card-header">
+        ${getCharImageHTML(c.name)}
+        <div class="char-info">
+          <div class="faction-badge">${escHTML(c.faction||'无阵营')}</div>
+          <div class="char-name">${escHTML(c.name)}</div>
+        </div>
+      </div>
       <div class="char-meta"><span class="tier">Tier ${escHTML(c.tier)}</span></div>
       <div class="skill-tags">${skillTags}</div>
       <div class="card-actions">
@@ -664,6 +685,7 @@ function openFullscreen(idx) {
   if (!c) return;
   fsCurrentIdx = idx;
 
+  document.getElementById('fsAvatar').innerHTML = getCharImageHTML_Big(c.name);
   document.getElementById('fsCharName').innerText = c.name;
   document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?');
   document.getElementById('fsFaction').innerText = c.faction || '无阵营';

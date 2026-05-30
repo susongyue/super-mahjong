@@ -21,6 +21,7 @@ app.use(express.static('public', {
     }
   }
 }));
+app.use('/png', express.static('png')); // 角色头像图片
 
 // ── Supabase 客户端 ──
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rvdvdgriyleoiuglzgch.supabase.co';
@@ -506,12 +507,17 @@ setInterval(async () => {
 
 // 如果 characters.json 不存在，从 CSV 自动生成
 const CSV_FILE = path.join(__dirname, 'super-mahjong.csv');
+const IMG_MAP_FILE = path.join(__dirname, 'data', 'character-images.json');
 if (!fs.existsSync(CHARS_FILE) && fs.existsSync(CSV_FILE)) {
   try {
     const csvText = fs.readFileSync(CSV_FILE, 'utf8');
     const result = parseCSV(csvText);
-    fs.writeFileSync(CHARS_FILE, JSON.stringify(result, null, 2), 'utf8');
-    console.log('✅ 已从 CSV 自动生成 ' + result.length + ' 个角色');
+    // 合并头像映射
+    let imgMap = {};
+    try { imgMap = JSON.parse(fs.readFileSync(IMG_MAP_FILE, 'utf8')); } catch (e) {}
+    const withImages = result.map(c => ({ ...c, image: imgMap[c.name] || null }));
+    fs.writeFileSync(CHARS_FILE, JSON.stringify(withImages, null, 2), 'utf8');
+    console.log('✅ 已从 CSV 自动生成 ' + withImages.length + ' 个角色（含头像映射）');
   } catch (e) { console.log('⚠️ CSV 解析失败: ' + e.message); }
 }
 
@@ -601,7 +607,16 @@ app.post('/api/join-room', async (req, res) => {
 app.get('/api/characters', (req, res) => {
   try {
     const chars = JSON.parse(fs.readFileSync(CHARS_FILE, 'utf8'));
-    res.json(chars);
+    // 合并头像映射
+    let imgMap = {};
+    try {
+      imgMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'character-images.json'), 'utf8'));
+    } catch (e) { /* ignore */ }
+    const result = chars.map(c => ({
+      ...c,
+      image: imgMap[c.name] || null
+    }));
+    res.json(result);
   } catch (e) {
     res.json([]);
   }

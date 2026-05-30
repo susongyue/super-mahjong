@@ -177,6 +177,15 @@ if (!user) location.href = '/login.html';
 document.getElementById('navUser').innerText = '👤 ' + user;
 
 let myReconnectInfo = null; // 重连信息： { roomId, phase }
+let charImageMap = {}; // 角色名→头像文件名映射
+
+// ─── 加载角色头像映射 ───
+(async function loadCharImages() {
+  try {
+    const chars = await fetch('/api/characters').then(r => r.json());
+    chars.forEach(c => { charImageMap[c.name] = c.image || null; });
+  } catch (e) { /* ignore */ }
+})();
 
 // ─── 页面加载时检查是否有未完成的对局 ───
 (async function checkReconnect() {
@@ -431,9 +440,19 @@ async function viewHistoryDetail(roomId) {
     if (Object.keys(draft).length > 0) {
       draftHtml = '<div style="margin-top:12px;"><strong>选角情况：</strong></div>';
       for (const [player, chars] of Object.entries(draft)) {
-        const charNames = (chars || []).map(c => c.name || c).join('、');
-        draftHtml += '<div style="font-size:13px;color:var(--text-secondary);margin:4px 0;padding-left:12px;">' +
-          '• ' + player + '：' + charNames + '</div>';
+        const charItems = (chars || []).map(c => {
+          const cname = c.name || c;
+          const img = charImageMap[cname];
+          let avatarHTML = '';
+          if (img) {
+            avatarHTML = `<img src="/png/${img}" style="width:28px;height:28px;border-radius:8px;object-fit:cover;vertical-align:middle;margin-right:4px;border:1px solid #ccc;" onerror="this.style.display='none';">`;
+          } else {
+            avatarHTML = `<span style="display:inline-flex;width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#bdc3c7,#95a5a6);color:#fff;align-items:center;justify-content:center;font-size:13px;font-weight:700;vertical-align:middle;margin-right:4px;">${cname.charAt(0)}</span>`;
+          }
+          return avatarHTML + cname;
+        }).join(' ');
+        draftHtml += '<div style="font-size:13px;color:var(--text-secondary);margin:4px 0;padding-left:12px;line-height:32px;">' +
+          '• ' + player + '：' + charItems + '</div>';
       }
     }
 
