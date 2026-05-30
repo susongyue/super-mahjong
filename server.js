@@ -33,6 +33,12 @@ let rooms = {};
 let socketRooms = {};
 let draftResults = {};
 
+// ── 作战选将 + 休息/保留状态 ──
+// characterStates[roomId][username] = { "宫永咲": {resting:false}, "原村和": {resting:true}, ... }
+let characterStates = {};
+// battleSelections[roomId] = { "username1": "宫永咲", "username2": "天江衣", ... }
+let battleSelections = {};
+
 // ── 数据路径（兼容旧数据导入） ──
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -161,6 +167,17 @@ async function saveDraftResults() {
 }
 
 // ── 辅助函数 ──
+let _charCache = null;
+let _charCacheTime = 0;
+
+function getCharacterData(name) {
+  const now = Date.now();
+  if (!_charCache || now - _charCacheTime > 30000) {
+    try { _charCache = JSON.parse(fs.readFileSync(CHARS_FILE, 'utf8')); _charCacheTime = now; } catch (e) { _charCache = []; }
+  }
+  return _charCache.find(c => c.name === name) || null;
+}
+
 const resetRoomVote = (roomId) => {
   const r = socketRooms[roomId];
   if (r) { r.vote = { random: 0, normal: 0 }; r.voteEnd = false; }
@@ -171,6 +188,52 @@ const isAllReady = (roomId) => {
   if (!room || room.players.length === 0) return false;
   return room.players.every(p => p.ready);
 };
+
+// ── 回合结束后更新角色休息/保留状态 ──
+function updateCharacterStatesAfterRound(roomId) {
+  const selections = battleSelections[roomId] || {};
+  const draft = draftResults[roomId] || {};
+
+  // 初始化房间状态
+  if (!characterStates[roomId]) characterStates[roomId] = {};
+
+  // 遍历每个玩家的出战角色，将其标记为休息（保留角色除外）
+  for (const [playerName, charName] of Object.entries(selections)) {
+    if (!characterStates[roomId][playerName]) {
+      // 初始化该玩家的角色状态
+      characterStates[roomId][playerName] = {};
+      const playerChars = draft[playerName] || [];
+      playerChars.forEach(c => {
+        characterStates[roomId][playerName][c.name] = { resting: false };
+      });
+    }
+
+    // 所有角色出战都标记为休息（保留角色也计数，但可以选择时忽略）
+    if (characterStates[roomId][playerName][charName]) {
+      characterStates[roomId][playerName][charName].resting = true;
+      const charData = getCharacterData(charName) || {};
+      if (charData.retain) {
+        console.log(`🛡️ ${playerName} 的 ${charName} 拥有保留效果，标记休息但可继续出战`);
+      } else {
+        console.log(`😴 ${playerName} 的 ${charName} 进入休息状态`);
+      }
+    }
+  }
+
+  // 检查是否所有角色都在休息（除了保留的）
+  for (const [playerName, states] of Object.entries(characterStates[roomId])) {
+    const allCharStates = Object.entries(states);
+    const restingChars = allCharStates.filter(([, s]) => s.resting);
+
+    if (restingChars.length >= allCharStates.length && allCharStates.length > 0) {
+      // 所有角色都休息过了，重置
+      allCharStates.forEach(([cn]) => {
+        characterStates[roomId][playerName][cn].resting = false;
+      });
+      console.log(`🔄 ${playerName} 所有角色已休息完毕，全部恢复`);
+    }
+  }
+}
 
 // ═══════════════════════════════════════
 //  REST API 路由
@@ -309,6 +372,7 @@ function parseCSV(csvText) {
       else if (nk === '固有技' || nk === '天赋技') normalized.innate = obj[k];
       else if (nk === '被动技' || nk === '被动') normalized.passive = obj[k];
       else if (nk === '附加技' || nk === '额外技' || nk === '额外') normalized.extra = obj[k];
+      else if (nk === '保留' || nk === 'retain') normalized.retain = (obj[k] && (obj[k].toLowerCase() === 'true' || obj[k] === '1' || obj[k] === '是' || obj[k] === 'yes'));
     });
     result.push(normalized);
   }
@@ -389,6 +453,30 @@ app.get('/api/my-draft', async (req, res) => {
   res.json(room[username] || []);
 });
 
+// 获取用户的角色状态（休息/保留）
+app.get('/api/character-states', (req, res) => {
+  const { roomId, username } = req.query;
+  if (!roomId || !username) return res.json({});
+  const roomStates = characterStates[roomId] || {};
+  res.json(roomStates[username] || {});
+});
+
+// 获取当前回合所有玩家的出战选择（用于 battle_round.html）
+app.get('/api/battle-selections', (req, res) => {
+  const { roomId } = req.query;
+  if (!roomId) return res.json({});
+  res.json(battleSelections[roomId] || {});
+});
+
+// 获取当前房间所有玩家的角色信息
+app.get('/api/all-draft', async (req, res) => {
+  const { roomId } = req.query;
+  if (!roomId) return res.json({});
+  const room = draftResults[roomId];
+  if (!room) return res.json({});
+  res.json(room);
+});
+
 // ═══════════════════════════════════════
 //  HTTP 服务器 + Socket.io
 // ═══════════════════════════════════════
@@ -434,7 +522,11 @@ io.on('connection', (socket) => {
 
     socket.join(roomId);
     saveSocketRooms();
-    io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId });
+
+    // 附带发送当前作战选将和角色状态
+    const sel = battleSelections[roomId] || {};
+    const cs = (characterStates[roomId] || {})[playerName] || {};
+    io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId, battleSelections: sel, characterStates: cs });
     socket.emit('joinSuccess', `成功加入房间【${roomId}】`);
   });
 
@@ -478,6 +570,80 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── 作战选将：玩家选择出战角色 ──
+  socket.on('selectBattleCharacter', (data) => {
+    const { roomId, characterName, playerName } = data;
+    if (!roomId || !characterName || !playerName) return;
+
+    if (!battleSelections[roomId]) battleSelections[roomId] = {};
+
+    // 检查角色是否在休息状态（保留角色不受影响）
+    const playerStates = (characterStates[roomId] || {})[playerName] || {};
+    if (playerStates[characterName] && playerStates[characterName].resting) {
+      const charData = getCharacterData(characterName);
+      if (!charData || !charData.retain) {
+        socket.emit('error', '该角色正在休息中，无法出战');
+        return;
+      }
+      console.log(`🛡️ ${playerName} 的 ${characterName} 拥有保留效果，休息状态下出战`);
+    }
+
+    // 记录选择
+    battleSelections[roomId][playerName] = characterName;
+    console.log(`⚔️ ${playerName} 在房间 ${roomId} 选择了 ${characterName} 出战`);
+
+    // 通知房间内所有人
+    const selections = battleSelections[roomId];
+    const room = socketRooms[roomId];
+    const totalPlayers = room ? room.players.length : 4;
+    const selectedCount = Object.keys(selections).length;
+
+    io.to(roomId).emit('battleSelectionUpdate', {
+      selections,
+      selectedCount,
+      totalPlayers,
+      lastSelector: playerName
+    });
+
+    // 检查是否所有人都选完了
+    if (room && selectedCount >= totalPlayers && totalPlayers > 0) {
+      io.to(roomId).emit('allBattleSelected', {
+        selections,
+        msg: '所有玩家已选择出战角色，即将进入回合界面！'
+      });
+    }
+
+    saveSocketRooms();
+  });
+
+  // ── 重置单个玩家的出战选择（切换选择时） ──
+  socket.on('resetBattleSelection', (data) => {
+    const { roomId, playerName } = data;
+    if (!roomId || !playerName) return;
+    if (battleSelections[roomId]) {
+      delete battleSelections[roomId][playerName];
+      io.to(roomId).emit('battleSelectionUpdate', {
+        selections: battleSelections[roomId],
+        selectedCount: Object.keys(battleSelections[roomId]).length,
+        totalPlayers: (socketRooms[roomId] || {}).players ? socketRooms[roomId].players.length : 4
+      });
+    }
+  });
+
+  // ── 查询当前作战选将状态 ──
+  socket.on('getBattleState', (roomId) => {
+    const selections = battleSelections[roomId] || {};
+    const room = socketRooms[roomId];
+    if (room) {
+      socket.emit('battleState', {
+        selections,
+        selectedCount: Object.keys(selections).length,
+        totalPlayers: room.players.length,
+        round: room.round || 1
+      });
+    }
+  });
+
   socket.on('voteEndRound', (roomId) => {
     const room = socketRooms[roomId];
     if (!room) return;
@@ -488,8 +654,12 @@ io.on('connection', (socket) => {
     const votedNames = room.players.filter(p => room.roundEndVotes[p.id]).map(p => p.name);
     io.to(roomId).emit('roundEndVoteUpdate', { voted: votedCount, total: totalCount, votedNames });
     if (votedCount >= totalCount && totalCount > 0) {
+      // ── 更新角色休息/保留状态 ──
+      updateCharacterStatesAfterRound(roomId);
       room.round += 1;
       room.roundEndVotes = {};
+      // 清空本轮作战选择
+      battleSelections[roomId] = {};
       io.to(roomId).emit('roundAdvanced', { round: room.round });
     }
     saveSocketRooms();
@@ -505,9 +675,12 @@ io.on('connection', (socket) => {
     const votedNames = room.players.filter(p => room.gameEndVotes[p.id]).map(p => p.name);
     io.to(roomId).emit('gameEndVoteUpdate', { voted: votedCount, total: totalCount, votedNames });
     if (votedCount >= totalCount && totalCount > 0) {
+      // ── 清理作战选将和角色状态 ──
+      delete battleSelections[roomId];
+      delete characterStates[roomId];
       room.gameEndVotes = {};
       room.round = 1;
-      io.to(roomId).emit('gameEnded', { msg: '全部玩家同意，对局结束！' });
+      io.to(roomId).emit('gameEnded', { msg: '全部玩家同意，对局结束！即将返回大厅。' });
     }
     saveSocketRooms();
   });
@@ -515,11 +688,14 @@ io.on('connection', (socket) => {
   socket.on('getRoomState', (roomId) => {
     const room = socketRooms[roomId];
     if (room) {
+      const selections = battleSelections[roomId] || {};
       socket.emit('roomState', {
         round: room.round || 1,
         roundEndVotes: room.roundEndVotes ? Object.keys(room.roundEndVotes).length : 0,
         gameEndVotes: room.gameEndVotes ? Object.keys(room.gameEndVotes).length : 0,
-        totalPlayers: room.players.length
+        totalPlayers: room.players.length,
+        battleSelections: selections,
+        selectedCount: Object.keys(selections).length
       });
     }
   });
@@ -529,9 +705,15 @@ io.on('connection', (socket) => {
       const room = socketRooms[roomId];
       const idx = room.players.findIndex(p => p.id === socket.id);
       if (idx > -1) {
+        const playerName = room.players[idx].name;
         room.players.splice(idx, 1);
+        // 清理该玩家的作战选择
+        if (battleSelections[roomId]) delete battleSelections[roomId][playerName];
         saveSocketRooms();
-        io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId });
+        io.to(roomId).emit('roomPlayersUpdate', {
+          players: room.players, roomId,
+          battleSelections: battleSelections[roomId] || {}
+        });
       }
     });
   });
@@ -548,6 +730,7 @@ async function start() {
     console.log('   - 大厅页:  http://localhost:' + PORT + '/lobby.html');
     console.log('   - 房间页:  http://localhost:' + PORT + '/index.html');
     console.log('   - 对局页:  http://localhost:' + PORT + '/game.html');
+    console.log('   - 回合页:  http://localhost:' + PORT + '/battle_round.html');
   });
 }
 start();
