@@ -1,23 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>登录 - 超能力立直麻将</title>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-    body{background:#1a1a1a;color:#fff;display:grid;place-items:center;height:100vh}
-    /* 导航栏 */
-    .navbar{position:fixed;top:0;left:0;right:0;background:#16213e;padding:12px 24px;display:flex;align-items:center;justify-content:center;border-bottom:2px solid #e94560;z-index:100}
-    .navbar .logo{color:#f5c518;font-size:18px;font-weight:bold;text-decoration:none}
-    .box{background:#222;padding:40px;border-radius:12px;width:360px;text-align:center}
-    h1{margin-bottom:20px;color:#e63946}
-    input{width:100%;margin:8px 0;padding:12px;border-radius:6px;border:none;background:#333;color:#fff}
-    button{width:100%;padding:12px;background:#e63946;color:#fff;border:none;border-radius:6px;margin-top:10px;font-weight:bold}
-    .tab{display:flex;gap:10px;margin-bottom:20px}
-    .tab button{flex:1;background:#444}
-    .tab button.active{background:#e63946}
-    .panel{display:none}
+    :root {
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --text-secondary: #7f8c8d;
+      --accent: #e74c3c;
+      --accent-hover: #c0392b;
+      --gold: #d4a017;
+      --border: #e8ecf1;
+      --input-bg: #f8f9fa;
+      --input-border: #dce1e6;
+      --shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif}
+    body{background:var(--bg);color:var(--text);display:grid;place-items:center;min-height:100vh;padding:20px}
+
+    .navbar{position:fixed;top:0;left:0;right:0;background:var(--card);padding:14px 24px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.04);z-index:100}
+    .navbar .logo{color:var(--gold);font-size:18px;font-weight:bold;text-decoration:none;letter-spacing:0.5px}
+
+    .box{background:var(--card);padding:40px 36px;border-radius:16px;width:100%;max-width:400px;text-align:center;box-shadow:var(--shadow)}
+    h1{margin-bottom:8px;color:var(--accent);font-size:24px;font-weight:800}
+    .subtitle{color:var(--text-secondary);font-size:13px;margin-bottom:24px}
+
+    input{width:100%;margin:10px 0;padding:13px 16px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text);font-size:15px;transition:border .2s;outline:none}
+    input:focus{border-color:var(--accent)}
+
+    button{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;margin-top:10px;font-weight:bold;font-size:15px;cursor:pointer;transition:background .2s,transform .1s}
+    button:hover{background:var(--accent-hover)}
+    button:active{transform:scale(0.98)}
+
+    .tab{display:flex;gap:6px;margin-bottom:20px;background:var(--input-bg);border-radius:10px;padding:4px}
+    .tab button{flex:1;background:transparent;color:var(--text-secondary);margin:0;border-radius:8px;font-weight:600;font-size:14px;padding:10px}
+    .tab button.active{background:var(--accent);color:#fff}
+    .tab button:not(.active):hover{background:rgba(0,0,0,0.04);color:var(--text)}
+
+    .panel{display:none;animation:fadeIn .3s}
     .panel.active{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    /* 移动端适配 */
+    @media (max-width:480px) {
+      .box{padding:30px 20px;border-radius:12px}
+      h1{font-size:21px}
+      .navbar{padding:12px 16px}
+      .navbar .logo{font-size:16px}
+      input{padding:12px 14px;font-size:14px}
+      button{padding:12px;font-size:14px}
+    }
   </style>
 </head>
 <body>
@@ -27,21 +62,22 @@
 
 <div class="box">
   <h1>超能力立直麻将</h1>
+  <p class="subtitle">登录或注册，开始你的对局</p>
   <div class="tab">
     <button class="active" onclick="tab(0)">登录</button>
     <button onclick="tab(1)">注册</button>
   </div>
 
   <div class="panel active" id="login">
-    <input id="login-user" placeholder="用户名">
-    <input id="login-pwd" type="password" placeholder="密码">
-    <button onclick="login()">登录</button>
+    <input id="login-user" placeholder="请输入用户名" autocomplete="username">
+    <input id="login-pwd" type="password" placeholder="请输入密码" autocomplete="current-password">
+    <button onclick="login()">登 录</button>
   </div>
 
   <div class="panel" id="reg">
-    <input id="reg-user" placeholder="用户名">
-    <input id="reg-pwd" type="password" placeholder="密码">
-    <button onclick="register()">注册</button>
+    <input id="reg-user" placeholder="请输入用户名" autocomplete="username">
+    <input id="reg-pwd" type="password" placeholder="请设置密码" autocomplete="new-password">
+    <button onclick="register()">注 册</button>
   </div>
 </div>
 
@@ -54,8 +90,9 @@ function tab(i) {
 }
 
 async function login() {
-  const username = document.getElementById('login-user').value;
+  const username = document.getElementById('login-user').value.trim();
   const password = document.getElementById('login-pwd').value;
+  if(!username||!password) return alert('请填写用户名和密码');
   const r = await fetch('/api/login', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({username,password})
@@ -67,13 +104,14 @@ async function login() {
 }
 
 async function register() {
-  const username = document.getElementById('reg-user').value;
+  const username = document.getElementById('reg-user').value.trim();
   const password = document.getElementById('reg-pwd').value;
+  if(!username||!password) return alert('请填写用户名和密码');
   const r = await fetch('/api/register', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({username,password})
   }).then(x=>x.json());
-  alert(r.success ? '注册成功' : r.msg);
+  alert(r.success ? '注册成功！请切换到登录页登录' : r.msg);
 }
 </script>
 </body>

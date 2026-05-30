@@ -208,6 +208,11 @@ app.post('/api/draft-results', (req, res) => {
   if (!roomId || !results) return res.json({ success: false, msg: '参数不完整' });
   draftResults[roomId] = results;
   saveDraftResults();
+  // 自动标记房间为对局中，玩家可直接进入 game.html
+  if (roomId && rooms[roomId]) {
+    rooms[roomId].started = true;
+    saveRooms();
+  }
   res.json({ success: true });
 });
 

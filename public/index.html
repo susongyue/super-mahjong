@@ -2,79 +2,127 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>超能力立直麻将 - 对局房间</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-body{background:#1a1a2e;color:#eee;min-height:100vh}
-.hidden{display:none!important}
+  :root {
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --card-secondary: #f8f9fa;
+    --text: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --accent: #e74c3c;
+    --accent-hover: #c0392b;
+    --gold: #d4a017;
+    --green: #27ae60;
+    --green-hover: #219a52;
+    --cyan: #2980b9;
+    --cyan-hover: #1f6f9f;
+    --border: #e8ecf1;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif}
+  body{background:var(--bg);color:var(--text);min-height:100vh;padding-top:56px}
+  .hidden{display:none!important}
 
-/* 导航栏 */
-.navbar{background:#16213e;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #e94560}
-.navbar .logo{color:#f5c518;font-size:18px;font-weight:bold;text-decoration:none}
-.navbar .nav-links{display:flex;gap:16px}
-.navbar .nav-links a{color:#aaa;text-decoration:none;font-size:14px;padding:4px 10px;border-radius:4px}
-.navbar .nav-links a:hover,.navbar .nav-links a.active{color:#fff;background:#e94560}
-.navbar .nav-user{color:#e94560;font-size:14px}
+  /* 导航栏 */
+  .navbar{position:fixed;top:0;left:0;right:0;background:var(--card);padding:0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.04);z-index:100;height:56px}
+  .navbar .logo{color:var(--gold);font-size:18px;font-weight:bold;text-decoration:none;letter-spacing:0.5px}
+  .navbar .nav-links{display:flex;gap:8px}
+  .navbar .nav-links a{color:var(--text-secondary);text-decoration:none;font-size:14px;padding:6px 14px;border-radius:8px;transition:all .2s;font-weight:500}
+  .navbar .nav-links a:hover,.navbar .nav-links a.active{color:var(--accent);background:rgba(231,76,60,0.08)}
+  .navbar .nav-user{color:var(--accent);font-size:14px;font-weight:600}
 
-/* 房间信息 */
-.room-header{background:#16213e;padding:20px 30px;display:flex;justify-content:space-between;align-items:center}
-.room-header h2{color:#f5c518}
-.room-id{color:#aaa;font-size:14px}
-.user-info{color:#e94560}
+  /* 房间头部 */
+  .room-header{background:var(--card);padding:18px 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+  .room-header h2{color:var(--gold);font-size:18px}
+  .room-id{color:var(--text-secondary);font-size:13px}
+  .room-id strong{color:var(--text)}
+  .user-info{color:var(--accent);font-weight:600}
 
-/* 主体 */
-.container{max-width:800px;margin:20px auto;padding:0 20px}
+  /* 主体 */
+  .container{max-width:800px;margin:0 auto;padding:20px 20px 40px}
 
-/* 玩家列表 */
-.player-card{background:#16213e;border-radius:10px;padding:14px 20px;margin:8px 0;display:flex;justify-content:space-between;align-items:center}
-.player-card.self{border:2px solid #e94560}
-.player-name{font-size:16px;font-weight:bold}
-.player-status{font-size:13px;color:#aaa}
-.player-status .ready{color:#42b983}
-.player-status .unready{color:#e94560}
+  /* 玩家列表 */
+  .section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px}
+  .player-card{background:var(--card);border-radius:12px;padding:14px 20px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow)}
+  .player-card.self{border:2px solid var(--accent);background:#fff5f5}
+  .player-name{font-size:16px;font-weight:bold}
+  .player-status{font-size:13px;color:var(--text-secondary)}
+  .player-status .ready{color:var(--green);font-weight:600}
+  .player-status .unready{color:var(--accent);font-weight:600}
 
-/* 按钮 */
-.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold}
-.btn-ready{background:#42b983;color:#fff}
-.btn-unready{background:#e94560;color:#fff}
-.btn-primary{background:#e94560;color:#fff;width:100%;padding:14px;margin-top:12px}
-.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
-.btn-secondary{background:#099;color:#fff}
+  /* 按钮 */
+  .btn{padding:11px 22px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold;transition:all .2s}
+  .btn-ready{background:var(--green);color:#fff}
+  .btn-ready:hover{background:var(--green-hover)}
+  .btn-unready{background:var(--accent);color:#fff}
+  .btn-unready:hover{background:var(--accent-hover)}
+  .btn-primary{background:var(--accent);color:#fff;width:100%;padding:14px;margin-top:12px;font-size:15px;border-radius:10px}
+  .btn-primary:disabled{opacity:0.45;cursor:not-allowed}
+  .btn-secondary{background:var(--cyan);color:#fff}
+  .btn-secondary:hover{background:var(--cyan-hover)}
 
-/* 投票区 */
-#voteArea{margin-top:20px;background:#16213e;border-radius:10px;padding:20px}
-#voteArea h3{color:#f5c518;margin-bottom:12px}
-.vote-btns{display:flex;gap:10px}
-.vote-btns button{flex:1;padding:14px;border-radius:8px;background:#333;color:#fff;border:2px solid #444;cursor:pointer;font-size:15px}
-.vote-btns button:hover{border-color:#e94560}
-.vote-btns button:disabled{opacity:0.4}
-#voteTip{margin-top:10px;font-size:13px;color:#aaa}
-#voteResult{margin-top:8px;font-size:14px;color:#f5c518}
+  /* 投票区 */
+  #voteArea{margin-top:20px;background:var(--card);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+  #voteArea h3{color:var(--gold);margin-bottom:12px;font-size:16px}
+  .vote-btns{display:flex;gap:10px}
+  .vote-btns button{flex:1;padding:14px;border-radius:10px;background:var(--card-secondary);color:var(--text);border:2px solid var(--border);cursor:pointer;font-size:15px;font-weight:600;transition:all .2s}
+  .vote-btns button:hover{border-color:var(--accent);color:var(--accent)}
+  .vote-btns button:disabled{opacity:0.4;cursor:not-allowed}
+  #voteTip{margin-top:10px;font-size:13px;color:var(--text-secondary)}
+  #voteResult{margin-top:8px;font-size:14px;color:var(--gold);font-weight:600}
 
-/* 选角结果区 */
-#draftArea{margin-top:20px;background:#16213e;border-radius:10px;padding:20px}
-#draftArea h3{color:#f5c518;margin-bottom:12px}
-.draft-player{margin-bottom:18px}
-.draft-player .dp-name{color:#e94560;font-size:17px;margin-bottom:8px}
-.char-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.char-card{background:#1a1a2e;padding:10px 14px;border-radius:6px}
-.char-card .char-name{font-weight:bold}
-.char-card .faction-badge{color:#f5c518;font-size:12px}
-.char-card .char-tier{font-size:11px;color:#888}
+  /* 选角结果区 */
+  #draftArea{margin-top:20px;background:var(--card);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+  #draftArea h3{color:var(--gold);margin-bottom:12px;font-size:16px}
+  .draft-player{margin-bottom:20px}
+  .draft-player .dp-name{color:var(--accent);font-size:17px;margin-bottom:10px;font-weight:bold}
+  .char-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .char-card{background:var(--card-secondary);padding:12px 14px;border-radius:10px;border:1px solid var(--border)}
+  .char-card .char-name{font-weight:bold;font-size:14px}
+  .char-card .faction-badge{color:var(--gold);font-size:12px;font-weight:600;margin-bottom:2px}
+  .char-card .char-tier{font-size:11px;color:var(--text-secondary)}
+  .char-card .char-skill{font-size:11px;color:var(--text-secondary);margin-top:2px;line-height:1.4}
+  .char-card .char-skill strong{color:var(--text)}
 
-/* 底部操作 */
-.actions{margin:20px 0 40px;display:flex;gap:10px;flex-wrap:wrap}
-.actions button{flex:1;min-width:120px}
+  .redirect-hint{text-align:center;color:var(--text-secondary);font-size:13px;margin-top:20px;padding:10px;background:var(--card-secondary);border-radius:8px}
 
-/* CSV上传 */
-#csvArea{margin-top:20px;background:#16213e;border-radius:10px;padding:20px}
-#csvArea h3{color:#aaa;margin-bottom:8px;font-size:14px}
-#csvDrop{border:2px dashed #444;border-radius:10px;padding:20px;text-align:center;cursor:pointer}
-#csvDrop:hover{border-color:#e94560}
-#csvDrop .icon{font-size:24px;margin-bottom:6px}
-.char-count{font-size:13px;color:#888;margin-top:6px}
-.char-count span{color:#f5c518}
+  /* 底部操作 */
+  .actions{margin:20px 0 40px;display:flex;gap:10px;flex-wrap:wrap}
+  .actions button{flex:1;min-width:120px}
+
+  /* CSV上传 */
+  .admin-section{margin-top:20px;background:var(--card);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+  .admin-section h3{color:var(--text-secondary);margin-bottom:8px;font-size:14px}
+  #csvDrop{border:2px dashed #ccc;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s}
+  #csvDrop:hover{border-color:var(--accent);background:#fff5f5}
+  .char-count{font-size:13px;color:var(--text-secondary);margin-top:8px}
+  .char-count span{color:var(--gold);font-weight:bold}
+
+  /* Toast */
+  .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.2);animation:slideDown .3s}
+  @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+  /* 移动端 */
+  @media (max-width:768px) {
+    .navbar{padding:0 14px;height:50px}
+    .navbar .logo{font-size:15px}
+    .navbar .nav-links a{font-size:12px;padding:4px 10px}
+    .navbar .nav-user{font-size:12px}
+    .room-header{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:4px}
+    .container{padding:16px 12px 30px}
+    .char-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+    .player-card{padding:12px 14px}
+    .vote-btns{flex-direction:column}
+  }
+
+  @media (max-width:480px) {
+    .char-grid{grid-template-columns:1fr}
+    .player-card{flex-direction:column;align-items:flex-start;gap:6px}
+    .actions{flex-direction:column}
+    .actions button{min-width:auto}
+  }
 </style>
 </head>
 <body>
@@ -99,7 +147,7 @@ body{background:#1a1a2e;color:#eee;min-height:100vh}
 
 <div class="container">
   <!-- 玩家列表 -->
-  <h3 style="margin-bottom:10px">房间玩家（最多4人）</h3>
+  <div class="section-title">房间玩家（最多4人）</div>
   <div id="playerList"></div>
 
   <!-- 准备按钮 -->
@@ -120,19 +168,16 @@ body{background:#1a1a2e;color:#eee;min-height:100vh}
   <div id="draftArea" class="hidden">
     <h3>🎯 角色分配结果</h3>
     <div id="draftContent"></div>
+    <div class="redirect-hint" id="redirectHint">
+      ⏳ 即将自动跳转到对局页面...
+    </div>
   </div>
 
-  <!-- 底部操作 -->
-  <div class="actions">
-    <button class="btn btn-secondary hidden" id="startGameBtn" onclick="startGame()">✅ 进入对局</button>
-  </div>
-
-  <!-- CSV角色管理（收起状态） -->
-  <div id="csvArea">
+  <!-- CSV角色管理 -->
+  <div class="admin-section">
     <h3>📂 角色数据管理（点击上传CSV覆盖服务器角色池）</h3>
     <div id="csvDrop">
-      <div class="icon">📁</div>
-      <p>点击或拖放 CSV 文件</p>
+      <p>📁 点击或拖放 CSV 文件</p>
     </div>
     <div class="char-count">服务器角色总数：<span id="charCount">0</span></div>
   </div>
@@ -150,6 +195,14 @@ document.getElementById('navUser').innerText = '👤 ' + username;
 
 const socket = io();
 let myVote = '';
+
+// Toast 提示
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
 
 // 页面加载时自动加入房间
 socket.emit('joinRoom', { roomId, playerName: username });
@@ -176,11 +229,11 @@ function renderPlayers(players) {
       <span class="player-name">${isSelf ? '⭐ ' : ''}${p.name}</span>
       <span class="player-status">
         ${p.ready ? '<span class="ready">✅ 已准备</span>' : '<span class="unready">❌ 未准备</span>'}
-        ${p.vote ? ' | 已投票' : ''}
+        ${p.vote ? ' · 已投票' : ''}
       </span>
     </div>`;
   });
-  document.getElementById('playerList').innerHTML = html || '<p style="color:#aaa">暂无玩家</p>';
+  document.getElementById('playerList').innerHTML = html || '<p style="color:var(--text-secondary);text-align:center;padding:20px">暂无玩家</p>';
 }
 
 // ── 准备 ──
@@ -208,16 +261,18 @@ socket.on('voteUpdate', (data) => {
     `当前投票：随机${data.vote.random}票 | 正常${data.vote.normal}票`;
 });
 
-// ── 投票完成 → 触发选角 ──
+// ── 投票完成 → 自动选角 → 自动跳转对局页 ──
 socket.on('voteResult', async (data) => {
   document.getElementById('voteResult').innerText = `投票结束！最终选择：${data.desc}`;
   document.getElementById('draftArea').classList.remove('hidden');
   await doDraft(data.players, data.type);
+
+  // 自动跳转到对局页面
+  startRedirectCountdown(3);
 });
 
 // ── 选角逻辑 ──
 async function doDraft(players, draftType) {
-  // 从服务器获取角色池
   const chars = await fetch('/api/characters').then(r => r.json());
   const pool = [...chars];
   const result = {};
@@ -228,12 +283,12 @@ async function doDraft(players, draftType) {
       if (pool.length === 0) break;
       const idx = draftType === 'random'
         ? Math.floor(Math.random() * pool.length)
-        : 0; // 正常抽取：顺序取
+        : 0;
       result[p.name].push(pool.splice(idx, 1)[0]);
     }
   });
 
-  // 渲染结果
+  // 渲染结果（包含技能简述）
   let html = '';
   Object.entries(result).forEach(([name, chars]) => {
     html += `<div class="draft-player">
@@ -242,15 +297,17 @@ async function doDraft(players, draftType) {
         ${chars.map(c => `<div class="char-card">
           <div class="faction-badge">${c.faction || '无阵营'}</div>
           <div class="char-name">${c.name}</div>
-          <div class="char-tier">Tier: ${c.tier}</div>
+          <div class="char-tier">Tier: ${c.tier}${c.limit ? ' | 限' + c.limit : ''}</div>
+          ${c.passive ? '<div class="char-skill"><strong>被动</strong> ' + c.passive + '</div>' : ''}
+          ${c.innate ? '<div class="char-skill"><strong>天赋</strong> ' + c.innate + '</div>' : ''}
+          ${c.extra ? '<div class="char-skill"><strong>额外</strong> ' + c.extra + '</div>' : ''}
         </div>`).join('')}
       </div>
     </div>`;
   });
   document.getElementById('draftContent').innerHTML = html;
-  document.getElementById('startGameBtn').classList.remove('hidden');
 
-  // 回传选角结果到服务器，对局页可获取
+  // 回传选角结果，同时标记房间为对局中
   await fetch('/api/draft-results', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -258,14 +315,21 @@ async function doDraft(players, draftType) {
   });
 }
 
-// ── 进入对局 ──
-async function startGame() {
-  await fetch('/api/start-game', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ roomId })
-  });
-  location.href = '/game.html';
+// ── 倒计时提示 ──
+function startRedirectCountdown(seconds) {
+  const hint = document.getElementById('redirectHint');
+  let remaining = seconds;
+  hint.innerText = `⏳ ${remaining} 秒后自动跳转到对局页面...`;
+  const timer = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(timer);
+      hint.innerText = '🚀 正在跳转...';
+      location.href = '/game.html';
+    } else {
+      hint.innerText = `⏳ ${remaining} 秒后自动跳转到对局页面...`;
+    }
+  }, 1000);
 }
 
 // ── 错误 ──
@@ -286,11 +350,11 @@ fileInput.accept = '.csv';
 fileInput.style.display = 'none';
 drop.appendChild(fileInput);
 drop.onclick = () => fileInput.click();
-drop.ondragover = e => { e.preventDefault(); drop.style.borderColor = '#e94560'; };
-drop.ondragleave = () => { drop.style.borderColor = '#444'; };
+drop.ondragover = e => { e.preventDefault(); drop.style.borderColor = '#e74c3c'; };
+drop.ondragleave = () => { drop.style.borderColor = '#ccc'; };
 drop.ondrop = e => {
   e.preventDefault();
-  drop.style.borderColor = '#444';
+  drop.style.borderColor = '#ccc';
   const file = e.dataTransfer.files[0];
   if (file) uploadCSV(file);
 };

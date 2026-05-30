@@ -1,49 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>大厅 - 超能力立直麻将</title>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-    body{background:#1a1a2e;color:#eee;min-height:100vh}
+    :root {
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --text-secondary: #7f8c8d;
+      --accent: #e74c3c;
+      --accent-hover: #c0392b;
+      --gold: #d4a017;
+      --green: #27ae60;
+      --cyan: #2980b9;
+      --cyan-hover: #1f6f9f;
+      --border: #e8ecf1;
+      --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif}
+    body{background:var(--bg);color:var(--text);min-height:100vh;padding-top:70px}
 
     /* 导航栏 */
-    .navbar{background:#16213e;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #e94560}
-    .navbar .logo{color:#f5c518;font-size:18px;font-weight:bold;text-decoration:none}
-    .navbar .nav-links{display:flex;gap:16px}
-    .navbar .nav-links a{color:#aaa;text-decoration:none;font-size:14px;padding:4px 10px;border-radius:4px}
-    .navbar .nav-links a:hover,.navbar .nav-links a.active{color:#fff;background:#e94560}
-    .navbar .nav-user{color:#e94560;font-size:14px}
+    .navbar{position:fixed;top:0;left:0;right:0;background:var(--card);padding:0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.04);z-index:100;height:56px}
+    .navbar .logo{color:var(--gold);font-size:18px;font-weight:bold;text-decoration:none;letter-spacing:0.5px}
+    .navbar .nav-links{display:flex;gap:8px}
+    .navbar .nav-links a{color:var(--text-secondary);text-decoration:none;font-size:14px;padding:6px 14px;border-radius:8px;transition:all .2s;font-weight:500}
+    .navbar .nav-links a:hover,.navbar .nav-links a.active{color:var(--accent);background:rgba(231,76,60,0.08)}
+    .navbar .nav-user{color:var(--accent);font-size:14px;font-weight:600}
 
-    .container{max-width:700px;margin:30px auto;padding:0 20px}
-    .section{background:#16213e;border-radius:12px;padding:24px;margin-bottom:20px}
-    .section h2{color:#f5c518;font-size:18px;margin-bottom:16px}
+    .container{max-width:700px;margin:0 auto;padding:24px 20px 40px}
+    .section{background:var(--card);border-radius:14px;padding:24px;margin-bottom:18px;box-shadow:var(--shadow)}
+    .section h2{color:var(--gold);font-size:18px;margin-bottom:16px;font-weight:700}
 
     /* 创建/加入 */
     .form-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .form-row input{padding:10px 14px;background:#1a1a2e;color:#fff;border:1px solid #333;border-radius:6px;flex:1;min-width:150px}
-    .form-row button{padding:10px 20px;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold}
-    .btn-create{background:#e94560;color:#fff}
-    .btn-join{background:#099;color:#fff}
+    .form-row input{padding:11px 14px;background:#f8f9fa;color:var(--text);border:1.5px solid #dce1e6;border-radius:10px;flex:1;min-width:150px;font-size:14px;outline:none;transition:border .2s}
+    .form-row input:focus{border-color:var(--accent)}
+    .form-row button{padding:11px 22px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold;transition:all .2s}
+    .btn-create{background:var(--accent);color:#fff}
+    .btn-create:hover{background:var(--accent-hover)}
+    .btn-join{background:var(--cyan);color:#fff}
+    .btn-join:hover{background:var(--cyan-hover)}
 
     /* 房间列表 */
-    .room-item{background:#1a1a2e;border-radius:8px;padding:14px 18px;margin:8px 0;display:flex;justify-content:space-between;align-items:center}
-    .room-item .room-info{}
-    .room-item .room-id{color:#f5c518;font-weight:bold;font-size:16px}
-    .room-item .room-meta{font-size:13px;color:#aaa;margin-top:4px}
-    .room-item .room-players{font-size:13px;color:#888}
-    .room-item .btn-join-room{background:#099;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px}
-    .room-item .btn-join-room:disabled{opacity:0.4;cursor:not-allowed}
-    .no-rooms{text-align:center;color:#888;padding:20px}
-    .status-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:6px}
-    .status-waiting{background:#42b983;color:#fff}
-    .status-playing{background:#e94560;color:#fff}
-    .status-ready{background:#f5c518;color:#1a1a2e}
+    .room-item{background:#f8f9fa;border-radius:10px;padding:14px 18px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--border)}
+    .room-item .room-id{color:var(--gold);font-weight:bold;font-size:16px}
+    .room-item .room-meta{font-size:13px;color:var(--text-secondary);margin-top:4px}
+    .room-item .room-players{font-size:13px;color:var(--text-secondary)}
+    .room-item .btn-join-room{background:var(--cyan);color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;white-space:nowrap}
+    .room-item .btn-join-room:hover{background:var(--cyan-hover)}
+    .room-item .btn-join-room:disabled{opacity:0.35;cursor:not-allowed}
+    .no-rooms{text-align:center;color:var(--text-secondary);padding:30px;font-size:14px}
+    .status-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;margin-left:8px;font-weight:600}
+    .status-waiting{background:#e8f5e9;color:var(--green)}
+    .status-playing{background:#ffebee;color:var(--accent)}
+    .status-ready{background:#fff8e1;color:#b8860b}
+
+    /* 移动端适配 */
+    @media (max-width:600px) {
+      .navbar{padding:0 12px;height:50px}
+      .navbar .logo{font-size:15px}
+      .navbar .nav-links a{font-size:12px;padding:4px 10px}
+      .navbar .nav-user{font-size:12px}
+      .container{padding:16px 12px 30px}
+      .section{padding:18px 14px;border-radius:12px}
+      .section h2{font-size:16px;margin-bottom:12px}
+      .form-row{gap:8px}
+      .form-row input{padding:10px 12px;font-size:13px;min-width:120px}
+      .form-row button{padding:10px 16px;font-size:13px}
+      .room-item{flex-direction:column;align-items:flex-start;gap:10px;padding:12px 14px}
+      .room-item .btn-join-room{align-self:stretch;text-align:center}
+    }
   </style>
 </head>
 <body>
 
-<!-- 导航栏 -->
 <nav class="navbar">
   <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
   <div class="nav-links">
@@ -54,7 +87,6 @@
 </nav>
 
 <div class="container">
-  <!-- 创建/加入房间 -->
   <div class="section">
     <h2>开始游戏</h2>
     <div class="form-row">
@@ -66,7 +98,6 @@
     </div>
   </div>
 
-  <!-- 活跃对局 -->
   <div class="section">
     <h2>活跃对局</h2>
     <div id="roomList">
@@ -76,12 +107,10 @@
 </div>
 
 <script>
-// ── 初始化 ──
 const user = localStorage.user;
 if (!user) location.href = '/login.html';
 document.getElementById('navUser').innerText = '👤 ' + user;
 
-// 如果已有对局房间，显示"我的对局"入口
 const savedRoomId = localStorage.roomId;
 if (savedRoomId) {
   const navGame = document.getElementById('navGame');
@@ -89,7 +118,6 @@ if (savedRoomId) {
   navGame.onclick = () => location.href = '/index.html';
 }
 
-// ── 创建房间 ──
 async function createRoom() {
   const r = await fetch('/api/create-room', {
     method: 'POST', headers: {'Content-Type':'application/json'},
@@ -99,9 +127,8 @@ async function createRoom() {
   location.href = '/index.html';
 }
 
-// ── 加入房间 ──
 async function joinRoom(roomId) {
-  const id = roomId || document.getElementById('roomId').value;
+  const id = roomId || document.getElementById('roomId').value.trim();
   if (!id) return alert('请输入房间号');
   const r = await fetch('/api/join-room', {
     method: 'POST', headers: {'Content-Type':'application/json'},
@@ -113,7 +140,6 @@ async function joinRoom(roomId) {
   } else alert(r.msg);
 }
 
-// ── 加载活跃房间 ──
 async function loadRooms() {
   const list = await fetch('/api/rooms').then(r => r.json());
   const box = document.getElementById('roomList');
