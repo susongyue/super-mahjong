@@ -1,0 +1,20 @@
+{
+  "140094": {
+    "players": [],
+    "maxPlayers": 4,
+    "vote": {
+      "random": 0,
+      "normal": 0
+    },
+    "voteEnd": false
+  },
+  "179982": {
+    "players": [],
+    "maxPlayers": 4,
+    "vote": {
+      "random": 0,
+      "normal": 0
+    },
+    "voteEnd": false
+  }
+}

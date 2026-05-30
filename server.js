@@ -1,13 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
-// Express 5 内置 JSON/urlencoded 解析
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
@@ -21,7 +22,18 @@ app.use(express.static('public', {
   }
 }));
 
-// ── 数据持久化路径 ──
+// ── Supabase 客户端 ──
+const supabaseUrl = process.env.SUPABASE_URL || 'https://rvdvdgriyleoiuglzgch.supabase.co';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2ZHZkZ3JpeWxlb2l1Z2x6Z2NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTk2NjQsImV4cCI6MjA5NTczNTY2NH0.ReGBK9H8xV0uReWiUWJe0Vo2hO4Jp66ou9pxjI2a3G4';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// ── 内存缓存（从 Supabase 加载，减少数据库查询） ──
+let users = {};
+let rooms = {};
+let socketRooms = {};
+let draftResults = {};
+
+// ── 数据路径（兼容旧数据导入） ──
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const ROOMS_FILE = path.join(DATA_DIR, 'rooms.json');
@@ -29,30 +41,113 @@ const CHARS_FILE = path.join(DATA_DIR, 'characters.json');
 const SOCKET_ROOMS_FILE = path.join(DATA_DIR, 'socket_rooms.json');
 const DRAFT_RESULTS_FILE = path.join(DATA_DIR, 'draft_results.json');
 
-// ── 内存数据存储 ──
-let users = {};        // { username: password }
-let rooms = {};        // REST 房间（lobby 流程用）
-let socketRooms = {};  // Socket.io 房间（index.html 用）
-let draftResults = {}; // 选角结果（按房间+用户）
-
-// 确保 data 目录存在
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-// 从文件加载数据
-function loadData() {
+// ── 从 Supabase 加载数据到内存缓存 ──
+async function loadFromDB() {
+  try {
+    // 加载用户
+    const { data: userData } = await supabase.from('users').select('*');
+    if (userData) {
+      users = {};
+      userData.forEach(u => { users[u.username] = u.password; });
+      console.log('✅ 从 Supabase 加载 ' + userData.length + ' 个用户');
+    }
+
+    // 加载 REST 房间
+    const { data: roomData } = await supabase.from('rooms').select('*');
+    if (roomData) {
+      rooms = {};
+      roomData.forEach(r => {
+        const { room_id, ...rest } = r;
+        rooms[room_id] = { id: room_id, ...rest };
+      });
+      console.log('✅ 从 Supabase 加载 ' + roomData.length + ' 个 REST 房间');
+    }
+
+    // 加载 Socket 房间
+    const { data: srData } = await supabase.from('socket_rooms').select('*');
+    if (srData) {
+      socketRooms = {};
+      srData.forEach(r => { socketRooms[r.room_id] = r.state_data; });
+      // 重启后清空玩家连接
+      Object.keys(socketRooms).forEach(id => {
+        if (socketRooms[id] && socketRooms[id].players) socketRooms[id].players = [];
+      });
+      console.log('✅ 从 Supabase 加载 ' + srData.length + ' 个 Socket 房间');
+    }
+
+    // 加载选角结果
+    const { data: drData } = await supabase.from('draft_results').select('*');
+    if (drData) {
+      draftResults = {};
+      drData.forEach(r => { draftResults[r.room_id] = r.results; });
+      console.log('✅ 从 Supabase 加载 ' + drData.length + ' 条选角结果');
+    }
+  } catch (e) {
+    console.log('⚠️ Supabase 加载失败，尝试从本地 JSON 恢复: ' + e.message);
+    loadFromLocalJSON();
+  }
+}
+
+// 从本地 JSON 导入数据（兼容旧数据迁移）
+function loadFromLocalJSON() {
   try { if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); } catch (e) { users = {}; }
   try { if (fs.existsSync(ROOMS_FILE)) rooms = JSON.parse(fs.readFileSync(ROOMS_FILE, 'utf8')); } catch (e) { rooms = {}; }
-  try { if (fs.existsSync(SOCKET_ROOMS_FILE)) socketRooms = JSON.parse(fs.readFileSync(SOCKET_ROOMS_FILE, 'utf8')); } catch (e) { socketRooms = {}; }
+  try { if (fs.existsSync(SOCKET_ROOMS_FILE)) { socketRooms = JSON.parse(fs.readFileSync(SOCKET_ROOMS_FILE, 'utf8')); } } catch (e) { socketRooms = {}; }
   try { if (fs.existsSync(DRAFT_RESULTS_FILE)) draftResults = JSON.parse(fs.readFileSync(DRAFT_RESULTS_FILE, 'utf8')); } catch (e) { draftResults = {}; }
-  // 重启后清空玩家连接（socket.id 已失效），但保留房间结构和投票状态
   Object.keys(socketRooms).forEach(id => { if (socketRooms[id].players) socketRooms[id].players = []; });
+  console.log('✅ 从本地 JSON 文件加载数据');
 }
-function saveUsers()        { fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8'); }
-function saveRooms()        { fs.writeFileSync(ROOMS_FILE, JSON.stringify(rooms, null, 2), 'utf8'); }
-function saveSocketRooms()  { fs.writeFileSync(SOCKET_ROOMS_FILE, JSON.stringify(socketRooms, null, 2), 'utf8'); }
-function saveDraftResults() { fs.writeFileSync(DRAFT_RESULTS_FILE, JSON.stringify(draftResults, null, 2), 'utf8'); }
-loadData();
 
+// ── 保存到 Supabase ──
+async function saveUsers() {
+  try {
+    const rows = Object.entries(users).map(([username, password]) => ({ username, password }));
+    // Upsert: 冲突时更新
+    for (const row of rows) {
+      await supabase.from('users').upsert(row, { onConflict: 'username' });
+    }
+  } catch (e) { console.log('⚠️ saveUsers 失败: ' + e.message); }
+}
+async function saveRooms() {
+  try {
+    for (const [roomId, room] of Object.entries(rooms)) {
+      await supabase.from('rooms').upsert({
+        room_id: roomId,
+        host: room.host,
+        players: room.players || [],
+        max_players: room.maxPlayers || 4,
+        started: room.started || false,
+        created_at: room.createdAt
+      }, { onConflict: 'room_id' });
+    }
+  } catch (e) { console.log('⚠️ saveRooms 失败: ' + e.message); }
+}
+async function saveSocketRooms() {
+  try {
+    for (const [roomId, state] of Object.entries(socketRooms)) {
+      await supabase.from('socket_rooms').upsert({
+        room_id: roomId,
+        state_data: state,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'room_id' });
+    }
+  } catch (e) { console.log('⚠️ saveSocketRooms 失败: ' + e.message); }
+}
+async function saveDraftResults() {
+  try {
+    for (const [roomId, results] of Object.entries(draftResults)) {
+      await supabase.from('draft_results').upsert({
+        room_id: roomId,
+        results: results,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'room_id' });
+    }
+  } catch (e) { console.log('⚠️ saveDraftResults 失败: ' + e.message); }
+}
+
+// ── 辅助函数 ──
 const resetRoomVote = (roomId) => {
   const r = socketRooms[roomId];
   if (r) { r.vote = { random: 0, normal: 0 }; r.voteEnd = false; }
@@ -80,12 +175,18 @@ if (!fs.existsSync(CHARS_FILE) && fs.existsSync(CSV_FILE)) {
 }
 
 // 注册
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.json({ success: false, msg: '用户名和密码不能为空' });
   if (users[username]) return res.json({ success: false, msg: '用户名已存在' });
+
+  // 先写到数据库再更新内存
+  try {
+    await supabase.from('users').insert({ username, password });
+  } catch (e) {
+    return res.json({ success: false, msg: '注册失败，请重试' });
+  }
   users[username] = password;
-  saveUsers();
   res.json({ success: true, msg: '注册成功' });
 });
 
@@ -99,10 +200,9 @@ app.post('/api/login', (req, res) => {
 });
 
 // 创建房间（lobby 流程）
-app.post('/api/create-room', (req, res) => {
+app.post('/api/create-room', async (req, res) => {
   const { username } = req.body;
   if (!username) return res.json({ success: false, msg: '用户名为空' });
-  // 生成6位房间号
   let roomId;
   do { roomId = String(Math.floor(100000 + Math.random() * 900000)); } while (rooms[roomId]);
   rooms[roomId] = {
@@ -118,7 +218,7 @@ app.post('/api/create-room', (req, res) => {
 });
 
 // 加入房间
-app.post('/api/join-room', (req, res) => {
+app.post('/api/join-room', async (req, res) => {
   const { username, roomId } = req.body;
   if (!username || !roomId) return res.json({ success: false, msg: '参数不完整' });
   const room = rooms[roomId];
@@ -157,12 +257,26 @@ function parseCSV(csvText) {
       else { current += ch; }
     }
     obj[headers[fieldIdx]] = current;
-    result.push(obj);
+    // 规范化键名
+    const normalized = {};
+    Object.keys(obj).forEach(k => {
+      const nk = k.trim().toLowerCase()
+        .replace(/（/g, '(').replace(/）/g, ')')
+        .replace(/\s+/g, '');
+      if (nk === '姓名' || nk === '角色' || nk === '角色名' || nk === '名称') normalized.name = obj[k];
+      else if (nk === '强度' || nk === 'tier') normalized.tier = obj[k];
+      else if (nk === '阵营' || nk === '势力') normalized.faction = obj[k];
+      else if (nk === '限定技') normalized.limit = obj[k];
+      else if (nk === '固有技' || nk === '天赋技') normalized.innate = obj[k];
+      else if (nk === '被动技' || nk === '被动') normalized.passive = obj[k];
+      else if (nk === '附加技' || nk === '额外技' || nk === '额外') normalized.extra = obj[k];
+    });
+    result.push(normalized);
   }
   return result;
 }
 
-// CSV 上传（支持 text/csv 和 text/plain）
+// CSV 上传
 app.post('/api/upload-csv', express.text({ type: ['text/csv', 'text/plain'] }), (req, res) => {
   try {
     const result = parseCSV(req.body);
@@ -174,7 +288,7 @@ app.post('/api/upload-csv', express.text({ type: ['text/csv', 'text/plain'] }), 
 });
 
 // 开始游戏
-app.post('/api/start-game', (req, res) => {
+app.post('/api/start-game', async (req, res) => {
   const { roomId } = req.body;
   if (roomId && rooms[roomId]) {
     rooms[roomId].started = true;
@@ -183,7 +297,7 @@ app.post('/api/start-game', (req, res) => {
   res.json({ success: true });
 });
 
-// 获取活跃房间列表（大厅用）
+// 获取活跃房间列表
 app.get('/api/rooms', (req, res) => {
   const list = [];
   Object.keys(socketRooms).forEach(id => {
@@ -203,12 +317,11 @@ app.get('/api/rooms', (req, res) => {
 });
 
 // 保存选角结果
-app.post('/api/draft-results', (req, res) => {
+app.post('/api/draft-results', async (req, res) => {
   const { roomId, results } = req.body;
   if (!roomId || !results) return res.json({ success: false, msg: '参数不完整' });
   draftResults[roomId] = results;
   saveDraftResults();
-  // 自动标记房间为对局中，玩家可直接进入 game.html
   if (roomId && rooms[roomId]) {
     rooms[roomId].started = true;
     saveRooms();
@@ -233,15 +346,13 @@ const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
   serveClient: true,
   maxHttpBufferSize: 1e8,
-  transports: ['polling', 'websocket'],  // 兼容 Render 反向代理
+  transports: ['polling', 'websocket'],
   allowEIO3: true
 });
 
-// Socket.io 核心逻辑
 io.on('connection', (socket) => {
   console.log(`[Socket] 玩家 ${socket.id} 连接成功`);
 
-  // 加入房间
   socket.on('joinRoom', (data) => {
     const { roomId = "0000", playerName } = data;
     if (!socketRooms[roomId]) {
@@ -251,7 +362,6 @@ io.on('connection', (socket) => {
       };
     }
     const room = socketRooms[roomId];
-    // 确保新加入的玩家回合计数器一致
     if (!room.round) room.round = 1;
     if (!room.roundEndVotes) room.roundEndVotes = {};
     if (!room.gameEndVotes) room.gameEndVotes = {};
@@ -277,17 +387,14 @@ io.on('connection', (socket) => {
     socket.emit('joinSuccess', `成功加入房间【${roomId}】`);
   });
 
-  // 切换准备状态
   socket.on('toggleReady', (roomId) => {
     const room = socketRooms[roomId];
     if (!room) return socket.emit('error', '房间不存在');
-
     const player = room.players.find(p => p.id === socket.id);
     if (player) {
       player.ready = !player.ready;
       saveSocketRooms();
       io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId });
-
       if (isAllReady(roomId)) {
         resetRoomVote(roomId);
         io.to(roomId).emit('allReady', '所有人已准备，开始投票选择角色抽取方式！');
@@ -295,21 +402,17 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 投票
   socket.on('voteSelect', (data) => {
     const { roomId, type } = data;
     const room = socketRooms[roomId];
     if (!room || room.voteEnd) return;
-
     const player = room.players.find(p => p.id === socket.id);
     if (player) {
       if (player.vote) room.vote[player.vote] -= 1;
       player.vote = type;
       room.vote[type] += 1;
       saveSocketRooms();
-
       io.to(roomId).emit('voteUpdate', { vote: room.vote, players: room.players });
-
       const allVoted = room.players.every(p => p.vote);
       if (allVoted) {
         room.voteEnd = true;
@@ -324,23 +427,15 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 投票结束当前回合
   socket.on('voteEndRound', (roomId) => {
     const room = socketRooms[roomId];
     if (!room) return;
     if (!room.roundEndVotes) room.roundEndVotes = {};
     room.roundEndVotes[socket.id] = true;
-
     const votedCount = Object.keys(room.roundEndVotes).length;
     const totalCount = room.players.length;
     const votedNames = room.players.filter(p => room.roundEndVotes[p.id]).map(p => p.name);
-
-    io.to(roomId).emit('roundEndVoteUpdate', {
-      voted: votedCount,
-      total: totalCount,
-      votedNames
-    });
-
+    io.to(roomId).emit('roundEndVoteUpdate', { voted: votedCount, total: totalCount, votedNames });
     if (votedCount >= totalCount && totalCount > 0) {
       room.round += 1;
       room.roundEndVotes = {};
@@ -349,23 +444,15 @@ io.on('connection', (socket) => {
     saveSocketRooms();
   });
 
-  // 投票结束对局
   socket.on('voteEndGame', (roomId) => {
     const room = socketRooms[roomId];
     if (!room) return;
     if (!room.gameEndVotes) room.gameEndVotes = {};
     room.gameEndVotes[socket.id] = true;
-
     const votedCount = Object.keys(room.gameEndVotes).length;
     const totalCount = room.players.length;
     const votedNames = room.players.filter(p => room.gameEndVotes[p.id]).map(p => p.name);
-
-    io.to(roomId).emit('gameEndVoteUpdate', {
-      voted: votedCount,
-      total: totalCount,
-      votedNames
-    });
-
+    io.to(roomId).emit('gameEndVoteUpdate', { voted: votedCount, total: totalCount, votedNames });
     if (votedCount >= totalCount && totalCount > 0) {
       room.gameEndVotes = {};
       room.round = 1;
@@ -374,7 +461,6 @@ io.on('connection', (socket) => {
     saveSocketRooms();
   });
 
-  // 获取当前房间状态（回合数等）
   socket.on('getRoomState', (roomId) => {
     const room = socketRooms[roomId];
     if (room) {
@@ -387,7 +473,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 断开连接
   socket.on('disconnect', () => {
     Object.keys(socketRooms).forEach(roomId => {
       const room = socketRooms[roomId];
@@ -401,12 +486,17 @@ io.on('connection', (socket) => {
   });
 });
 
-// 启动服务
+// ── 启动服务 ──
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`✅ 服务器运行在 http://localhost:${PORT}`);
-  console.log('   - 登录页:  http://localhost:' + PORT + '/login.html');
-  console.log('   - 大厅页:  http://localhost:' + PORT + '/lobby.html');
-  console.log('   - 房间页:  http://localhost:' + PORT + '/index.html');
-  console.log('   - 对局页:  http://localhost:' + PORT + '/game.html');
-});
+
+async function start() {
+  await loadFromDB();
+  server.listen(PORT, () => {
+    console.log(`✅ 服务器运行在 http://localhost:${PORT}`);
+    console.log('   - 登录页:  http://localhost:' + PORT + '/login.html');
+    console.log('   - 大厅页:  http://localhost:' + PORT + '/lobby.html');
+    console.log('   - 房间页:  http://localhost:' + PORT + '/index.html');
+    console.log('   - 对局页:  http://localhost:' + PORT + '/game.html');
+  });
+}
+start();

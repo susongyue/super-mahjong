@@ -1,0 +1,43 @@
+{
+  "140094": {
+    "id": "140094",
+    "host": "1234",
+    "players": [
+      "1234",
+      "12345"
+    ],
+    "maxPlayers": 4,
+    "started": false,
+    "createdAt": "2026-05-30T08:20:00.657Z"
+  },
+  "179982": {
+    "id": "179982",
+    "host": "1234",
+    "players": [
+      "1234"
+    ],
+    "maxPlayers": 4,
+    "started": false,
+    "createdAt": "2026-05-30T11:50:12.850Z"
+  },
+  "222876": {
+    "id": "222876",
+    "host": "testuser",
+    "players": [
+      "testuser"
+    ],
+    "maxPlayers": 4,
+    "started": false,
+    "createdAt": "2026-05-30T08:01:50.030Z"
+  },
+  "953524": {
+    "id": "953524",
+    "host": "1234",
+    "players": [
+      "1234"
+    ],
+    "maxPlayers": 4,
+    "started": true,
+    "createdAt": "2026-05-30T08:12:52.302Z"
+  }
+}
