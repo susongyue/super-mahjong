@@ -100,16 +100,29 @@ function loadFromLocalJSON() {
   console.log('✅ 从本地 JSON 文件加载数据');
 }
 
-// ── 保存到 Supabase ──
-async function saveUsers() {
+// ── 从 Supabase 查询单个用户（登录时内存缓存缺失的兜底） ──
+async function findUserInDB(username) {
   try {
-    const rows = Object.entries(users).map(([username, password]) => ({ username, password }));
-    // Upsert: 冲突时更新
-    for (const row of rows) {
-      await supabase.from('users').upsert(row, { onConflict: 'username' });
+    const { data, error } = await supabase.from('users').select('*').eq('username', username).single();
+    if (error) { console.log('⚠️ findUserInDB 查询失败: ' + error.message); return null; }
+    if (data) {
+      users[data.username] = data.password; // 回填到内存缓存
+      return data;
     }
-  } catch (e) { console.log('⚠️ saveUsers 失败: ' + e.message); }
+    return null;
+  } catch (e) { console.log('⚠️ findUserInDB 异常: ' + e.message); return null; }
 }
+
+// ── 保存到 Supabase ──
+async function saveUserToDB(username, password) {
+  try {
+    const { error } = await supabase.from('users').insert({ username, password });
+    if (error) { console.log('⚠️ saveUserToDB 失败: ' + error.message); return false; }
+    console.log('✅ 用户 ' + username + ' 已写入 Supabase');
+    return true;
+  } catch (e) { console.log('⚠️ saveUserToDB 异常: ' + e.message); return false; }
+}
+
 async function saveRooms() {
   try {
     for (const [roomId, room] of Object.entries(rooms)) {
@@ -178,24 +191,38 @@ if (!fs.existsSync(CHARS_FILE) && fs.existsSync(CSV_FILE)) {
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.json({ success: false, msg: '用户名和密码不能为空' });
-  if (users[username]) return res.json({ success: false, msg: '用户名已存在' });
 
-  // 先写到数据库再更新内存
-  try {
-    await supabase.from('users').insert({ username, password });
-  } catch (e) {
-    return res.json({ success: false, msg: '注册失败，请重试' });
-  }
+  // 先检查数据库是否已存在（避免内存缓存不完整导致重复注册）
+  const existing = await findUserInDB(username);
+  if (existing) return res.json({ success: false, msg: '用户名已存在' });
+
+  // 直接写入数据库
+  const ok = await saveUserToDB(username, password);
+  if (!ok) return res.json({ success: false, msg: '注册失败，数据库写入异常，请重试' });
+
+  // 更新内存缓存
   users[username] = password;
+  console.log('✅ 注册成功: ' + username + ' (用户总数: ' + Object.keys(users).length + ')');
   res.json({ success: true, msg: '注册成功' });
 });
 
 // 登录
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.json({ success: false, msg: '用户名和密码不能为空' });
-  if (!users[username]) return res.json({ success: false, msg: '用户不存在' });
-  if (users[username] !== password) return res.json({ success: false, msg: '密码错误' });
+
+  // 先查内存缓存
+  let pwd = users[username];
+  if (pwd) {
+    // 内存命中，直接校验
+    if (pwd !== password) return res.json({ success: false, msg: '密码错误' });
+  } else {
+    // 内存未命中，从 Supabase 查询
+    console.log('🔍 内存缓存缺失 ' + username + '，尝试从 Supabase 查询...');
+    const dbUser = await findUserInDB(username);
+    if (!dbUser) return res.json({ success: false, msg: '用户不存在' });
+    if (dbUser.password !== password) return res.json({ success: false, msg: '密码错误' });
+  }
   res.json({ success: true, msg: '登录成功' });
 });
 
@@ -217,11 +244,23 @@ app.post('/api/create-room', async (req, res) => {
   res.json({ success: true, roomId });
 });
 
-// 加入房间
+// 加入房间（支持内存未命中时从 Supabase 查询）
 app.post('/api/join-room', async (req, res) => {
   const { username, roomId } = req.body;
   if (!username || !roomId) return res.json({ success: false, msg: '参数不完整' });
-  const room = rooms[roomId];
+
+  let room = rooms[roomId];
+  // 内存未命中，从 Supabase 查询
+  if (!room) {
+    try {
+      const { data, error } = await supabase.from('rooms').select('*').eq('room_id', roomId).single();
+      if (!error && data) {
+        room = { id: data.room_id, host: data.host, players: data.players, maxPlayers: data.max_players, started: data.started, createdAt: data.created_at };
+        rooms[roomId] = room; // 回填内存
+        console.log('🔍 从 Supabase 恢复房间 ' + roomId);
+      }
+    } catch (e) { /* ignore */ }
+  }
   if (!room) return res.json({ success: false, msg: '房间不存在' });
   if (room.started) return res.json({ success: false, msg: '游戏已开始' });
   if (room.players.length >= room.maxPlayers) return res.json({ success: false, msg: '房间已满' });
@@ -329,11 +368,23 @@ app.post('/api/draft-results', async (req, res) => {
   res.json({ success: true });
 });
 
-// 获取当前用户的选角结果
-app.get('/api/my-draft', (req, res) => {
+// 获取当前用户的选角结果（支持内存未命中时从 Supabase 查询）
+app.get('/api/my-draft', async (req, res) => {
   const { roomId, username } = req.query;
   if (!roomId || !username) return res.json([]);
-  const room = draftResults[roomId];
+
+  let room = draftResults[roomId];
+  // 内存未命中，从 Supabase 查询
+  if (!room) {
+    try {
+      const { data, error } = await supabase.from('draft_results').select('*').eq('room_id', roomId).single();
+      if (!error && data && data.results) {
+        room = data.results;
+        draftResults[roomId] = room;
+        console.log('🔍 从 Supabase 恢复选角结果 ' + roomId);
+      }
+    } catch (e) { /* ignore */ }
+  }
   if (!room) return res.json([]);
   res.json(room[username] || []);
 });
