@@ -25,6 +25,8 @@
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
 
   /* 技能标签色 */
+  --skill-limit: #c0392b;
+  --skill-limit-bg: #ffebee;
   --skill-passive: #2980b9;
   --skill-passive-bg: #e3f2fd;
   --skill-innate: #e67e22;
@@ -310,6 +312,15 @@ body {
   opacity: 0.8;
 }
 
+.skill-tag.limit {
+  background: var(--skill-limit-bg);
+  color: var(--skill-limit);
+  border-color: #ef9a9a;
+}
+.skill-tag.limit:hover {
+  background: #ffcdd2;
+  border-color: var(--skill-limit);
+}
 .skill-tag.passive {
   background: var(--skill-passive-bg);
   color: var(--skill-passive);
@@ -409,6 +420,11 @@ body {
   font-weight: 700;
   margin-bottom: 12px;
   border: 2px solid transparent;
+}
+.modal-dialog .dialog-skill-type.limit {
+  background: var(--skill-limit-bg);
+  color: var(--skill-limit);
+  border-color: #ef9a9a;
 }
 .modal-dialog .dialog-skill-type.passive {
   background: var(--skill-passive-bg);
@@ -527,6 +543,11 @@ body {
   font-weight: 700;
   margin-bottom: 12px;
   border: 2px solid transparent;
+}
+.char-fullscreen-overlay .fs-skill-label.limit {
+  background: var(--skill-limit-bg);
+  color: var(--skill-limit);
+  border-color: #ef9a9a;
 }
 .char-fullscreen-overlay .fs-skill-label.passive {
   background: var(--skill-passive-bg);

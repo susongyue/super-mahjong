@@ -133,10 +133,12 @@ document.getElementById('navUser').innerText = '👤 ' + username;
 document.getElementById('roomDisplay').innerText = roomId || '未知';
 document.getElementById('nameDisplay').innerText = username;
 
+// 技能类型：按展示顺序 限定技 → 固有技 → 被动技 → 附加技
 const SKILL_TYPES = {
-  passive: { label: '被动', icon: '🛡️', cls: 'passive' },
-  innate:  { label: '天赋', icon: '⚡', cls: 'innate' },
-  extra:   { label: '额外', icon: '✨', cls: 'extra' }
+  limit:   { label: '限定', icon: '🔥', cls: 'limit', order: 1 },
+  innate:  { label: '固有', icon: '⚡', cls: 'innate', order: 2 },
+  passive: { label: '被动', icon: '🛡️', cls: 'passive', order: 3 },
+  extra:   { label: '附加', icon: '✨', cls: 'extra', order: 4 }
 };
 
 function escHTML(s) {
@@ -161,9 +163,6 @@ socket.on('roomState', (data) => {
 socket.on('roundEndVoteUpdate', (data) => {
   document.getElementById('roundVoteInfo').innerText = '回合投票 ' + data.voted + '/' + data.total;
   document.getElementById('roundVoteInfo').className = data.voted >= data.total ? 'vote-count done' : 'vote-count round';
-  document.getElementById('btnEndRound').disabled = true;
-  document.getElementById('btnEndRound').innerText = '✅ 已投票结束回合';
-  updateVoteNames();
 });
 
 // 回合推进
@@ -180,9 +179,6 @@ socket.on('roundAdvanced', (data) => {
 socket.on('gameEndVoteUpdate', (data) => {
   document.getElementById('gameVoteInfo').innerText = '对局投票 ' + data.voted + '/' + data.total;
   document.getElementById('gameVoteInfo').className = data.voted >= data.total ? 'vote-count done' : 'vote-count game';
-  document.getElementById('btnEndGame').disabled = true;
-  document.getElementById('btnEndGame').innerText = '🏁 已投票结束对局';
-  updateVoteNames();
 });
 
 // 对局结束
@@ -210,12 +206,20 @@ function updateVoteNames() {
 
 // 投票结束回合
 function voteEndRound() {
+  const btn = document.getElementById('btnEndRound');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.innerText = '✅ 已投票结束回合';
   socket.emit('voteEndRound', roomId);
 }
 
 // 投票结束对局
 function voteEndGame() {
   if (!confirm('确定要投票结束本局游戏吗？所有玩家同意后将结束对局。')) return;
+  const btn = document.getElementById('btnEndGame');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.innerText = '🏁 已投票结束对局';
   socket.emit('voteEndGame', roomId);
 }
 
@@ -229,9 +233,11 @@ async function loadChars() {
   }
 
   grid.innerHTML = chars.map((c, idx) => {
+    // 技能按顺序: 限定技 → 固有技 → 被动技 → 附加技
     const skills = [];
-    if (c.passive) skills.push({ key: 'passive', text: c.passive });
+    if (c.limit)   skills.push({ key: 'limit', text: c.limit });
     if (c.innate)  skills.push({ key: 'innate', text: c.innate });
+    if (c.passive) skills.push({ key: 'passive', text: c.passive });
     if (c.extra)   skills.push({ key: 'extra', text: c.extra });
 
     const skillTags = skills.map(s => {
@@ -248,7 +254,6 @@ async function loadChars() {
       <div class="char-name">${escHTML(c.name)}</div>
       <div class="char-meta">
         <span class="tier">Tier ${escHTML(c.tier)}</span>
-        ${c.limit ? '<span class="limit-tag"> · 限' + escHTML(c.limit) + '</span>' : ''}
       </div>
       <div class="skill-tags">${skillTags}</div>
       <span class="card-hint">👆 点击卡片查看完整技能</span>
@@ -265,12 +270,14 @@ function openFullscreen(index) {
   if (!c) return;
 
   document.getElementById('fsCharName').innerText = c.name;
-  document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?') + (c.limit ? ' · 限' + c.limit : '');
+  document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?');
   document.getElementById('fsFaction').innerText = c.faction || '无阵营';
 
+  // 技能按顺序: 限定技 → 固有技 → 被动技 → 附加技
   const skills = [];
-  if (c.passive) skills.push({ key: 'passive', text: c.passive });
+  if (c.limit)   skills.push({ key: 'limit', text: c.limit });
   if (c.innate)  skills.push({ key: 'innate', text: c.innate });
+  if (c.passive) skills.push({ key: 'passive', text: c.passive });
   if (c.extra)   skills.push({ key: 'extra', text: c.extra });
 
   document.getElementById('fsBody').innerHTML = skills.map(s => {
