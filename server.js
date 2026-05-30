@@ -103,7 +103,21 @@ async function loadFromDB() {
     const { data: bsData } = await supabase.from('battle_selections').select('*');
     if (bsData) {
       battleSelections = {};
-      bsData.forEach(r => { battleSelections[r.room_id] = r.selections_data; });
+      bsData.forEach(r => {
+        const sel = r.selections_data || {};
+        // 验证：只保留在玩家角色池中实际存在的选择
+        const draft = draftResults[r.room_id] || {};
+        const valid = {};
+        for (const [player, charName] of Object.entries(sel)) {
+          const playerChars = (draft[player] || []).map(c => c.name);
+          if (playerChars.includes(charName)) {
+            valid[player] = charName;
+          } else if (charName) {
+            console.log(`🧹 移除过期选择: ${player}→${charName} (角色池中不存在)`);
+          }
+        }
+        battleSelections[r.room_id] = valid;
+      });
       console.log('✅ 从 Supabase 加载 ' + bsData.length + ' 条出战选择');
     }
   } catch (e) {
@@ -220,11 +234,17 @@ async function cleanupStaleSelections() {
 }
 
 // 从 Supabase 恢复某个房间的出战选择（内存缺失时）
+// 注意：dataFromMemory 必须是包含至少一个条目的对象，空对象 {} 不算有效数据
+function _hasValidSelections(roomId) {
+  const sel = battleSelections[roomId];
+  return sel && typeof sel === 'object' && Object.keys(sel).length > 0;
+}
+
 async function restoreBattleSelections(roomId) {
-  if (battleSelections[roomId]) return battleSelections[roomId];
+  if (_hasValidSelections(roomId)) return battleSelections[roomId];
   try {
     const { data } = await supabase.from('battle_selections').select('*').eq('room_id', roomId).single();
-    if (data && data.selections_data) {
+    if (data && data.selections_data && Object.keys(data.selections_data).length > 0) {
       battleSelections[roomId] = data.selections_data;
       console.log('🔍 从 Supabase 恢复出战选择 ' + roomId);
       return data.selections_data;
@@ -593,12 +613,12 @@ app.get('/api/battle-selections', async (req, res) => {
   const { roomId } = req.query;
   if (!roomId) return res.json({});
 
-  // 内存已有数据直接返回
-  if (battleSelections[roomId]) {
+  // 内存已有有效数据直接返回
+  if (_hasValidSelections(roomId)) {
     return res.json(battleSelections[roomId]);
   }
 
-  // 内存缺失，尝试从 Supabase 恢复
+  // 内存缺失或为空，尝试从 Supabase 恢复
   const restored = await restoreBattleSelections(roomId);
   if (restored) {
     return res.json(restored);
@@ -882,10 +902,26 @@ io.on('connection', (socket) => {
   // ── battle_round.html 专用：请求完整对战数据 ──
   socket.on('requestBattleRoundData', async (roomId) => {
     const room = socketRooms[roomId];
-    if (!room) return socket.emit('battleRoundData', { draft: {}, selections: {} });
+    if (!room) {
+      // 房间不在内存中，但数据可能仍在 Supabase 中，尝试恢复
+      await restoreBattleSelections(roomId);
+      if (!draftResults[roomId]) {
+        try {
+          const { data } = await supabase.from('draft_results').select('*').eq('room_id', roomId).single();
+          if (data && data.results) draftResults[roomId] = data.results;
+        } catch (e) { /* ignore */ }
+      }
+      return socket.emit('battleRoundData', {
+        roomId,
+        round: 1,
+        draft: draftResults[roomId] || {},
+        selections: battleSelections[roomId] || {},
+        totalPlayers: 0
+      });
+    }
 
-    // 确保数据从 Supabase 恢复
-    if (!battleSelections[roomId]) await restoreBattleSelections(roomId);
+    // 确保数据从 Supabase 恢复（空对象也视为无效）
+    if (!_hasValidSelections(roomId)) await restoreBattleSelections(roomId);
     if (!draftResults[roomId]) {
       try {
         const { data } = await supabase.from('draft_results').select('*').eq('room_id', roomId).single();
@@ -909,18 +945,7 @@ io.on('connection', (socket) => {
       if (idx > -1) {
         const playerName = room.players[idx].name;
         room.players.splice(idx, 1);
-        // 清理该玩家的作战选择
-        if (battleSelections[roomId]) {
-          delete battleSelections[roomId][playerName];
-          saveBattleSelections(); // 持久化更新
-          // 广播更新后的准备状态
-          const readyNames = Object.keys(battleSelections[roomId]);
-          io.to(roomId).emit('battleReadyUpdate', {
-            selectedCount: readyNames.length,
-            totalPlayers: room.players.length,
-            readyPlayerNames: readyNames
-          });
-        }
+        // 不删除作战选择：断开连接不是真正的退出游戏，玩家重连后仍需保留其选择
         saveSocketRooms();
         io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId });
       }

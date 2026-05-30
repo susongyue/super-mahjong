@@ -1,0 +1,14 @@
+◇ injected env (3) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+✅ 从 Supabase 加载 3 个用户
+✅ 从 Supabase 加载 11 个 REST 房间
+✅ 从 Supabase 加载 12 个 Socket 房间
+✅ 从 Supabase 加载 11 条选角结果
+✅ 从 Supabase 加载 2 条角色状态
+✅ 从 Supabase 加载 3 条出战选择
+✅ 服务器运行在 http://localhost:3000
+   - 登录页:  http://localhost:3000/login.html
+   - 大厅页:  http://localhost:3000/lobby.html
+   - 房间页:  http://localhost:3000/index.html
+   - 对局页:  http://localhost:3000/game.html
+   - 回合页:  http://localhost:3000/battle_round.html
+[Socket] 玩家 UHCm1TnmF_rRvkaZAAAB 连接成功
