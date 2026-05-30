@@ -34,6 +34,88 @@
     .room-item .btn-join-room {
       flex-shrink: 0;
     }
+    .btn-reconnect {
+      background: #ff9800;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-reconnect:hover { background: #f57c00; transform: translateY(-1px); }
+    .reconnect-area {
+      background: #fff3e0;
+      border: 2px solid #ff9800;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .reconnect-area .reconnect-info {
+      font-size: 14px;
+      color: #e65100;
+      font-weight: 600;
+    }
+    .reconnect-area .reconnect-info span {
+      display: block;
+      font-size: 12px;
+      color: #bf360c;
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .history-item {
+      background: var(--card-secondary);
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin: 8px 0;
+      border: 1.5px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: box-shadow .2s;
+    }
+    .history-item:hover { box-shadow: var(--shadow); }
+    .history-item .hist-room {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .history-item .hist-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .history-item .hist-date {
+      font-size: 11px;
+      color: #999;
+    }
+
+    .section-divider {
+      border-top: 1px solid var(--border);
+      margin: 20px 0 12px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .section-header h2 { margin: 0; }
+
+    .status-badge { font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+    .status-playing { background: #e3f2fd; color: #1565c0; }
+    .status-ready { background: #e8f5e9; color: #2e7d32; }
+    .status-waiting { background: #fff3e0; color: #e65100; }
+    .status-ended { background: #f3e5f5; color: #7b1fa2; }
   </style>
 </head>
 <body>
@@ -42,26 +124,48 @@
   <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
   <div class="nav-links">
     <a href="/lobby.html" class="active">大厅</a>
-    <a href="#" id="navGame" style="display:none">我的对局</a>
   </div>
   <span class="nav-user" id="navUser"></span>
 </nav>
 
 <div class="container">
+  <!-- 重连提示区 -->
+  <div class="section" id="reconnectSection" style="display:none">
+    <div class="reconnect-area">
+      <div class="reconnect-info">
+        🔄 您有未完成的对局
+        <span id="reconnectDetail"></span>
+      </div>
+      <button class="btn-reconnect" id="btnReconnect" onclick="reconnectToGame()">⚡ 重连进入对局</button>
+    </div>
+  </div>
+
   <div class="section">
     <h2>开始游戏</h2>
     <div class="form-row">
       <button class="btn btn-primary" onclick="createRoom()">🏠 创建对局房间</button>
     </div>
     <div class="form-row" style="margin-top:12px">
-      <input class="input" id="roomId" placeholder="输入房间号">
-      <button class="btn btn-cyan" onclick="joinRoom()">🚪 加入房间</button>
+      <input class="input" id="roomId" placeholder="输入房间号加入或重连">
+      <button class="btn btn-cyan" onclick="handleJoinOrReconnect()">🚪 进入房间</button>
     </div>
   </div>
 
   <div class="section">
     <h2>活跃对局</h2>
     <div id="roomList">
+      <div class="no-data">加载中...</div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section">
+    <div class="section-header">
+      <h2>我的对局历史</h2>
+      <button class="btn btn-cyan" style="font-size:12px;padding:6px 14px;" onclick="refreshHistory()">🔄 刷新</button>
+    </div>
+    <div id="historyList">
       <div class="no-data">加载中...</div>
     </div>
   </div>
@@ -72,59 +176,294 @@ const user = localStorage.user;
 if (!user) location.href = '/login.html';
 document.getElementById('navUser').innerText = '👤 ' + user;
 
-const savedRoomId = localStorage.roomId;
-if (savedRoomId) {
-  const navGame = document.getElementById('navGame');
-  navGame.style.display = 'inline';
-  navGame.onclick = () => location.href = '/index.html';
-}
+let myReconnectInfo = null; // 重连信息： { roomId, phase }
 
+// ─── 页面加载时检查是否有未完成的对局 ───
+(async function checkReconnect() {
+  const savedRoomId = localStorage.roomId;
+  if (!savedRoomId) {
+    // 没有保存的房间号，检查是否需要清理
+    return;
+  }
+
+  try {
+    const r = await fetch('/api/room-status?roomId=' + savedRoomId + '&username=' + encodeURIComponent(user))
+      .then(x => x.json());
+
+    if (r.finished) {
+      // 对局已结束，清除保存的房间号
+      localStorage.removeItem('roomId');
+      return;
+    }
+
+    if (r.exists && r.isStarted && r.isPlayer) {
+      // 有正在进行中的对局，显示重连按钮
+      myReconnectInfo = { roomId: savedRoomId, phase: r.phase };
+      document.getElementById('reconnectSection').style.display = 'block';
+      const phaseText = r.phase === 'battle_round' ? '回合对战阶段' : '选将阶段';
+      document.getElementById('reconnectDetail').innerText =
+        '房间 ' + savedRoomId + ' | 第 ' + r.round + ' 回合 | ' + phaseText +
+        ' | 玩家: ' + (r.players || []).join('、');
+    } else if (!r.exists) {
+      // 房间不存在了，清除保存的房间号
+      localStorage.removeItem('roomId');
+    }
+  } catch (e) {
+    // 网络错误，保留 roomId 以便后续重连
+    if (savedRoomId) {
+      myReconnectInfo = { roomId: savedRoomId, phase: 'unknown' };
+      document.getElementById('reconnectSection').style.display = 'block';
+      document.getElementById('reconnectDetail').innerText =
+        '房间 ' + savedRoomId + ' | 状态未知（请点击重连尝试）';
+    }
+  }
+})();
+
+// ─── 创建房间 ───
 async function createRoom() {
+  // 先清除旧的重连信息
+  const oldRoomId = localStorage.roomId;
+  if (oldRoomId) {
+    // 检查旧房间是否还在
+    try {
+      const r = await fetch('/api/room-status?roomId=' + oldRoomId + '&username=' + encodeURIComponent(user))
+        .then(x => x.json());
+      if (r.exists && r.isStarted && r.isPlayer) {
+        if (!confirm('您有一个进行中的对局（房间 ' + oldRoomId + '），创建新房间将离开当前对局。确定要继续吗？')) {
+          return;
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
   const r = await fetch('/api/create-room', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: user })
   }).then(x => x.json());
+  if (!r.success) return alert(r.msg);
   localStorage.roomId = r.roomId;
   location.href = '/index.html';
 }
 
-async function joinRoom(roomId) {
-  const id = roomId || document.getElementById('roomId').value.trim();
-  if (!id) return alert('请输入房间号');
+// ─── 统一的加入/重连处理 ───
+async function handleJoinOrReconnect() {
+  const roomId = document.getElementById('roomId').value.trim();
+  if (!roomId) return alert('请输入房间号');
+
+  // 先查询房间状态
+  try {
+    const status = await fetch('/api/room-status?roomId=' + roomId + '&username=' + encodeURIComponent(user))
+      .then(x => x.json());
+
+    if (status.finished) {
+      return alert('该对局已结束，可在大厅下方查看历史记录');
+    }
+
+    if (!status.exists) {
+      return alert('房间不存在或已过期');
+    }
+
+    if (status.isStarted && status.isPlayer) {
+      // 对局进行中，且用户是该房间玩家 → 重连
+      doReconnect(roomId, status);
+    } else if (status.isStarted && !status.isPlayer) {
+      return alert('该对局已开始，您不是参与玩家，无法加入');
+    } else {
+      // 对局未开始 → 正常加入
+      doJoinRoom(roomId);
+    }
+  } catch (e) {
+    alert('网络错误，请重试');
+  }
+}
+
+// ─── 重连进入对局 ───
+async function reconnectToGame() {
+  if (!myReconnectInfo) return;
+  try {
+    const status = await fetch(
+      '/api/room-status?roomId=' + myReconnectInfo.roomId + '&username=' + encodeURIComponent(user)
+    ).then(x => x.json());
+
+    if (status.finished) {
+      localStorage.removeItem('roomId');
+      document.getElementById('reconnectSection').style.display = 'none';
+      myReconnectInfo = null;
+      alert('该对局已结束');
+      return;
+    }
+
+    if (!status.exists) {
+      localStorage.removeItem('roomId');
+      document.getElementById('reconnectSection').style.display = 'none';
+      myReconnectInfo = null;
+      alert('房间不存在或已过期');
+      return;
+    }
+
+    doReconnect(myReconnectInfo.roomId, status);
+  } catch (e) {
+    alert('重连失败，请检查网络后重试');
+  }
+}
+
+function doReconnect(roomId, status) {
+  localStorage.roomId = roomId;
+  // 根据对局阶段跳转到对应页面
+  switch (status.phase) {
+    case 'game':
+      location.href = '/game.html';
+      break;
+    case 'battle_round':
+      location.href = '/battle_round.html';
+      break;
+    default:
+      location.href = '/index.html';
+  }
+}
+
+// ─── 正常加入房间 ───
+async function doJoinRoom(roomId) {
+  // 先检查是否有进行中的对局
+  const oldRoomId = localStorage.roomId;
+  if (oldRoomId && oldRoomId !== roomId) {
+    try {
+      const r = await fetch('/api/room-status?roomId=' + oldRoomId + '&username=' + encodeURIComponent(user))
+        .then(x => x.json());
+      if (r.exists && r.isStarted && r.isPlayer) {
+        if (!confirm('您有一个进行中的对局（房间 ' + oldRoomId + '），加入新房间将离开当前对局。确定要继续吗？')) {
+          return;
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
   const r = await fetch('/api/join-room', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: user, roomId: id })
+    body: JSON.stringify({ username: user, roomId: roomId })
   }).then(x => x.json());
-  if (r.success) { localStorage.roomId = id; location.href = '/index.html'; }
-  else alert(r.msg);
-}
-
-async function loadRooms() {
-  const list = await fetch('/api/rooms').then(r => r.json());
-  const box = document.getElementById('roomList');
-  if (list.length === 0) {
-    box.innerHTML = '<div class="no-data">暂无活跃对局，快来创建一个吧！</div>';
-    return;
+  if (r.success) {
+    localStorage.roomId = roomId;
+    location.href = '/index.html';
+  } else {
+    alert(r.msg);
   }
-  box.innerHTML = list.map(room => {
-    const status = room.playing
-      ? '<span class="status-badge status-playing">对局中</span>'
-      : room.allReady
-        ? '<span class="status-badge status-ready">已全员准备</span>'
-        : '<span class="status-badge status-waiting">等待中</span>';
-    return `<div class="room-item">
-      <div class="room-info">
-        <span class="room-id">房间 ${room.roomId}</span>${status}
-        <div class="room-meta">${room.players.join('、')}</div>
-      </div>
-      <button class="btn btn-cyan btn-join-room" onclick="joinRoom('${room.roomId}')"
-        ${room.playing ? 'disabled' : ''}>${room.playing ? '对局中' : '加入'}</button>
-    </div>`;
-  }).join('');
 }
 
+// ─── 加载活跃对局列表 ───
+async function loadRooms() {
+  try {
+    const list = await fetch('/api/rooms').then(r => r.json());
+    const box = document.getElementById('roomList');
+    if (list.length === 0) {
+      box.innerHTML = '<div class="no-data">暂无活跃对局，快来创建一个吧！</div>';
+      return;
+    }
+    box.innerHTML = list.map(room => {
+      let statusHtml, btnHtml;
+      if (room.started) {
+        statusHtml = '<span class="status-badge status-playing">对局中</span>';
+        btnHtml = '<span style="font-size:12px;color:#999;">对局中</span>';
+      } else if (room.allReady) {
+        statusHtml = '<span class="status-badge status-ready">已全员准备</span>';
+        btnHtml = '<button class="btn btn-cyan btn-join-room" onclick="handleJoinRoomList(\'' + room.roomId + '\')">加入</button>';
+      } else {
+        statusHtml = '<span class="status-badge status-waiting">等待中</span>';
+        btnHtml = '<button class="btn btn-cyan btn-join-room" onclick="handleJoinRoomList(\'' + room.roomId + '\')">加入</button>';
+      }
+      return '<div class="room-item">' +
+        '<div class="room-info">' +
+        '<span class="room-id">房间 ' + room.roomId + '</span>' + statusHtml +
+        '<div class="room-meta">' + (room.players || []).join('、') + ' | 第 ' + room.round + ' 回合</div>' +
+        '</div>' + btnHtml +
+        '</div>';
+    }).join('');
+  } catch (e) {
+    document.getElementById('roomList').innerHTML = '<div class="no-data">加载失败，请检查网络</div>';
+  }
+}
+
+function handleJoinRoomList(roomId) {
+  document.getElementById('roomId').value = roomId;
+  handleJoinOrReconnect();
+}
+
+// ─── 加载对局历史 ───
+async function loadHistory() {
+  try {
+    const list = await fetch('/api/game-history?username=' + encodeURIComponent(user)).then(r => r.json());
+    const box = document.getElementById('historyList');
+    if (list.length === 0) {
+      box.innerHTML = '<div class="no-data">暂无历史对局记录</div>';
+      return;
+    }
+    box.innerHTML = list.map(h => {
+      const date = h.endedAt ? new Date(h.endedAt).toLocaleString('zh-CN') : '未知';
+      return '<div class="history-item" onclick="viewHistoryDetail(\'' + h.roomId + '\')">' +
+        '<div>' +
+        '<div class="hist-room">🏆 房间 ' + h.roomId + '</div>' +
+        '<div class="hist-meta">' + h.playerCount + '人对局 | ' + h.totalRounds + ' 回合 | 房主: ' + (h.host || '未知') + '</div>' +
+        '<div class="hist-meta">玩家: ' + (h.players || []).join('、') + '</div>' +
+        '</div>' +
+        '<div class="hist-date">' + date + '</div>' +
+        '</div>';
+    }).join('');
+  } catch (e) {
+    document.getElementById('historyList').innerHTML = '<div class="no-data">加载失败，请检查网络</div>';
+  }
+}
+
+function refreshHistory() {
+  document.getElementById('historyList').innerHTML = '<div class="no-data">加载中...</div>';
+  loadHistory();
+}
+
+// ─── 查看对局详情 ───
+async function viewHistoryDetail(roomId) {
+  try {
+    const detail = await fetch('/api/game-history-detail?roomId=' + roomId).then(r => r.json());
+    if (!detail) { alert('无法加载对局详情'); return; }
+
+    const date = detail.endedAt ? new Date(detail.endedAt).toLocaleString('zh-CN') : '未知';
+    const draft = detail.draftResults || {};
+
+    let draftHtml = '';
+    if (Object.keys(draft).length > 0) {
+      draftHtml = '<div style="margin-top:12px;"><strong>选角情况：</strong></div>';
+      for (const [player, chars] of Object.entries(draft)) {
+        const charNames = (chars || []).map(c => c.name || c).join('、');
+        draftHtml += '<div style="font-size:13px;color:var(--text-secondary);margin:4px 0;padding-left:12px;">' +
+          '• ' + player + '：' + charNames + '</div>';
+      }
+    }
+
+    const popup = document.createElement('div');
+    popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);' +
+      'display:flex;align-items:center;justify-content:center;z-index:9999;';
+    popup.innerHTML = '<div style="background:var(--card);border-radius:16px;padding:24px;max-width:500px;width:90%;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.3);border:2px solid var(--border);max-height:80vh;overflow-y:auto;">' +
+      '<h3 style="color:var(--accent);margin-top:0;">🏆 对局详情</h3>' +
+      '<div style="font-size:14px;line-height:1.8;">' +
+      '<div>房间号：<strong>' + detail.roomId + '</strong></div>' +
+      '<div>房主：' + (detail.host || '未知') + '</div>' +
+      '<div>总回合数：' + detail.totalRounds + '</div>' +
+      '<div>参与玩家：' + (detail.players || []).join('、') + '</div>' +
+      '<div>结束时间：' + date + '</div>' +
+      draftHtml +
+      '</div>' +
+      '<button class="btn btn-primary" style="margin-top:16px;width:100%;" onclick="this.closest(\'div\').parentElement.remove()">关闭</button>' +
+      '</div>';
+    document.body.appendChild(popup);
+    popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove(); });
+  } catch (e) {
+    alert('加载详情失败');
+  }
+}
+
+// ─── 初始化 ───
 loadRooms();
 setInterval(loadRooms, 5000);
+loadHistory();
 </script>
 </body>
 </html>

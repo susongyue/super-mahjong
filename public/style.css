@@ -71,7 +71,7 @@ body {
 }
 .navbar .logo {
   color: var(--gold);
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 800;
   text-decoration: none;
   letter-spacing: 0.5px;
@@ -780,7 +780,7 @@ body {
     padding: 0 14px;
     height: 50px;
   }
-  .navbar .logo { font-size: 15px; }
+  .navbar .logo { font-size: 12px; }
   .navbar .nav-links a { font-size: 12px; padding: 4px 10px; }
   .navbar .nav-user { font-size: 12px; }
 

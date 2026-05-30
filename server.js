@@ -38,6 +38,10 @@ let draftResults = {};
 let characterStates = {};
 // battleSelections[roomId] = { "username1": "宫永咲", "username2": "天江衣", ... }
 let battleSelections = {};
+// gameHistory[roomId] = { roomId, players, totalRounds, draftResults, host, createdAt, endedAt }
+let gameHistory = {};
+// finishedRooms 用于标记已结束的房间（防止重连）；值 = 结束时间戳
+let finishedRooms = {};
 
 // ── 数据路径（兼容旧数据导入） ──
 const DATA_DIR = path.join(__dirname, 'data');
@@ -119,6 +123,14 @@ async function loadFromDB() {
         battleSelections[r.room_id] = valid;
       });
       console.log('✅ 从 Supabase 加载 ' + bsData.length + ' 条出战选择');
+    }
+
+    // 加载游戏历史记录
+    const { data: ghData } = await supabase.from('game_history').select('*').order('ended_at', { ascending: false });
+    if (ghData) {
+      gameHistory = {};
+      ghData.forEach(h => { gameHistory[h.room_id] = h; });
+      console.log('✅ 从 Supabase 加载 ' + ghData.length + ' 条对局历史');
     }
   } catch (e) {
     console.log('⚠️ Supabase 加载失败，尝试从本地 JSON 恢复: ' + e.message);
@@ -382,6 +394,112 @@ function findSocketByPlayerName(roomId, playerName) {
   return null;
 }
 
+// ── 保存/删除游戏历史 ──
+async function saveGameHistory(roomId, data) {
+  try {
+    await supabase.from('game_history').upsert({
+      room_id: roomId,
+      players: data.players || [],
+      total_rounds: data.totalRounds || 0,
+      draft_results: data.draftResults || {},
+      host: data.host || '',
+      created_at: data.createdAt || new Date().toISOString(),
+      ended_at: data.endedAt || new Date().toISOString()
+    }, { onConflict: 'room_id' });
+    gameHistory[roomId] = data;
+    console.log('📝 对局历史已保存: ' + roomId);
+  } catch (e) { console.log('⚠️ saveGameHistory 失败: ' + e.message); }
+}
+
+// ── 清理过期房间数据（从 Supabase 和各内存缓存中删除） ──
+async function deleteRoomData(roomId) {
+  try {
+    await supabase.from('rooms').delete().eq('room_id', roomId);
+    await supabase.from('socket_rooms').delete().eq('room_id', roomId);
+    await supabase.from('draft_results').delete().eq('room_id', roomId);
+    await supabase.from('character_states').delete().eq('room_id', roomId);
+    await supabase.from('battle_selections').delete().eq('room_id', roomId);
+  } catch (e) { /* ignore */ }
+  delete rooms[roomId];
+  delete socketRooms[roomId];
+  delete draftResults[roomId];
+  delete characterStates[roomId];
+  delete battleSelections[roomId];
+  console.log('🧹 已清理房间数据: ' + roomId);
+}
+
+// ── 更新房间最近活动时间 ──
+function touchRoom(roomId) {
+  if (socketRooms[roomId]) {
+    socketRooms[roomId]._lastActivity = Date.now();
+  }
+}
+
+// ── 定时清理超时对局 ──
+// 超时规则：
+//   1. 房间创建后 30 分钟无人加入 → 删除
+//   2. 对局中（started=true）60 分钟无活动 → 保存为历史并删除
+//   3. 已结束房间 → 保留在历史记录中（仅清理活跃数据）
+const CLEANUP_INTERVAL = 5 * 60 * 1000;   // 每 5 分钟检查一次
+const ROOM_IDLE_TIMEOUT = 30 * 60 * 1000;  // 30 分钟无活动超时
+const GAME_TIMEOUT = 60 * 60 * 1000;        // 60 分钟对局超时
+
+setInterval(async () => {
+  const now = Date.now();
+  const toClean = [];
+
+  // 检查 socketRooms
+  for (const [roomId, room] of Object.entries(socketRooms)) {
+    const lastActivity = (room._lastActivity || 0);
+    const hasPlayers = room.players && room.players.length > 0;
+    const isStarted = rooms[roomId] && rooms[roomId].started;
+
+    if (isStarted) {
+      // 对局中：60 分钟无活动 → 自动结束并保存
+      if (lastActivity && (now - lastActivity) > GAME_TIMEOUT) {
+        const playerNames = (room.players || []).map(p => p.name);
+        const uniquePlayers = [...new Set([...playerNames, ...(rooms[roomId] ? rooms[roomId].players || [] : [])])];
+        console.log(`⏰ 房间 ${roomId} 对局超时（${Math.floor((now - lastActivity) / 60000)} 分钟无活动），自动结束`);
+        await saveGameHistory(roomId, {
+          players: uniquePlayers,
+          totalRounds: room.round || 1,
+          draftResults: draftResults[roomId] || {},
+          host: rooms[roomId] ? rooms[roomId].host : '',
+          createdAt: rooms[roomId] ? rooms[roomId].createdAt : null,
+          endedAt: new Date().toISOString()
+        });
+        finishedRooms[roomId] = Date.now();
+        toClean.push(roomId);
+      }
+    } else if (!hasPlayers) {
+      // 无人房间且无活动 30 分钟 → 清理
+      if (!lastActivity || (now - lastActivity) > ROOM_IDLE_TIMEOUT) {
+        console.log(`⏰ 房间 ${roomId} 无人且超时，清理中...`);
+        toClean.push(roomId);
+      }
+    }
+  }
+
+  // 检查 REST rooms 中的孤立房间（不在 socketRooms 中）
+  for (const [roomId, room] of Object.entries(rooms)) {
+    if (!socketRooms[roomId]) {
+      const created = room.createdAt ? new Date(room.createdAt).getTime() : 0;
+      if (created && (now - created) > ROOM_IDLE_TIMEOUT) {
+        console.log(`⏰ 孤立 REST 房间 ${roomId} 超时，清理中...`);
+        toClean.push(roomId);
+      }
+    }
+  }
+
+  for (const roomId of toClean) {
+    await deleteRoomData(roomId);
+  }
+
+  if (toClean.length > 0) {
+    console.log('🧹 本轮清理 ' + toClean.length + ' 个超时房间');
+  }
+}, CLEANUP_INTERVAL);
+
 // ═══════════════════════════════════════
 //  REST API 路由
 // ═══════════════════════════════════════
@@ -553,13 +671,32 @@ app.get('/api/rooms', (req, res) => {
   Object.keys(socketRooms).forEach(id => {
     const r = socketRooms[id];
     if (r.players && r.players.length > 0) {
+      const restRoom = rooms[id] || {};
+      const isStarted = restRoom.started || false;
       list.push({
         roomId: id,
         players: r.players.map(p => p.name),
         playerCount: r.players.length,
         maxPlayers: r.maxPlayers,
         allReady: r.players.every(p => p.ready),
-        playing: !!r.voteEnd
+        playing: !!r.voteEnd,
+        started: isStarted,
+        round: r.round || 1
+      });
+    }
+  });
+  // 也对 REST rooms 中在 socketRooms 中不存在的房间进行检查
+  Object.keys(rooms).forEach(id => {
+    if (!socketRooms[id] && rooms[id].started) {
+      list.push({
+        roomId: id,
+        players: rooms[id].players || [],
+        playerCount: (rooms[id].players || []).length,
+        maxPlayers: rooms[id].maxPlayers || 4,
+        allReady: false,
+        playing: false,
+        started: true,
+        round: 1
       });
     }
   });
@@ -650,6 +787,149 @@ app.get('/api/all-draft', async (req, res) => {
   return res.json({});
 });
 
+// ── 对局历史：获取某个玩家的历史对局 ──
+app.get('/api/game-history', async (req, res) => {
+  const { username } = req.query;
+  if (!username) return res.json([]);
+
+  try {
+    // 先从内存加载（如果不存在则从 Supabase 查询）
+    let history = Object.values(gameHistory);
+    if (history.length === 0) {
+      const { data } = await supabase.from('game_history').select('*').order('ended_at', { ascending: false });
+      if (data) {
+        data.forEach(h => { gameHistory[h.room_id] = h; });
+        history = data;
+      }
+    }
+    const result = history.filter(h => {
+      const players = h.players || [];
+      return players.includes(username);
+    }).map(h => ({
+      roomId: h.room_id,
+      players: h.players,
+      totalRounds: h.total_rounds,
+      host: h.host,
+      endedAt: h.ended_at,
+      playerCount: h.players ? h.players.length : 0
+    }));
+    res.json(result);
+  } catch (e) {
+    res.json([]);
+  }
+});
+
+// ── 对局历史详情 ──
+app.get('/api/game-history-detail', async (req, res) => {
+  const { roomId } = req.query;
+  if (!roomId) return res.json(null);
+
+  try {
+    let record = gameHistory[roomId];
+    if (!record) {
+      const { data } = await supabase.from('game_history').select('*').eq('room_id', roomId).single();
+      if (data) {
+        record = data;
+        gameHistory[roomId] = data;
+      }
+    }
+    if (record) {
+      res.json({
+        roomId: record.room_id,
+        players: record.players,
+        totalRounds: record.total_rounds,
+        draftResults: record.draft_results,
+        host: record.host,
+        createdAt: record.created_at,
+        endedAt: record.ended_at
+      });
+    } else {
+      res.json(null);
+    }
+  } catch (e) {
+    res.json(null);
+  }
+});
+
+// ── 房间状态查询（用于重连判断） ──
+app.get('/api/room-status', async (req, res) => {
+  const { roomId, username } = req.query;
+  if (!roomId) return res.json({ exists: false, msg: '未提供房间号' });
+
+  // 检查是否为已结束房间
+  if (finishedRooms[roomId]) {
+    return res.json({ exists: false, finished: true, msg: '该对局已结束' });
+  }
+  // 检查历史记录中的已结束房间
+  if (gameHistory[roomId]) {
+    return res.json({ exists: false, finished: true, msg: '该对局已结束' });
+  }
+
+  // 检查活跃房间
+  const socketRoom = socketRooms[roomId];
+  const restRoom = rooms[roomId];
+
+  if (!socketRoom && !restRoom) {
+    // 尝试从 Supabase 恢复
+    let found = false;
+    try {
+      const { data: sr } = await supabase.from('socket_rooms').select('*').eq('room_id', roomId).single();
+      if (sr && sr.state_data) {
+        socketRooms[roomId] = sr.state_data;
+        found = true;
+      }
+      if (!found) {
+        const { data: r } = await supabase.from('rooms').select('*').eq('room_id', roomId).single();
+        if (r) {
+          rooms[roomId] = { id: r.room_id, host: r.host, players: r.players, maxPlayers: r.max_players, started: r.started, createdAt: r.created_at };
+          found = true;
+        }
+      }
+    } catch (e) { /* ignore */ }
+    if (!found) {
+      return res.json({ exists: false, msg: '房间不存在或已过期' });
+    }
+  }
+
+  const room = socketRooms[roomId] || {};
+  const restR = rooms[roomId] || {};
+  const isStarted = restR.started || (room.round > 1);
+
+  // 检查用户是否是该房间的玩家
+  const allPlayers = new Set();
+  (restR.players || []).forEach(p => allPlayers.add(p));
+  if (room.players) room.players.forEach(p => allPlayers.add(p.name));
+  const isPlayer = username ? allPlayers.has(username) : false;
+
+  // 判断当前阶段
+  let phase = 'lobby'; // 大厅/准备阶段
+  if (isStarted) {
+    if (draftResults[roomId] && Object.keys(draftResults[roomId]).length > 0) {
+      if (battleSelections[roomId] && Object.keys(battleSelections[roomId]).length > 0) {
+        phase = 'battle_round'; // 回合对战阶段
+      } else if (room.round > 1 && (!battleSelections[roomId] || Object.keys(battleSelections[roomId]).length === 0)) {
+        phase = 'game'; // 选将阶段（新回合开始）
+      } else {
+        phase = 'game'; // 选将阶段
+      }
+    }
+  }
+
+  const playerNames = [...allPlayers];
+
+  res.json({
+    exists: true,
+    roomId,
+    phase,
+    isStarted,
+    isPlayer,
+    players: playerNames,
+    round: room.round || 1,
+    totalPlayers: playerNames.length,
+    host: restR.host || ''
+  });
+});
+
 // ═══════════════════════════════════════
 //  HTTP 服务器 + Socket.io
 // ═══════════════════════════════════════
@@ -668,13 +948,25 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', (data) => {
     const { roomId = "0000", playerName } = data;
     socket.playerName = playerName; // 记录玩家名，用于后续查找
+
+    // 检查房间是否已结束
+    if (finishedRooms[roomId]) {
+      socket.emit('joinFailed', '该对局已结束');
+      return;
+    }
+    if (gameHistory[roomId]) {
+      socket.emit('joinFailed', '该对局已结束，可在大厅查看历史记录');
+      return;
+    }
+
     if (!socketRooms[roomId]) {
       socketRooms[roomId] = {
         players: [], maxPlayers: 4, vote: { random: 0, normal: 0 }, voteEnd: false,
-        round: 1, roundEndVotes: {}, gameEndVotes: {}
+        round: 1, roundEndVotes: {}, gameEndVotes: {}, _lastActivity: Date.now()
       };
     }
     const room = socketRooms[roomId];
+    touchRoom(roomId);
     if (!room.round) room.round = 1;
     if (!room.roundEndVotes) room.roundEndVotes = {};
     if (!room.gameEndVotes) room.gameEndVotes = {};
@@ -708,6 +1000,7 @@ io.on('connection', (socket) => {
   socket.on('toggleReady', (roomId) => {
     const room = socketRooms[roomId];
     if (!room) return socket.emit('error', '房间不存在');
+    touchRoom(roomId);
     const player = room.players.find(p => p.id === socket.id);
     if (player) {
       player.ready = !player.ready;
@@ -749,6 +1042,7 @@ io.on('connection', (socket) => {
   socket.on('selectBattleCharacter', (data) => {
     const { roomId, characterName, playerName } = data;
     if (!roomId || !characterName || !playerName) return;
+    touchRoom(roomId);
 
     if (!battleSelections[roomId]) battleSelections[roomId] = {};
 
@@ -844,6 +1138,7 @@ io.on('connection', (socket) => {
   socket.on('voteEndRound', (roomId) => {
     const room = socketRooms[roomId];
     if (!room) return;
+    touchRoom(roomId);
     if (!room.roundEndVotes) room.roundEndVotes = {};
     room.roundEndVotes[socket.id] = true;
     const votedCount = Object.keys(room.roundEndVotes).length;
@@ -863,23 +1158,40 @@ io.on('connection', (socket) => {
     saveSocketRooms();
   });
 
-  socket.on('voteEndGame', (roomId) => {
+  socket.on('voteEndGame', async (roomId) => {
     const room = socketRooms[roomId];
     if (!room) return;
     if (!room.gameEndVotes) room.gameEndVotes = {};
     room.gameEndVotes[socket.id] = true;
+    touchRoom(roomId);
     const votedCount = Object.keys(room.gameEndVotes).length;
     const totalCount = room.players.length;
     const votedNames = room.players.filter(p => room.gameEndVotes[p.id]).map(p => p.name);
     io.to(roomId).emit('gameEndVoteUpdate', { voted: votedCount, total: totalCount, votedNames });
     if (votedCount >= totalCount && totalCount > 0) {
+      // ── 保存对局历史 ──
+      const playerNames = room.players.map(p => p.name);
+      const restRoom = rooms[roomId] || {};
+      const allPlayers = [...new Set([...playerNames, ...(restRoom.players || [])])];
+      await saveGameHistory(roomId, {
+        players: allPlayers,
+        totalRounds: room.round || 1,
+        draftResults: draftResults[roomId] || {},
+        host: restRoom.host || '',
+        createdAt: restRoom.createdAt || null,
+        endedAt: new Date().toISOString()
+      });
+      // 标记为已结束，阻止重连
+      finishedRooms[roomId] = Date.now();
       // ── 清理作战选将和角色状态 ──
       delete battleSelections[roomId];
-      saveBattleSelections(); // 持久化删除
+      await saveBattleSelections(); // 持久化删除
       delete characterStates[roomId];
       room.gameEndVotes = {};
       room.round = 1;
-      io.to(roomId).emit('gameEnded', { msg: '全部玩家同意，对局结束！即将返回大厅。' });
+      // 清除活跃房间数据
+      await deleteRoomData(roomId);
+      io.to(roomId).emit('gameEnded', { msg: '全部玩家同意，对局结束！即将返回大厅。', roomId });
     }
     saveSocketRooms();
   });
@@ -945,6 +1257,7 @@ io.on('connection', (socket) => {
       if (idx > -1) {
         const playerName = room.players[idx].name;
         room.players.splice(idx, 1);
+        touchRoom(roomId);
         // 不删除作战选择：断开连接不是真正的退出游戏，玩家重连后仍需保留其选择
         saveSocketRooms();
         io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId });

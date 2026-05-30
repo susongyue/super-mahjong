@@ -199,7 +199,22 @@
 <script>
 const username = localStorage.user;
 const roomId = localStorage.roomId;
-if (!username || !roomId) location.href = '/login.html';
+if (!username) location.href = '/login.html';
+if (!roomId) location.href = '/lobby.html';
+
+// ─── 页面加载前检查房间状态（防止回到已结束对局） ───
+(async function checkRoomBeforeLoad() {
+  try {
+    const status = await fetch('/api/room-status?roomId=' + roomId + '&username=' + encodeURIComponent(username))
+      .then(x => x.json());
+    if (status.finished || !status.exists) {
+      alert(status.msg || '该对局已结束，即将返回大厅');
+      localStorage.removeItem('roomId');
+      location.href = '/lobby.html';
+      return;
+    }
+  } catch (e) { /* 网络错误允许继续 */ }
+})();
 
 document.getElementById('roomIdDisplay').innerText = roomId;
 document.getElementById('navUser').innerText = '👤 ' + username;
