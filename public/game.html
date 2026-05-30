@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>对局中 - 超能力立直麻将</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+    body{background:#1a1a2e;color:#eee;min-height:100vh}
+
+    /* 导航栏 */
+    .navbar{background:#16213e;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #e94560}
+    .navbar .logo{color:#f5c518;font-size:18px;font-weight:bold;text-decoration:none}
+    .navbar .nav-links{display:flex;gap:16px}
+    .navbar .nav-links a{color:#aaa;text-decoration:none;font-size:14px;padding:4px 10px;border-radius:4px}
+    .navbar .nav-links a:hover,.navbar .nav-links a.active{color:#fff;background:#e94560}
+    .navbar .nav-user{color:#e94560;font-size:14px}
+
+    .container{max-width:800px;margin:0 auto;padding:30px 20px}
+    .header{text-align:center;margin-bottom:30px}
+    .header h1{font-size:36px;color:#e94560}
+    .header .info{color:#aaa;font-size:16px;margin-top:8px}
+
+    /* 角色区 */
+    .section{background:#16213e;border-radius:12px;padding:24px;margin-bottom:20px}
+    .section h2{color:#f5c518;font-size:18px;margin-bottom:16px}
+    .char-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .char-card{background:#1a1a2e;border-radius:8px;padding:14px;border:1px solid #2a2a4e}
+    .char-card .char-name{font-weight:bold;font-size:15px;margin-bottom:4px}
+    .char-card .faction-badge{color:#f5c518;font-size:12px;margin-bottom:4px}
+    .char-card .char-tier{font-size:11px;color:#888}
+    .char-card .char-detail{font-size:11px;color:#aaa;margin-top:6px;line-height:1.5}
+
+    .no-chars{text-align:center;color:#888;padding:30px}
+  </style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+  <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
+  <div class="nav-links">
+    <a href="/lobby.html">大厅</a>
+    <a href="#" class="active">对局中</a>
+  </div>
+  <span class="nav-user" id="navUser"></span>
+</nav>
+
+<div class="container">
+  <div class="header">
+    <h1>🎴 对局进行中</h1>
+    <div class="info">房间：<strong id="roomDisplay"></strong> | 玩家：<strong id="nameDisplay"></strong></div>
+  </div>
+
+  <div class="section">
+    <h2>🎯 你的角色（6选1出战）</h2>
+    <div class="char-grid" id="charGrid">
+      <div class="no-chars">加载中...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const username = localStorage.user;
+const roomId = localStorage.roomId;
+if (!username) location.href = '/login.html';
+
+document.getElementById('navUser').innerText = '👤 ' + username;
+document.getElementById('roomDisplay').innerText = roomId || '未知';
+document.getElementById('nameDisplay').innerText = username;
+
+// 加载选角结果
+async function loadChars() {
+  const chars = await fetch(`/api/my-draft?roomId=${roomId}&username=${encodeURIComponent(username)}`).then(r => r.json());
+  const grid = document.getElementById('charGrid');
+  if (!chars || chars.length === 0) {
+    grid.innerHTML = '<div class="no-chars">暂无角色数据，请先在房间内完成选角</div>';
+    return;
+  }
+  grid.innerHTML = chars.map((c, i) => `
+    <div class="char-card">
+      <div class="faction-badge">${c.faction || '无阵营'}</div>
+      <div class="char-name">${c.name}</div>
+      <div class="char-tier">Tier: ${c.tier}${c.limit ? ' | 限' + c.limit : ''}</div>
+      <div class="char-detail">
+        ${c.passive ? '<div>被动: ' + c.passive + '</div>' : ''}
+        ${c.innate ? '<div>天赋: ' + c.innate + '</div>' : ''}
+        ${c.extra ? '<div>额外: ' + c.extra + '</div>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+loadChars();
+</script>
+</body>
+</html>

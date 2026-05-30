@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>超能力立直麻将 - 对局房间</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#1a1a2e;color:#eee;min-height:100vh}
+.hidden{display:none!important}
+
+/* 导航栏 */
+.navbar{background:#16213e;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #e94560}
+.navbar .logo{color:#f5c518;font-size:18px;font-weight:bold;text-decoration:none}
+.navbar .nav-links{display:flex;gap:16px}
+.navbar .nav-links a{color:#aaa;text-decoration:none;font-size:14px;padding:4px 10px;border-radius:4px}
+.navbar .nav-links a:hover,.navbar .nav-links a.active{color:#fff;background:#e94560}
+.navbar .nav-user{color:#e94560;font-size:14px}
+
+/* 房间信息 */
+.room-header{background:#16213e;padding:20px 30px;display:flex;justify-content:space-between;align-items:center}
+.room-header h2{color:#f5c518}
+.room-id{color:#aaa;font-size:14px}
+.user-info{color:#e94560}
+
+/* 主体 */
+.container{max-width:800px;margin:20px auto;padding:0 20px}
+
+/* 玩家列表 */
+.player-card{background:#16213e;border-radius:10px;padding:14px 20px;margin:8px 0;display:flex;justify-content:space-between;align-items:center}
+.player-card.self{border:2px solid #e94560}
+.player-name{font-size:16px;font-weight:bold}
+.player-status{font-size:13px;color:#aaa}
+.player-status .ready{color:#42b983}
+.player-status .unready{color:#e94560}
+
+/* 按钮 */
+.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold}
+.btn-ready{background:#42b983;color:#fff}
+.btn-unready{background:#e94560;color:#fff}
+.btn-primary{background:#e94560;color:#fff;width:100%;padding:14px;margin-top:12px}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-secondary{background:#099;color:#fff}
+
+/* 投票区 */
+#voteArea{margin-top:20px;background:#16213e;border-radius:10px;padding:20px}
+#voteArea h3{color:#f5c518;margin-bottom:12px}
+.vote-btns{display:flex;gap:10px}
+.vote-btns button{flex:1;padding:14px;border-radius:8px;background:#333;color:#fff;border:2px solid #444;cursor:pointer;font-size:15px}
+.vote-btns button:hover{border-color:#e94560}
+.vote-btns button:disabled{opacity:0.4}
+#voteTip{margin-top:10px;font-size:13px;color:#aaa}
+#voteResult{margin-top:8px;font-size:14px;color:#f5c518}
+
+/* 选角结果区 */
+#draftArea{margin-top:20px;background:#16213e;border-radius:10px;padding:20px}
+#draftArea h3{color:#f5c518;margin-bottom:12px}
+.draft-player{margin-bottom:18px}
+.draft-player .dp-name{color:#e94560;font-size:17px;margin-bottom:8px}
+.char-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.char-card{background:#1a1a2e;padding:10px 14px;border-radius:6px}
+.char-card .char-name{font-weight:bold}
+.char-card .faction-badge{color:#f5c518;font-size:12px}
+.char-card .char-tier{font-size:11px;color:#888}
+
+/* 底部操作 */
+.actions{margin:20px 0 40px;display:flex;gap:10px;flex-wrap:wrap}
+.actions button{flex:1;min-width:120px}
+
+/* CSV上传 */
+#csvArea{margin-top:20px;background:#16213e;border-radius:10px;padding:20px}
+#csvArea h3{color:#aaa;margin-bottom:8px;font-size:14px}
+#csvDrop{border:2px dashed #444;border-radius:10px;padding:20px;text-align:center;cursor:pointer}
+#csvDrop:hover{border-color:#e94560}
+#csvDrop .icon{font-size:24px;margin-bottom:6px}
+.char-count{font-size:13px;color:#888;margin-top:6px}
+.char-count span{color:#f5c518}
+</style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+  <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
+  <div class="nav-links">
+    <a href="/lobby.html">大厅</a>
+    <a href="#" class="active">当前对局</a>
+  </div>
+  <span class="nav-user" id="navUser"></span>
+</nav>
+
+<!-- 房间头部 -->
+<div class="room-header">
+  <div>
+    <h2>对局房间</h2>
+    <div class="room-id">房间号：<strong id="roomIdDisplay">---</strong></div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- 玩家列表 -->
+  <h3 style="margin-bottom:10px">房间玩家（最多4人）</h3>
+  <div id="playerList"></div>
+
+  <!-- 准备按钮 -->
+  <button class="btn-primary" id="readyBtn" disabled onclick="toggleReady()">准备游戏</button>
+
+  <!-- 投票区 -->
+  <div id="voteArea" class="hidden">
+    <h3>选择角色抽取方式</h3>
+    <div class="vote-btns">
+      <button onclick="vote('random')">🎲 随机抽取</button>
+      <button onclick="vote('normal')">📋 正常抽取</button>
+    </div>
+    <div id="voteTip"></div>
+    <div id="voteResult"></div>
+  </div>
+
+  <!-- 选角结果区 -->
+  <div id="draftArea" class="hidden">
+    <h3>🎯 角色分配结果</h3>
+    <div id="draftContent"></div>
+  </div>
+
+  <!-- 底部操作 -->
+  <div class="actions">
+    <button class="btn btn-secondary hidden" id="startGameBtn" onclick="startGame()">✅ 进入对局</button>
+  </div>
+
+  <!-- CSV角色管理（收起状态） -->
+  <div id="csvArea">
+    <h3>📂 角色数据管理（点击上传CSV覆盖服务器角色池）</h3>
+    <div id="csvDrop">
+      <div class="icon">📁</div>
+      <p>点击或拖放 CSV 文件</p>
+    </div>
+    <div class="char-count">服务器角色总数：<span id="charCount">0</span></div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ── 初始化 ──
+const username = localStorage.user;
+const roomId = localStorage.roomId;
+if (!username || !roomId) location.href = '/login.html';
+
+document.getElementById('roomIdDisplay').innerText = roomId;
+document.getElementById('navUser').innerText = '👤 ' + username;
+
+const socket = io();
+let myVote = '';
+
+// 页面加载时自动加入房间
+socket.emit('joinRoom', { roomId, playerName: username });
+
+// ── Socket 事件 ──
+socket.on('joinSuccess', (msg) => {
+  document.getElementById('readyBtn').disabled = false;
+});
+
+socket.on('joinFailed', (msg) => {
+  alert('加入房间失败：' + msg);
+  location.href = '/lobby.html';
+});
+
+socket.on('roomPlayersUpdate', (data) => {
+  renderPlayers(data.players);
+});
+
+function renderPlayers(players) {
+  let html = '';
+  players.forEach(p => {
+    const isSelf = p.name === username;
+    html += `<div class="player-card${isSelf ? ' self' : ''}">
+      <span class="player-name">${isSelf ? '⭐ ' : ''}${p.name}</span>
+      <span class="player-status">
+        ${p.ready ? '<span class="ready">✅ 已准备</span>' : '<span class="unready">❌ 未准备</span>'}
+        ${p.vote ? ' | 已投票' : ''}
+      </span>
+    </div>`;
+  });
+  document.getElementById('playerList').innerHTML = html || '<p style="color:#aaa">暂无玩家</p>';
+}
+
+// ── 准备 ──
+function toggleReady() {
+  socket.emit('toggleReady', roomId);
+}
+
+// ── 全员准备 ──
+socket.on('allReady', (msg) => {
+  document.getElementById('voteArea').classList.remove('hidden');
+  document.getElementById('readyBtn').disabled = true;
+  document.getElementById('voteTip').innerText = msg;
+});
+
+// ── 投票 ──
+function vote(type) {
+  myVote = type;
+  socket.emit('voteSelect', { roomId, type });
+  document.querySelectorAll('.vote-btns button').forEach(b => b.disabled = true);
+  document.getElementById('voteTip').innerText = `你已投票：${type === 'random' ? '随机抽取' : '正常抽取'}`;
+}
+
+socket.on('voteUpdate', (data) => {
+  document.getElementById('voteResult').innerText =
+    `当前投票：随机${data.vote.random}票 | 正常${data.vote.normal}票`;
+});
+
+// ── 投票完成 → 触发选角 ──
+socket.on('voteResult', async (data) => {
+  document.getElementById('voteResult').innerText = `投票结束！最终选择：${data.desc}`;
+  document.getElementById('draftArea').classList.remove('hidden');
+  await doDraft(data.players, data.type);
+});
+
+// ── 选角逻辑 ──
+async function doDraft(players, draftType) {
+  // 从服务器获取角色池
+  const chars = await fetch('/api/characters').then(r => r.json());
+  const pool = [...chars];
+  const result = {};
+
+  players.forEach(p => {
+    result[p.name] = [];
+    for (let i = 0; i < 6; i++) {
+      if (pool.length === 0) break;
+      const idx = draftType === 'random'
+        ? Math.floor(Math.random() * pool.length)
+        : 0; // 正常抽取：顺序取
+      result[p.name].push(pool.splice(idx, 1)[0]);
+    }
+  });
+
+  // 渲染结果
+  let html = '';
+  Object.entries(result).forEach(([name, chars]) => {
+    html += `<div class="draft-player">
+      <div class="dp-name">${name}（${chars.length}个角色）</div>
+      <div class="char-grid">
+        ${chars.map(c => `<div class="char-card">
+          <div class="faction-badge">${c.faction || '无阵营'}</div>
+          <div class="char-name">${c.name}</div>
+          <div class="char-tier">Tier: ${c.tier}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  document.getElementById('draftContent').innerHTML = html;
+  document.getElementById('startGameBtn').classList.remove('hidden');
+
+  // 回传选角结果到服务器，对局页可获取
+  await fetch('/api/draft-results', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomId, results: result })
+  });
+}
+
+// ── 进入对局 ──
+async function startGame() {
+  await fetch('/api/start-game', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomId })
+  });
+  location.href = '/game.html';
+}
+
+// ── 错误 ──
+socket.on('error', (msg) => alert('错误：' + msg));
+
+// ── CSV 上传 ──
+loadCharCount();
+function loadCharCount() {
+  fetch('/api/characters').then(r => r.json()).then(chars => {
+    document.getElementById('charCount').textContent = chars.length;
+  });
+}
+
+const drop = document.getElementById('csvDrop');
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = '.csv';
+fileInput.style.display = 'none';
+drop.appendChild(fileInput);
+drop.onclick = () => fileInput.click();
+drop.ondragover = e => { e.preventDefault(); drop.style.borderColor = '#e94560'; };
+drop.ondragleave = () => { drop.style.borderColor = '#444'; };
+drop.ondrop = e => {
+  e.preventDefault();
+  drop.style.borderColor = '#444';
+  const file = e.dataTransfer.files[0];
+  if (file) uploadCSV(file);
+};
+fileInput.onchange = () => {
+  const file = fileInput.files[0];
+  if (file) uploadCSV(file);
+};
+
+async function uploadCSV(file) {
+  const text = await file.text();
+  const res = await fetch('/api/upload-csv', {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: text
+  }).then(r => r.json());
+  alert(res.success ? `上传成功！共${res.count}个角色` : `上传失败：${res.msg}`);
+  loadCharCount();
+}
+</script>
+</body>
+</html>

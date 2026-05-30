@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>登录 - 超能力立直麻将</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+    body{background:#1a1a1a;color:#fff;display:grid;place-items:center;height:100vh}
+    /* 导航栏 */
+    .navbar{position:fixed;top:0;left:0;right:0;background:#16213e;padding:12px 24px;display:flex;align-items:center;justify-content:center;border-bottom:2px solid #e94560;z-index:100}
+    .navbar .logo{color:#f5c518;font-size:18px;font-weight:bold;text-decoration:none}
+    .box{background:#222;padding:40px;border-radius:12px;width:360px;text-align:center}
+    h1{margin-bottom:20px;color:#e63946}
+    input{width:100%;margin:8px 0;padding:12px;border-radius:6px;border:none;background:#333;color:#fff}
+    button{width:100%;padding:12px;background:#e63946;color:#fff;border:none;border-radius:6px;margin-top:10px;font-weight:bold}
+    .tab{display:flex;gap:10px;margin-bottom:20px}
+    .tab button{flex:1;background:#444}
+    .tab button.active{background:#e63946}
+    .panel{display:none}
+    .panel.active{display:block}
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <span class="logo">🀄 超能力立直麻将</span>
+</nav>
+
+<div class="box">
+  <h1>超能力立直麻将</h1>
+  <div class="tab">
+    <button class="active" onclick="tab(0)">登录</button>
+    <button onclick="tab(1)">注册</button>
+  </div>
+
+  <div class="panel active" id="login">
+    <input id="login-user" placeholder="用户名">
+    <input id="login-pwd" type="password" placeholder="密码">
+    <button onclick="login()">登录</button>
+  </div>
+
+  <div class="panel" id="reg">
+    <input id="reg-user" placeholder="用户名">
+    <input id="reg-pwd" type="password" placeholder="密码">
+    <button onclick="register()">注册</button>
+  </div>
+</div>
+
+<script>
+let mode = 0;
+function tab(i) {
+  mode = i;
+  document.querySelectorAll('.tab button').forEach((b,j)=>b.classList.toggle('active',j===i));
+  document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('active',j===i));
+}
+
+async function login() {
+  const username = document.getElementById('login-user').value;
+  const password = document.getElementById('login-pwd').value;
+  const r = await fetch('/api/login', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({username,password})
+  }).then(x=>x.json());
+  if (r.success) {
+    localStorage.user = username;
+    location.href = '/lobby.html';
+  } else alert(r.msg);
+}
+
+async function register() {
+  const username = document.getElementById('reg-user').value;
+  const password = document.getElementById('reg-pwd').value;
+  const r = await fetch('/api/register', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({username,password})
+  }).then(x=>x.json());
+  alert(r.success ? '注册成功' : r.msg);
+}
+</script>
+</body>
+</html>

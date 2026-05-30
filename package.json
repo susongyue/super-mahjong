@@ -1,0 +1,15 @@
+{
+  "name": "super-mahjong",
+  "version": "1.0.0",
+  "description": "超能力立直麻将 - 在线多人麻将角色选角游戏",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  }
+}
