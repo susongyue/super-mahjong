@@ -241,7 +241,7 @@
   <div class="nav-links">
     <a href="/lobby.html">大厅</a>
     <a href="/game.html">选择出战</a>
-    <a href="#" class="active">回合对战</a>
+    <a href="/battle_round.html" class="active">回合对战</a>
   </div>
   <span class="nav-user" id="navUser"></span>
 </nav>
@@ -327,11 +327,28 @@ const SKILL_TYPES = {
 
 // ══════════ Socket ══════════
 const socket = io({ transports: ['polling', 'websocket'] });
+let joinDone = false;
+let loadRetry = 0;
+const MAX_RETRY = 5;
 
 socket.on('connect', () => {
   socket.emit('joinRoom', { roomId, playerName: username });
   socket.emit('getRoomState', roomId);
-  loadBattleData();
+});
+
+// 等待加入房间成功后再加载数据
+socket.on('joinSuccess', () => {
+  if (!joinDone) {
+    joinDone = true;
+    loadBattleData();
+  }
+});
+
+// 玩家列表更新时也刷新（用于加入后同步）
+socket.on('roomPlayersUpdate', () => {
+  if (joinDone) {
+    loadBattleData();
+  }
 });
 
 socket.on('roomState', (data) => {
@@ -372,20 +389,48 @@ socket.on('gameEnded', (data) => {
 async function loadBattleData() {
   try {
     // 加载当前回合作战选择
-    const sel = await fetch(`/api/battle-selections?roomId=${roomId}`).then(r => r.json());
+    const selRes = await fetch(`/api/battle-selections?roomId=${roomId}`);
+    const sel = await selRes.json();
     battleSelections = sel || {};
 
     // 加载所有玩家的角色池
-    const drafts = await fetch(`/api/all-draft?roomId=${roomId}`).then(r => r.json());
+    const draftRes = await fetch(`/api/all-draft?roomId=${roomId}`);
+    const drafts = await draftRes.json();
     allChars = drafts || {};
 
-    console.log('Battle data loaded:', { selections: Object.keys(battleSelections).length, players: Object.keys(allChars).length });
+    console.log('Battle data loaded:', {
+      selections: Object.keys(battleSelections).length,
+      players: Object.keys(allChars).length
+    });
+
+    // 检查数据是否完整：如果有选择但没有角色池数据，重试
+    const selCount = Object.keys(battleSelections).length;
+    const draftCount = Object.keys(allChars).length;
+    if (selCount > 0 && draftCount === 0 && loadRetry < MAX_RETRY) {
+      loadRetry++;
+      console.log(`⚠️ 角色池数据为空，第 ${loadRetry} 次重试...`);
+      setTimeout(() => loadBattleData(), 1000);
+      return;
+    }
+
+    loadRetry = 0;
   } catch (e) {
     console.error('Failed to load battle data:', e);
+    if (loadRetry < MAX_RETRY) {
+      loadRetry++;
+      setTimeout(() => loadBattleData(), 1500);
+      return;
+    }
   }
 
   renderBattleGrid();
 }
+
+// socket 重连时也重新加载
+socket.on('disconnect', () => { joinDone = false; });
+socket.on('reconnect', () => {
+  socket.emit('joinRoom', { roomId, playerName: username });
+});
 
 function escHTML(s) {
   if (!s) return '';

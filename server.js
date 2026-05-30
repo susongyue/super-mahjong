@@ -90,6 +90,14 @@ async function loadFromDB() {
       drData.forEach(r => { draftResults[r.room_id] = r.results; });
       console.log('✅ 从 Supabase 加载 ' + drData.length + ' 条选角结果');
     }
+
+    // 加载角色休息/保留状态
+    const { data: csData } = await supabase.from('character_states').select('*');
+    if (csData) {
+      characterStates = {};
+      csData.forEach(r => { characterStates[r.room_id] = r.states_data; });
+      console.log('✅ 从 Supabase 加载 ' + csData.length + ' 条角色状态');
+    }
   } catch (e) {
     console.log('⚠️ Supabase 加载失败，尝试从本地 JSON 恢复: ' + e.message);
     loadFromLocalJSON();
@@ -166,6 +174,18 @@ async function saveDraftResults() {
   } catch (e) { console.log('⚠️ saveDraftResults 失败: ' + e.message); }
 }
 
+async function saveCharacterStates() {
+  try {
+    for (const [roomId, states] of Object.entries(characterStates)) {
+      await supabase.from('character_states').upsert({
+        room_id: roomId,
+        states_data: states,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'room_id' });
+    }
+  } catch (e) { console.log('⚠️ saveCharacterStates 失败: ' + e.message); }
+}
+
 // ── 辅助函数 ──
 let _charCache = null;
 let _charCacheTime = 0;
@@ -197,42 +217,102 @@ function updateCharacterStatesAfterRound(roomId) {
   // 初始化房间状态
   if (!characterStates[roomId]) characterStates[roomId] = {};
 
-  // 遍历每个玩家的出战角色，将其标记为休息（保留角色除外）
-  for (const [playerName, charName] of Object.entries(selections)) {
+  // 获取房间所有玩家
+  const room = socketRooms[roomId];
+  const allPlayerNames = new Set();
+  if (room && room.players) room.players.forEach(p => allPlayerNames.add(p.name));
+  Object.keys(draft).forEach(p => allPlayerNames.add(p));
+  Object.keys(selections).forEach(p => allPlayerNames.add(p));
+
+  // 为每个玩家初始化角色状态（如果还没有）
+  allPlayerNames.forEach(playerName => {
     if (!characterStates[roomId][playerName]) {
-      // 初始化该玩家的角色状态
       characterStates[roomId][playerName] = {};
-      const playerChars = draft[playerName] || [];
-      playerChars.forEach(c => {
+    }
+    const playerChars = draft[playerName] || [];
+    playerChars.forEach(c => {
+      if (!(c.name in characterStates[roomId][playerName])) {
         characterStates[roomId][playerName][c.name] = { resting: false };
-      });
+      }
+    });
+  });
+
+  // 遍历每个玩家的本回合出战角色，将其标记为休息（保留角色除外）
+  for (const [playerName, charName] of Object.entries(selections)) {
+    // 确保角色在状态字典中
+    if (!(charName in (characterStates[roomId][playerName] || {}))) {
+      if (!characterStates[roomId][playerName]) characterStates[roomId][playerName] = {};
+      characterStates[roomId][playerName][charName] = { resting: false };
     }
 
-    // 所有角色出战都标记为休息（保留角色也计数，但可以选择时忽略）
-    if (characterStates[roomId][playerName][charName]) {
+    const charData = getCharacterData(charName) || {};
+    if (charData.retain) {
+      // 保留角色也标记休息，但前端允许选择
       characterStates[roomId][playerName][charName].resting = true;
-      const charData = getCharacterData(charName) || {};
-      if (charData.retain) {
-        console.log(`🛡️ ${playerName} 的 ${charName} 拥有保留效果，标记休息但可继续出战`);
-      } else {
-        console.log(`😴 ${playerName} 的 ${charName} 进入休息状态`);
-      }
+      console.log(`🛡️ ${playerName} 的 ${charName} 拥有保留效果，标记休息但可继续出战`);
+    } else {
+      characterStates[roomId][playerName][charName].resting = true;
+      console.log(`😴 ${playerName} 的 ${charName} 进入休息状态`);
     }
   }
 
+  // 检查是否所有非保留角色都在休息 → 全部重置
   // 检查是否所有角色都在休息（除了保留的）
   for (const [playerName, states] of Object.entries(characterStates[roomId])) {
-    const allCharStates = Object.entries(states);
-    const restingChars = allCharStates.filter(([, s]) => s.resting);
+    const allCharEntries = Object.entries(states);
+    const nonRetainChars = allCharEntries.filter(([cn]) => {
+      const cd = getCharacterData(cn) || {};
+      return !cd.retain;
+    });
+    const retainChars = allCharEntries.filter(([cn]) => {
+      const cd = getCharacterData(cn) || {};
+      return cd.retain;
+    });
 
-    if (restingChars.length >= allCharStates.length && allCharStates.length > 0) {
-      // 所有角色都休息过了，重置
-      allCharStates.forEach(([cn]) => {
+    // 非保留角色全部休息 → 全部重置
+    const allNonRetainResting = nonRetainChars.length > 0 && nonRetainChars.every(([, s]) => s.resting);
+    if (allNonRetainResting) {
+      nonRetainChars.forEach(([cn]) => {
         characterStates[roomId][playerName][cn].resting = false;
       });
-      console.log(`🔄 ${playerName} 所有角色已休息完毕，全部恢复`);
+      console.log(`🔄 ${playerName} 所有非保留角色已休息完毕，全部恢复`);
+    }
+
+    // 保留角色也全休息了 → 也重置保留角色
+    const allRetainResting = retainChars.length > 0 && retainChars.every(([, s]) => s.resting);
+    if (allRetainResting && allNonRetainResting) {
+      retainChars.forEach(([cn]) => {
+        characterStates[roomId][playerName][cn].resting = false;
+      });
+      console.log(`🔄 ${playerName} 所有保留角色也一并恢复`);
     }
   }
+
+  // 持久化到 Supabase
+  saveCharacterStates();
+
+  // 广播角色状态给各玩家
+  Object.keys(characterStates[roomId]).forEach(playerName => {
+    const playerSocket = findSocketByPlayerName(roomId, playerName);
+    if (playerSocket) {
+      playerSocket.emit('characterStatesUpdate', characterStates[roomId][playerName]);
+    }
+  });
+}
+
+// 辅助函数：通过玩家名查找 socket
+function findSocketByPlayerName(roomId, playerName) {
+  const room = socketRooms[roomId];
+  if (!room) return null;
+  const player = room.players.find(p => p.name === playerName);
+  if (!player) return null;
+  const sockets = io.sockets.adapter.rooms.get(roomId);
+  if (!sockets) return null;
+  for (const socketId of sockets) {
+    const s = io.sockets.sockets.get(socketId);
+    if (s && s.playerName === playerName) return s;
+  }
+  return null;
 }
 
 // ═══════════════════════════════════════
@@ -494,6 +574,7 @@ io.on('connection', (socket) => {
 
   socket.on('joinRoom', (data) => {
     const { roomId = "0000", playerName } = data;
+    socket.playerName = playerName; // 记录玩家名，用于后续查找
     if (!socketRooms[roomId]) {
       socketRooms[roomId] = {
         players: [], maxPlayers: 4, vote: { random: 0, normal: 0 }, voteEnd: false,
@@ -617,6 +698,8 @@ io.on('connection', (socket) => {
 
     // 检查是否所有人都选完了
     if (room && selectedCount >= totalPlayers && totalPlayers > 0) {
+      // 持久化角色状态（防止服务器重启丢失）
+      saveCharacterStates();
       io.to(roomId).emit('allBattleSelected', {
         selections,
         msg: '所有玩家已选择出战角色，即将进入回合界面！'
