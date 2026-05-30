@@ -246,10 +246,15 @@ io.on('connection', (socket) => {
     const { roomId = "0000", playerName } = data;
     if (!socketRooms[roomId]) {
       socketRooms[roomId] = {
-        players: [], maxPlayers: 4, vote: { random: 0, normal: 0 }, voteEnd: false
+        players: [], maxPlayers: 4, vote: { random: 0, normal: 0 }, voteEnd: false,
+        round: 1, roundEndVotes: {}, gameEndVotes: {}
       };
     }
     const room = socketRooms[roomId];
+    // 确保新加入的玩家回合计数器一致
+    if (!room.round) room.round = 1;
+    if (!room.roundEndVotes) room.roundEndVotes = {};
+    if (!room.gameEndVotes) room.gameEndVotes = {};
 
     if (room.players.length >= room.maxPlayers) {
       socket.emit('joinFailed', '房间人数已满（最多4人）');
@@ -316,6 +321,69 @@ io.on('connection', (socket) => {
           desc: finalType === 'random' ? '随机抽取角色' : '正常抽取角色'
         });
       }
+    }
+  });
+
+  // 投票结束当前回合
+  socket.on('voteEndRound', (roomId) => {
+    const room = socketRooms[roomId];
+    if (!room) return;
+    if (!room.roundEndVotes) room.roundEndVotes = {};
+    room.roundEndVotes[socket.id] = true;
+
+    const votedCount = Object.keys(room.roundEndVotes).length;
+    const totalCount = room.players.length;
+    const votedNames = room.players.filter(p => room.roundEndVotes[p.id]).map(p => p.name);
+
+    io.to(roomId).emit('roundEndVoteUpdate', {
+      voted: votedCount,
+      total: totalCount,
+      votedNames
+    });
+
+    if (votedCount >= totalCount && totalCount > 0) {
+      room.round += 1;
+      room.roundEndVotes = {};
+      io.to(roomId).emit('roundAdvanced', { round: room.round });
+    }
+    saveSocketRooms();
+  });
+
+  // 投票结束对局
+  socket.on('voteEndGame', (roomId) => {
+    const room = socketRooms[roomId];
+    if (!room) return;
+    if (!room.gameEndVotes) room.gameEndVotes = {};
+    room.gameEndVotes[socket.id] = true;
+
+    const votedCount = Object.keys(room.gameEndVotes).length;
+    const totalCount = room.players.length;
+    const votedNames = room.players.filter(p => room.gameEndVotes[p.id]).map(p => p.name);
+
+    io.to(roomId).emit('gameEndVoteUpdate', {
+      voted: votedCount,
+      total: totalCount,
+      votedNames
+    });
+
+    if (votedCount >= totalCount && totalCount > 0) {
+      room.gameEndVotes = {};
+      room.round = 1;
+      io.to(roomId).emit('gameEnded', { msg: '全部玩家同意，对局结束！' });
+    }
+    saveSocketRooms();
+  });
+
+  // 获取当前房间状态（回合数等）
+  socket.on('getRoomState', (roomId) => {
+    const room = socketRooms[roomId];
+    if (room) {
+      socket.emit('roomState', {
+        round: room.round || 1,
+        roundEndVotes: room.roundEndVotes ? Object.keys(room.roundEndVotes).length : 0,
+        gameEndVotes: room.gameEndVotes ? Object.keys(room.gameEndVotes).length : 0,
+        totalPlayers: room.players.length
+      });
     }
   });
 

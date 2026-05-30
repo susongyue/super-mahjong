@@ -27,13 +27,32 @@
     }
     .page-header .info strong { color: var(--text); }
 
-    /* 手机适配 */
+    .section-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .section-header-row h2 { margin-bottom: 0; }
+
+    /* 提示文字 */
+    .card-hint {
+      display: block;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 10px;
+      text-align: center;
+    }
+
     @media (max-width: 768px) {
       .page-header h1 { font-size: 24px; }
     }
     @media (max-width: 540px) {
       .page-header h1 { font-size: 22px; }
       .page-header .info { font-size: 13px; }
+      .section-header-row { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -51,35 +70,60 @@
 <div class="container">
   <div class="page-header">
     <h1>🎴 对局进行中</h1>
-    <div class="info">房间：<strong id="roomDisplay"></strong> | 玩家：<strong id="nameDisplay"></strong></div>
+    <div class="info">
+      房间：<strong id="roomDisplay"></strong> | 玩家：<strong id="nameDisplay"></strong>
+    </div>
   </div>
 
+  <!-- 回合信息 + 投票区 -->
   <div class="section">
-    <h2>🎯 你的角色（6选1出战）</h2>
+    <div class="section-header-row">
+      <h2>📊 对局状态</h2>
+      <span class="round-badge">🏁 第 <span id="roundNum">1</span> 回合</span>
+    </div>
+    <div class="vote-section" style="margin-top:16px;">
+      <button class="vote-btn vote-btn-round" id="btnEndRound" onclick="voteEndRound()">
+        ✅ 投票结束回合
+      </button>
+      <button class="vote-btn vote-btn-game" id="btnEndGame" onclick="voteEndGame()">
+        🏁 投票结束对局
+      </button>
+      <div class="vote-info">
+        <span id="roundVoteInfo" class="vote-count round">回合投票 0/0</span>
+        <span id="gameVoteInfo" class="vote-count game">对局投票 0/0</span>
+      </div>
+    </div>
+    <div id="voteNames" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
+  </div>
+
+  <!-- 角色列表 -->
+  <div class="section">
+    <div class="section-header-row">
+      <h2>🎯 你的角色（6选1出战）</h2>
+    </div>
     <div class="char-grid" id="charGrid">
       <div class="no-data">加载中...</div>
     </div>
   </div>
 </div>
 
-<!-- 技能放大弹窗 -->
-<div class="modal-overlay hidden" id="skillOverlay" onclick="closeSkillOverlay(event)">
-  <div class="modal-dialog" id="skillDialog" onclick="event.stopPropagation()">
-    <div class="dialog-header">
-      <div>
-        <div class="dialog-title" id="skillDialogTitle"></div>
-        <div class="dialog-char" id="skillDialogChar"></div>
-      </div>
-      <button class="dialog-close" onclick="closeSkillOverlay()">✕</button>
+<!-- 全屏角色展示弹窗（覆盖整个手机屏幕） -->
+<div class="char-fullscreen-overlay hidden" id="charFullscreen">
+  <div class="fs-header">
+    <div class="fs-header-left">
+      <div class="fs-char-name" id="fsCharName"></div>
+      <div class="fs-char-tier" id="fsCharTier"></div>
+      <div class="fs-faction-badge" id="fsFaction"></div>
     </div>
-    <div class="dialog-body">
-      <span class="dialog-skill-type" id="skillDialogType"></span>
-      <div class="dialog-desc" id="skillDialogDesc"></div>
-      <div class="dialog-faction" id="skillDialogFaction"></div>
-    </div>
+    <button class="fs-close" onclick="closeFullscreen()">✕</button>
+  </div>
+  <div class="fs-body" id="fsBody"></div>
+  <div class="fs-footer">
+    <span class="fs-footer-hint">👆 将此屏幕展示给其他玩家查看</span>
   </div>
 </div>
 
+<script src="/socket.io/socket.io.js"></script>
 <script>
 const username = localStorage.user;
 const roomId = localStorage.roomId;
@@ -100,6 +144,82 @@ function escHTML(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// ══════════ Socket.io 连接 ══════════
+const socket = io({ transports: ['polling', 'websocket'] });
+
+socket.on('connect', () => {
+  socket.emit('joinRoom', { roomId, playerName: username });
+  socket.emit('getRoomState', roomId);
+});
+
+// 获取房间状态
+socket.on('roomState', (data) => {
+  document.getElementById('roundNum').innerText = data.round || 1;
+});
+
+// 回合投票更新
+socket.on('roundEndVoteUpdate', (data) => {
+  document.getElementById('roundVoteInfo').innerText = '回合投票 ' + data.voted + '/' + data.total;
+  document.getElementById('roundVoteInfo').className = data.voted >= data.total ? 'vote-count done' : 'vote-count round';
+  document.getElementById('btnEndRound').disabled = true;
+  document.getElementById('btnEndRound').innerText = '✅ 已投票结束回合';
+  updateVoteNames();
+});
+
+// 回合推进
+socket.on('roundAdvanced', (data) => {
+  document.getElementById('roundNum').innerText = data.round;
+  document.getElementById('roundVoteInfo').innerText = '回合投票 0/0';
+  document.getElementById('roundVoteInfo').className = 'vote-count round';
+  document.getElementById('btnEndRound').disabled = false;
+  document.getElementById('btnEndRound').innerText = '✅ 投票结束回合';
+  showToast('🎉 第 ' + data.round + ' 回合开始！');
+});
+
+// 对局投票更新
+socket.on('gameEndVoteUpdate', (data) => {
+  document.getElementById('gameVoteInfo').innerText = '对局投票 ' + data.voted + '/' + data.total;
+  document.getElementById('gameVoteInfo').className = data.voted >= data.total ? 'vote-count done' : 'vote-count game';
+  document.getElementById('btnEndGame').disabled = true;
+  document.getElementById('btnEndGame').innerText = '🏁 已投票结束对局';
+  updateVoteNames();
+});
+
+// 对局结束
+socket.on('gameEnded', (data) => {
+  showToast(data.msg);
+  document.getElementById('roundNum').innerText = '1';
+  document.getElementById('roundVoteInfo').innerText = '回合投票 0/0';
+  document.getElementById('roundVoteInfo').className = 'vote-count round';
+  document.getElementById('gameVoteInfo').innerText = '对局投票 0/0';
+  document.getElementById('gameVoteInfo').className = 'vote-count game';
+  document.getElementById('btnEndRound').disabled = false;
+  document.getElementById('btnEndRound').innerText = '✅ 投票结束回合';
+  document.getElementById('btnEndGame').disabled = false;
+  document.getElementById('btnEndGame').innerText = '🏁 投票结束对局';
+});
+
+// 玩家列表更新
+socket.on('roomPlayersUpdate', (data) => {
+  updateVoteNames();
+});
+
+function updateVoteNames() {
+  // 用简单的提示代替玩家名列表
+}
+
+// 投票结束回合
+function voteEndRound() {
+  socket.emit('voteEndRound', roomId);
+}
+
+// 投票结束对局
+function voteEndGame() {
+  if (!confirm('确定要投票结束本局游戏吗？所有玩家同意后将结束对局。')) return;
+  socket.emit('voteEndGame', roomId);
+}
+
+// ══════════ 角色加载 ══════════
 async function loadChars() {
   const chars = await fetch(`/api/my-draft?roomId=${roomId}&username=${encodeURIComponent(username)}`).then(r => r.json());
   const grid = document.getElementById('charGrid');
@@ -108,7 +228,7 @@ async function loadChars() {
     return;
   }
 
-  grid.innerHTML = chars.map(c => {
+  grid.innerHTML = chars.map((c, idx) => {
     const skills = [];
     if (c.passive) skills.push({ key: 'passive', text: c.passive });
     if (c.innate)  skills.push({ key: 'innate', text: c.innate });
@@ -116,19 +236,14 @@ async function loadChars() {
 
     const skillTags = skills.map(s => {
       const st = SKILL_TYPES[s.key];
-      const preview = s.text.length > 8 ? s.text.substring(0, 8) + '…' : s.text;
-      return `<button class="skill-tag ${st.cls}"
-        data-char="${escHTML(c.name)}"
-        data-faction="${escHTML(c.faction || '')}"
-        data-label="${escHTML(st.label)}"
-        data-desc="${escHTML(s.text)}"
-        data-cls="${st.cls}"
-        onclick="openSkill(this)"
-        title="点击放大查看详情"
-      ><span class="tag-icon">${st.icon}</span>${st.label}<span class="tag-preview">${escHTML(preview)}</span></button>`;
+      const preview = s.text.length > 10 ? s.text.substring(0, 10) + '…' : s.text;
+      return `<span class="skill-tag ${st.cls}" style="cursor:default;">
+        <span class="tag-icon">${st.icon}</span>${st.label}
+        <span class="tag-preview">${escHTML(preview)}</span>
+      </span>`;
     }).join('');
 
-    return `<div class="char-card">
+    return `<div class="char-card" onclick="openFullscreen(${idx})" style="cursor:pointer;">
       <div class="faction-badge">${escHTML(c.faction || '无阵营')}</div>
       <div class="char-name">${escHTML(c.name)}</div>
       <div class="char-meta">
@@ -136,37 +251,60 @@ async function loadChars() {
         ${c.limit ? '<span class="limit-tag"> · 限' + escHTML(c.limit) + '</span>' : ''}
       </div>
       <div class="skill-tags">${skillTags}</div>
+      <span class="card-hint">👆 点击卡片查看完整技能</span>
     </div>`;
   }).join('');
+
+  // 缓存角色数据
+  window._chars = chars;
 }
 
-// 打开技能放大弹窗
-function openSkill(btn) {
-  document.getElementById('skillDialogTitle').innerText = btn.dataset.label + '技能';
-  document.getElementById('skillDialogChar').innerText = '角色：' + btn.dataset.char;
-  const typeEl = document.getElementById('skillDialogType');
-  typeEl.textContent = btn.dataset.label;
-  typeEl.className = 'dialog-skill-type ' + btn.dataset.cls;
-  document.getElementById('skillDialogDesc').innerText = btn.dataset.desc;
-  document.getElementById('skillDialogFaction').innerText = btn.dataset.faction ? '阵营：' + btn.dataset.faction : '';
-  document.getElementById('skillOverlay').classList.remove('hidden');
+// ══════════ 全屏角色展示 ══════════
+function openFullscreen(index) {
+  const c = window._chars[index];
+  if (!c) return;
+
+  document.getElementById('fsCharName').innerText = c.name;
+  document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?') + (c.limit ? ' · 限' + c.limit : '');
+  document.getElementById('fsFaction').innerText = c.faction || '无阵营';
+
+  const skills = [];
+  if (c.passive) skills.push({ key: 'passive', text: c.passive });
+  if (c.innate)  skills.push({ key: 'innate', text: c.innate });
+  if (c.extra)   skills.push({ key: 'extra', text: c.extra });
+
+  document.getElementById('fsBody').innerHTML = skills.map(s => {
+    const st = SKILL_TYPES[s.key];
+    return `<div class="fs-skill-block">
+      <span class="fs-skill-label ${st.cls}">${st.icon} ${st.label}技能</span>
+      <div class="fs-skill-text">${escHTML(s.text)}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('charFullscreen').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
 
-// 关闭弹窗
-function closeSkillOverlay(e) {
-  // 如果传入了事件对象且点击的不是遮罩本身，则不关闭
-  if (e && e.target !== document.getElementById('skillOverlay')) return;
-  document.getElementById('skillOverlay').classList.add('hidden');
+function closeFullscreen() {
+  document.getElementById('charFullscreen').classList.add('hidden');
   document.body.style.overflow = '';
 }
 
-// ESC 关闭
+// ESC 关闭全屏
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !document.getElementById('skillOverlay').classList.contains('hidden')) {
-    closeSkillOverlay();
+  if (e.key === 'Escape' && !document.getElementById('charFullscreen').classList.contains('hidden')) {
+    closeFullscreen();
   }
 });
+
+// ══════════ Toast ══════════
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
 
 loadChars();
 </script>
