@@ -35,6 +35,9 @@ let rooms = {};        // REST 房间（lobby 流程用）
 let socketRooms = {};  // Socket.io 房间（index.html 用）
 let draftResults = {}; // 选角结果（按房间+用户）
 
+// 确保 data 目录存在
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
 // 从文件加载数据
 function loadData() {
   try { if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); } catch (e) { users = {}; }
@@ -64,6 +67,17 @@ const isAllReady = (roomId) => {
 // ═══════════════════════════════════════
 //  REST API 路由
 // ═══════════════════════════════════════
+
+// 如果 characters.json 不存在，从 CSV 自动生成
+const CSV_FILE = path.join(__dirname, 'super-mahjong.csv');
+if (!fs.existsSync(CHARS_FILE) && fs.existsSync(CSV_FILE)) {
+  try {
+    const csvText = fs.readFileSync(CSV_FILE, 'utf8');
+    const result = parseCSV(csvText);
+    fs.writeFileSync(CHARS_FILE, JSON.stringify(result, null, 2), 'utf8');
+    console.log('✅ 已从 CSV 自动生成 ' + result.length + ' 个角色');
+  } catch (e) { console.log('⚠️ CSV 解析失败: ' + e.message); }
+}
 
 // 注册
 app.post('/api/register', (req, res) => {
@@ -212,8 +226,10 @@ app.get('/api/my-draft', (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
-  serveClient: true,  // 启用自带客户端，前端不再需要 CDN
-  maxHttpBufferSize: 1e8
+  serveClient: true,
+  maxHttpBufferSize: 1e8,
+  transports: ['polling', 'websocket'],  // 兼容 Render 反向代理
+  allowEIO3: true
 });
 
 // Socket.io 核心逻辑
@@ -313,11 +329,11 @@ io.on('connection', (socket) => {
 });
 
 // 启动服务
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`✅ 服务器运行在 http://localhost:${PORT}`);
-  console.log('   - 登录页:  http://localhost:3000/login.html');
-  console.log('   - 大厅页:  http://localhost:3000/lobby.html');
-  console.log('   - 房间页:  http://localhost:3000/index.html');
-  console.log('   - 对局页:  http://localhost:3000/game.html');
+  console.log('   - 登录页:  http://localhost:' + PORT + '/login.html');
+  console.log('   - 大厅页:  http://localhost:' + PORT + '/lobby.html');
+  console.log('   - 房间页:  http://localhost:' + PORT + '/index.html');
+  console.log('   - 对局页:  http://localhost:' + PORT + '/game.html');
 });
