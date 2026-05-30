@@ -98,6 +98,14 @@ async function loadFromDB() {
       csData.forEach(r => { characterStates[r.room_id] = r.states_data; });
       console.log('✅ 从 Supabase 加载 ' + csData.length + ' 条角色状态');
     }
+
+    // 加载出战选择（关键：服务器重启后恢复，避免 battle_round 页显示"未选择"）
+    const { data: bsData } = await supabase.from('battle_selections').select('*');
+    if (bsData) {
+      battleSelections = {};
+      bsData.forEach(r => { battleSelections[r.room_id] = r.selections_data; });
+      console.log('✅ 从 Supabase 加载 ' + bsData.length + ' 条出战选择');
+    }
   } catch (e) {
     console.log('⚠️ Supabase 加载失败，尝试从本地 JSON 恢复: ' + e.message);
     loadFromLocalJSON();
@@ -184,6 +192,45 @@ async function saveCharacterStates() {
       }, { onConflict: 'room_id' });
     }
   } catch (e) { console.log('⚠️ saveCharacterStates 失败: ' + e.message); }
+}
+
+async function saveBattleSelections() {
+  try {
+    for (const [roomId, selections] of Object.entries(battleSelections)) {
+      await supabase.from('battle_selections').upsert({
+        room_id: roomId,
+        selections_data: selections,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'room_id' });
+    }
+  } catch (e) { console.log('⚠️ saveBattleSelections 失败: ' + e.message); }
+}
+
+// 启动时清理 Supabase 中已不存在于内存的过期出战选择
+async function cleanupStaleSelections() {
+  try {
+    const { data: existing } = await supabase.from('battle_selections').select('room_id');
+    if (!existing) return;
+    for (const r of existing) {
+      if (!(r.room_id in battleSelections)) {
+        await supabase.from('battle_selections').delete().eq('room_id', r.room_id);
+      }
+    }
+  } catch (e) { /* ignore */ }
+}
+
+// 从 Supabase 恢复某个房间的出战选择（内存缺失时）
+async function restoreBattleSelections(roomId) {
+  if (battleSelections[roomId]) return battleSelections[roomId];
+  try {
+    const { data } = await supabase.from('battle_selections').select('*').eq('room_id', roomId).single();
+    if (data && data.selections_data) {
+      battleSelections[roomId] = data.selections_data;
+      console.log('🔍 从 Supabase 恢复出战选择 ' + roomId);
+      return data.selections_data;
+    }
+  } catch (e) { /* ignore */ }
+  return null;
 }
 
 // ── 辅助函数 ──
@@ -542,19 +589,45 @@ app.get('/api/character-states', (req, res) => {
 });
 
 // 获取当前回合所有玩家的出战选择（用于 battle_round.html）
-app.get('/api/battle-selections', (req, res) => {
+app.get('/api/battle-selections', async (req, res) => {
   const { roomId } = req.query;
   if (!roomId) return res.json({});
-  res.json(battleSelections[roomId] || {});
+
+  // 内存已有数据直接返回
+  if (battleSelections[roomId]) {
+    return res.json(battleSelections[roomId]);
+  }
+
+  // 内存缺失，尝试从 Supabase 恢复
+  const restored = await restoreBattleSelections(roomId);
+  if (restored) {
+    return res.json(restored);
+  }
+
+  return res.json({});
 });
 
 // 获取当前房间所有玩家的角色信息
 app.get('/api/all-draft', async (req, res) => {
   const { roomId } = req.query;
   if (!roomId) return res.json({});
-  const room = draftResults[roomId];
-  if (!room) return res.json({});
-  res.json(room);
+
+  // 内存已有
+  if (draftResults[roomId]) {
+    return res.json(draftResults[roomId]);
+  }
+
+  // 内存缺失，从 Supabase 恢复
+  try {
+    const { data } = await supabase.from('draft_results').select('*').eq('room_id', roomId).single();
+    if (data && data.results) {
+      draftResults[roomId] = data.results;
+      console.log('🔍 从 Supabase 恢复选角结果 ' + roomId);
+      return res.json(data.results);
+    }
+  } catch (e) { /* ignore */ }
+
+  return res.json({});
 });
 
 // ═══════════════════════════════════════
@@ -672,6 +745,7 @@ io.on('connection', (socket) => {
 
     // 记录选择
     battleSelections[roomId][playerName] = characterName;
+    saveBattleSelections(); // 立即持久化，防止重启丢失
     console.log(`⚔️ ${playerName} 在房间 ${roomId} 选择了 ${characterName} 出战`);
 
     const selections = battleSelections[roomId];
@@ -715,6 +789,7 @@ io.on('connection', (socket) => {
     if (!roomId || !playerName) return;
     if (battleSelections[roomId]) {
       delete battleSelections[roomId][playerName];
+      saveBattleSelections(); // 持久化更新
       const sel = battleSelections[roomId];
       const readyPlayerNames = Object.keys(sel);
       // 仅发送准备数量，不透露选择
@@ -762,6 +837,7 @@ io.on('connection', (socket) => {
       room.roundEndVotes = {};
       // 清空本轮作战选择
       battleSelections[roomId] = {};
+      saveBattleSelections(); // 持久化清空
       io.to(roomId).emit('roundAdvanced', { round: room.round });
     }
     saveSocketRooms();
@@ -779,6 +855,7 @@ io.on('connection', (socket) => {
     if (votedCount >= totalCount && totalCount > 0) {
       // ── 清理作战选将和角色状态 ──
       delete battleSelections[roomId];
+      saveBattleSelections(); // 持久化删除
       delete characterStates[roomId];
       room.gameEndVotes = {};
       room.round = 1;
@@ -802,6 +879,29 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── battle_round.html 专用：请求完整对战数据 ──
+  socket.on('requestBattleRoundData', async (roomId) => {
+    const room = socketRooms[roomId];
+    if (!room) return socket.emit('battleRoundData', { draft: {}, selections: {} });
+
+    // 确保数据从 Supabase 恢复
+    if (!battleSelections[roomId]) await restoreBattleSelections(roomId);
+    if (!draftResults[roomId]) {
+      try {
+        const { data } = await supabase.from('draft_results').select('*').eq('room_id', roomId).single();
+        if (data && data.results) draftResults[roomId] = data.results;
+      } catch (e) { /* ignore */ }
+    }
+
+    socket.emit('battleRoundData', {
+      roomId,
+      round: room.round || 1,
+      draft: draftResults[roomId] || {},
+      selections: battleSelections[roomId] || {},
+      totalPlayers: room.players.length
+    });
+  });
+
   socket.on('disconnect', () => {
     Object.keys(socketRooms).forEach(roomId => {
       const room = socketRooms[roomId];
@@ -812,6 +912,7 @@ io.on('connection', (socket) => {
         // 清理该玩家的作战选择
         if (battleSelections[roomId]) {
           delete battleSelections[roomId][playerName];
+          saveBattleSelections(); // 持久化更新
           // 广播更新后的准备状态
           const readyNames = Object.keys(battleSelections[roomId]);
           io.to(roomId).emit('battleReadyUpdate', {
@@ -832,6 +933,7 @@ const PORT = process.env.PORT || 3000;
 
 async function start() {
   await loadFromDB();
+  cleanupStaleSelections(); // 异步清理过期数据，不阻塞启动
   server.listen(PORT, () => {
     console.log(`✅ 服务器运行在 http://localhost:${PORT}`);
     console.log('   - 登录页:  http://localhost:' + PORT + '/login.html');

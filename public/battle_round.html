@@ -340,6 +340,8 @@ socket.on('connect', () => {
 socket.on('joinSuccess', () => {
   if (!joinDone) {
     joinDone = true;
+    // 先通过 REST API 加载，同时在 socket 层面也请求一份
+    socket.emit('requestBattleRoundData', roomId);
     loadBattleData();
   }
 });
@@ -349,6 +351,24 @@ socket.on('roomPlayersUpdate', () => {
   if (joinDone) {
     loadBattleData();
   }
+});
+
+// 从 socket 接收完整对战数据（比 REST 更可靠，会检查 Supabase）
+socket.on('battleRoundData', (data) => {
+  console.log('📡 收到 socket 对战数据:', { draft: Object.keys(data.draft||{}).length, selections: Object.keys(data.selections||{}).length });
+  if (data.draft && Object.keys(data.draft).length > 0) {
+    allChars = data.draft;
+  }
+  if (data.selections && Object.keys(data.selections).length > 0) {
+    battleSelections = data.selections;
+    // 尝试重新请求 REST API（可能已恢复）
+    if (Object.keys(allChars).length === 0) {
+      fetch(`/api/all-draft?roomId=${roomId}`).then(r => r.json()).then(d => {
+        if (d && Object.keys(d).length > 0) allChars = d;
+      }).catch(()=>{});
+    }
+  }
+  renderBattleGrid();
 });
 
 socket.on('roomState', (data) => {
@@ -430,6 +450,9 @@ async function loadBattleData() {
 socket.on('disconnect', () => { joinDone = false; });
 socket.on('reconnect', () => {
   socket.emit('joinRoom', { roomId, playerName: username });
+  socket.emit('requestBattleRoundData', roomId);
+  joinDone = true;
+  loadBattleData();
 });
 
 function escHTML(s) {
@@ -443,6 +466,17 @@ function renderBattleGrid() {
 
   if (playerNames.length === 0) {
     grid.innerHTML = '<div class="no-data">暂无对局数据，请返回选择出战页面重新操作</div>';
+    return;
+  }
+
+  // 如果所有玩家都没有选择记录，尝试通过 socket 请求兜底
+  const selKeys = Object.keys(battleSelections);
+  if (selKeys.length === 0 && loadRetry < MAX_RETRY) {
+    loadRetry++;
+    console.log(`⚠️ 出战选择数据为空，第 ${loadRetry} 次通过 socket 请求兜底...`);
+    socket.emit('requestBattleRoundData', roomId);
+    // 同时重试 REST API
+    setTimeout(() => loadBattleData(), 800);
     return;
   }
 
