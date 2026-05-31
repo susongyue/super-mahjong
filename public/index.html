@@ -130,6 +130,167 @@
     border: 1px solid var(--border);
   }
 
+  /* 池选 Draft 新 UI */
+  .draft-phase-label {
+    text-align: center;
+    font-size: 15px;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 12px;
+    padding: 8px 16px;
+    background: var(--gold-bg);
+    border-radius: 10px;
+    border: 1px solid #f0d78c;
+  }
+
+  .draft-turn-info {
+    background: var(--card-secondary);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    border: 2px solid var(--border);
+    text-align: center;
+    transition: all .3s;
+  }
+  .draft-turn-info.my-turn {
+    border-color: var(--accent);
+    background: #fff5f5;
+    box-shadow: 0 0 16px rgba(231,76,60,0.12);
+  }
+
+  .turn-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .turn-badge.your-turn {
+    background: var(--accent);
+    color: #fff;
+    animation: pulse-turn 1.2s infinite;
+  }
+  .turn-badge.waiting-turn {
+    background: var(--card);
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border-strong);
+  }
+  @keyframes pulse-turn {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+
+  .turn-progress {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .turn-order-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .draft-section {
+    margin-bottom: 16px;
+  }
+  .draft-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .draft-pool-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+
+  .draft-char-pickable {
+    cursor: pointer;
+    transition: all .2s;
+    border-color: var(--accent) !important;
+    background: #fff !important;
+  }
+  .draft-char-pickable:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(231,76,60,0.2);
+    border-color: #c0392b !important;
+    background: #fff5f5 !important;
+  }
+
+  .draft-player-hand .dp-name {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .draft-player-hand.my-hand .dp-name {
+    color: var(--accent);
+  }
+  .dp-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .draft-hand-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+
+  .draft-player-hand {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: var(--card-secondary);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .draft-player-hand.my-hand {
+    background: #fff5f5;
+    border-color: var(--accent);
+  }
+
+  .draft-preview {
+    background: var(--card-secondary);
+    border-radius: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+  }
+  .draft-pick-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pick-order-item {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 14px;
+    font-size: 12px;
+    background: var(--card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  .draft-char-hidden {
+    background: var(--card-secondary);
+    border-style: dashed;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .no-pick-hint {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-style: italic;
+    padding: 8px;
+  }
+
   /* CSV */
   .admin-section {
     margin-top: 20px;
@@ -169,6 +330,17 @@
     .admin-section { padding: 14px; }
     #csvDrop { padding: 14px; }
     .section-title { font-size: 14px; }
+
+    .draft-pool-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .draft-hand-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .draft-phase-label { font-size: 13px; padding: 6px 12px; }
+    .turn-badge { font-size: 13px; padding: 5px 16px; }
+    .draft-turn-info { padding: 10px 14px; }
+    .draft-player-hand { padding: 8px 10px; }
+    .draft-player-hand .dp-name { font-size: 13px; }
+    .draft-section-title { font-size: 13px; }
+    .pick-order-item { font-size: 11px; padding: 3px 10px; }
+    .turn-order-hint { font-size: 11px; }
   }
   @media (max-width: 480px) {
     body { padding-top: 42px; }
@@ -186,6 +358,23 @@
     .draft-char-row { gap: 6px; }
     .redirect-hint { font-size: 11px; padding: 8px; margin-top: 12px; }
     .admin-section h3 { font-size: 12px; }
+
+    .draft-pool-grid { grid-template-columns: repeat(2, 1fr); gap: 5px; }
+    .draft-hand-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+    .draft-phase-label { font-size: 12px; padding: 5px 10px; margin-bottom: 8px; }
+    .turn-badge { font-size: 12px; padding: 4px 14px; }
+    .draft-turn-info { padding: 8px 10px; margin-bottom: 10px; }
+    .draft-turn-info .turn-progress { font-size: 11px; }
+    .draft-player-hand { padding: 6px 8px; margin-bottom: 8px; }
+    .draft-player-hand .dp-name { font-size: 12px; }
+    .dp-count { font-size: 10px; }
+    .draft-section { margin-bottom: 10px; }
+    .draft-section-title { font-size: 12px; margin-bottom: 5px; }
+    .pick-order-item { font-size: 10px; padding: 2px 8px; }
+    .draft-char-pickable { padding: 6px 8px; }
+    .draft-char-pickable .draft-char-row { gap: 4px; }
+    .draft-char-pickable .faction-badge { font-size: 10px; padding: 2px 6px; }
+    .draft-phase-label { font-size: 11px; }
   }
 </style>
 </head>
@@ -225,7 +414,7 @@
   </div>
 
   <div id="draftArea" class="hidden">
-    <h3>🎯 角色分配结果</h3>
+    <h3>🎯 角色选取</h3>
     <div id="draftContent"></div>
     <div class="redirect-hint" id="redirectHint">⏳ 即将自动跳转到对局页面...</div>
   </div>
@@ -333,60 +522,206 @@ socket.on('voteUpdate', data => {
   document.getElementById('voteResult').innerText = `当前投票：随机${data.vote.random}票 | 正常${data.vote.normal}票`;
 });
 
-socket.on('voteResult', async data => {
+socket.on('voteResult', data => {
   document.getElementById('voteResult').innerText = `投票结束！最终选择：${data.desc}`;
   document.getElementById('draftArea').classList.remove('hidden');
-  await doDraft(data.players, data.type);
-  startRedirectCountdown(3);
+  document.getElementById('draftContent').innerHTML = '<p style="text-align:center;padding:20px">⏳ 正在准备角色池...</p>';
+  document.getElementById('redirectHint').classList.add('hidden');
 });
 
+// ─── 角色卡片渲染辅助 ───
 function draftCharImageHTML(c) {
   if (c.image) return `<img class="draft-avatar" src="/png/${c.image}" alt="${c.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`;
   return `<div class="draft-avatar-placeholder">${(c.name||'').charAt(0)}</div>`;
 }
 
-async function doDraft(players, draftType) {
-  const chars = await fetch('/api/characters').then(r => r.json());
-  const pool = [...chars];
-  const result = {};
+function renderDraftCharCard(c, clickable) {
+  const cls = clickable ? 'draft-char draft-char-pickable' : 'draft-char';
+  const dataAttr = clickable ? ` data-char-name="${c.name.replace(/"/g, '&quot;')}"` : '';
+  return `<div class="${cls}"${dataAttr}>
+    <div class="draft-char-row">
+      ${draftCharImageHTML(c)}
+      <div style="flex:1;min-width:0;">
+        <div class="faction-badge">${c.faction || '无阵营'}</div>
+        <div style="font-weight:bold;font-size:14px">${c.name}</div>
+        <div class="char-tier">Tier: ${c.tier}${c.limit ? ' | 限' + c.limit : ''}</div>
+      </div>
+    </div>
+    ${c.passive ? '<div class="char-skill"><strong>被动</strong> ' + c.passive + '</div>' : ''}
+    ${c.innate ? '<div class="char-skill"><strong>天赋</strong> ' + c.innate + '</div>' : ''}
+    ${c.extra ? '<div class="char-skill"><strong>额外</strong> ' + c.extra + '</div>' : ''}
+  </div>`;
+}
 
-  players.forEach(p => {
-    result[p.name] = [];
-    for (let i = 0; i < 6; i++) {
-      if (pool.length === 0) break;
-      const idx = draftType === 'random' ? Math.floor(Math.random() * pool.length) : 0;
-      result[p.name].push(pool.splice(idx, 1)[0]);
-    }
-  });
+// ─── 池选模式：正常抽取 ───
+// 事件委托：点击可选取的角色卡片
+document.getElementById('draftContent').addEventListener('click', (e) => {
+  const card = e.target.closest('.draft-char-pickable');
+  if (card && card.dataset.charName) {
+    socket.emit('draftPick', { roomId, characterName: card.dataset.charName, playerName: username });
+  }
+});
 
-  let html = '';
-  Object.entries(result).forEach(([name, chars]) => {
-    html += `<div class="draft-player">
-      <div class="dp-name">${name}（${chars.length}个角色）</div>
-      <div class="draft-grid">
-        ${chars.map(c => `<div class="draft-char">
-          <div class="draft-char-row">
-            ${draftCharImageHTML(c)}
-            <div style="flex:1;min-width:0;">
-              <div class="faction-badge">${c.faction || '无阵营'}</div>
-              <div style="font-weight:bold;font-size:14px">${c.name}</div>
-              <div class="char-tier">Tier: ${c.tier}${c.limit ? ' | 限' + c.limit : ''}</div>
-            </div>
-          </div>
-          ${c.passive ? '<div class="char-skill"><strong>被动</strong> ' + c.passive + '</div>' : ''}
-          ${c.innate ? '<div class="char-skill"><strong>天赋</strong> ' + c.innate + '</div>' : ''}
-          ${c.extra ? '<div class="char-skill"><strong>额外</strong> ' + c.extra + '</div>' : ''}
-        </div>`).join('')}
+socket.on('draftPoolStart', data => {
+  document.getElementById('draftContent').innerHTML = renderPoolDraftUI(data);
+  document.getElementById('redirectHint').classList.add('hidden');
+});
+
+socket.on('draftUpdate', data => {
+  updatePoolDraftUI(data);
+});
+
+function renderPoolDraftUI(data) {
+  const { pool, currentPlayer, hands, currentTurnIndex, totalPicks, pickOrder, pickOrderPreview } = data;
+  const isMyTurn = currentPlayer === username;
+
+  // 找自己是第几个选（在 pickOrder 中首次出现的位置）
+  const myFirstPos = pickOrder.indexOf(username);
+  const myTurnHint = myFirstPos >= 0
+    ? `你是第 <strong>${myFirstPos + 1}</strong> 顺位（循环选取）`
+    : '';
+
+  let html = `<div class="draft-phase-label">📋 池选模式 — 每轮发10张角色，轮流选取</div>
+    <div class="draft-turn-info ${isMyTurn ? 'my-turn' : ''}">
+      ${isMyTurn
+        ? '<div class="turn-badge your-turn">🎯 轮到你选角了！</div>'
+        : '<div class="turn-badge waiting-turn">⏳ 等待 <strong>' + escHTML(currentPlayer) + '</strong> 选取...</div>'}
+      <div class="turn-progress">进度：${currentTurnIndex}/${totalPicks} 次选择</div>
+      <div class="turn-order-hint">${myTurnHint}</div>
+    </div>
+
+    <div class="draft-section">
+      <div class="draft-section-title">📦 当前角色池（${pool.length}张）${pool.length === 0 ? '— 等待发牌...' : ''}</div>
+      <div class="draft-pool-grid">
+        ${pool.map(c => renderDraftCharCard(c, isMyTurn)).join('')}
       </div>
     </div>`;
-  });
-  document.getElementById('draftContent').innerHTML = html;
 
-  await fetch('/api/draft-results', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ roomId, results: result })
+  // 各玩家手牌
+  html += '<div class="draft-section"><div class="draft-section-title">👥 各玩家已选角色</div>';
+  Object.entries(hands).forEach(([name, chars]) => {
+    const isMe = name === username;
+    html += `<div class="draft-player-hand ${isMe ? 'my-hand' : ''}" data-player="${escHTML(name)}">
+      <div class="dp-name">
+        ${isMe ? '⭐ ' : ''}${escHTML(name)}
+        <span class="dp-count">（${chars.length}/6）</span>
+      </div>
+      <div class="draft-grid draft-hand-grid">`
+        + chars.map(c => renderDraftCharCard(c, false)).join('')
+        + (chars.length === 0 ? '<div class="no-pick-hint">尚未选取</div>' : '')
+      + `</div>
+    </div>`;
   });
+  html += '</div>';
+
+  // 预览下几个选角顺序
+  if (pickOrderPreview && pickOrderPreview.length > 0) {
+    html += `<div class="draft-section draft-preview">
+      <div class="draft-section-title">🔜 即将选取的玩家</div>
+      <div class="draft-pick-preview">${pickOrderPreview.slice(0, 6).map((n, i) =>
+        `<span class="pick-order-item">${i + currentTurnIndex + 1}. ${escHTML(n)}</span>`
+      ).join('')}</div>
+    </div>`;
+  }
+
+  return html;
 }
+
+function updatePoolDraftUI(data) {
+  const { pool, currentPlayer, hands, currentTurnIndex, totalPicks, pickOrderPreview } = data;
+  const isMyTurn = currentPlayer === username;
+
+  // 更新池卡片
+  const poolGrid = document.querySelector('.draft-pool-grid');
+  if (poolGrid) {
+    poolGrid.innerHTML = pool.length > 0
+      ? pool.map(c => renderDraftCharCard(c, isMyTurn)).join('')
+      : '<div class="no-pick-hint" style="grid-column:1/-1">角色池已空，等待发牌...</div>';
+  }
+
+  // 更新回合信息
+  const turnInfo = document.querySelector('.draft-turn-info');
+  if (turnInfo) {
+    turnInfo.className = 'draft-turn-info ' + (isMyTurn ? 'my-turn' : '');
+    turnInfo.innerHTML = (isMyTurn
+      ? '<div class="turn-badge your-turn">🎯 轮到你选角了！</div>'
+      : '<div class="turn-badge waiting-turn">⏳ 等待 <strong>' + escHTML(currentPlayer) + '</strong> 选取...</div>')
+      + '<div class="turn-progress">进度：' + currentTurnIndex + '/' + totalPicks + ' 次选择</div>';
+  }
+
+  // 更新各玩家手牌
+  Object.entries(hands).forEach(([name, chars]) => {
+    const handGrid = document.querySelector(`.draft-player-hand[data-player="${name.replace(/"/g, '&quot;')}"] .draft-hand-grid`);
+    if (!handGrid) {
+      // 可能还没这个玩家的区域，重新渲染全部
+      document.getElementById('draftContent').innerHTML = renderPoolDraftUI({ pool, currentPlayer, hands, currentTurnIndex, totalPicks, pickOrderPreview, pickOrder: [] });
+      return;
+    }
+    handGrid.innerHTML = chars.map(c => renderDraftCharCard(c, false)).join('')
+      + (chars.length === 0 ? '<div class="no-pick-hint">尚未选取</div>' : '');
+    const dpName = handGrid.parentElement.querySelector('.dp-count');
+    if (dpName) dpName.textContent = `（${chars.length}/6）`;
+  });
+
+  // 更新预览
+  const preview = document.querySelector('.draft-pick-preview');
+  if (preview && pickOrderPreview) {
+    preview.innerHTML = pickOrderPreview.slice(0, 6).map((n, i) =>
+      `<span class="pick-order-item">${i + currentTurnIndex + 1}. ${escHTML(n)}</span>`
+    ).join('');
+  }
+
+  // 更新池数量标题
+  const poolTitle = document.querySelector('.draft-section:first-of-type .draft-section-title');
+  if (poolTitle) {
+    poolTitle.textContent = '📦 当前角色池（' + pool.length + '张）' + (pool.length === 0 ? ' — 等待发牌...' : '');
+  }
+}
+
+// ─── 随机模式：仅自己可见 ───
+let myRandomChars = [];
+
+socket.on('draftRandomResult', data => {
+  myRandomChars = data.myChars;
+  const html = `<div class="draft-phase-label">🎲 随机抽取模式 — 角色已分配</div>
+    <div class="draft-section">
+      <div class="draft-section-title">⭐ 你的角色</div>
+      <div class="draft-grid">${data.myChars.map(c => renderDraftCharCard(c, false)).join('')}</div>
+    </div>
+    <div class="draft-section">
+      <div class="draft-section-title">🔒 其他玩家角色</div>
+      <div class="draft-grid">
+        ${data.allPlayerNames.filter(n => n !== username).map(n =>
+          `<div class="draft-char draft-char-hidden">
+            <div class="draft-char-row" style="justify-content:center;padding:12px 0">
+              <span style="color:var(--text-secondary);font-size:13px">🔒 ${escHTML(n)} 的角色不可见</span>
+            </div>
+          </div>`
+        ).join('')}
+      </div>
+    </div>`;
+  document.getElementById('draftContent').innerHTML = html;
+});
+
+// ─── 选角完成统一处理 ───
+socket.on('draftAllDone', data => {
+  if (data.type === 'normal' && data.hands) {
+    // 正常模式：展示最终结果
+    let html = `<div class="draft-phase-label">✅ 选角完成！</div>`;
+    Object.entries(data.hands).forEach(([name, chars]) => {
+      html += `<div class="draft-player">
+        <div class="dp-name">${escHTML(name)}（${chars.length}个角色）</div>
+        <div class="draft-grid">${chars.map(c => renderDraftCharCard(c, false)).join('')}</div>
+      </div>`;
+    });
+    document.getElementById('draftContent').innerHTML = html;
+  }
+  document.getElementById('redirectHint').classList.remove('hidden');
+  startRedirectCountdown(3);
+});
+
+// ─── 重连时查询 draft 状态 ───
+socket.emit('getDraftState', roomId);
 
 function startRedirectCountdown(seconds) {
   const hint = document.getElementById('redirectHint');

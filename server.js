@@ -34,6 +34,8 @@ let users = {};
 let rooms = {};
 let socketRooms = {};
 let draftResults = {};
+// draftPools[roomId] = { deck, pool, pickOrder, currentTurnIndex, hands, phase, draftType }
+let draftPools = {};
 
 // ── 作战选将 + 休息/保留状态 ──
 // characterStates[roomId][username] = { "宫永咲": {resting:false}, "原村和": {resting:true}, ... }
@@ -434,6 +436,7 @@ async function deleteRoomData(roomId) {
   delete rooms[roomId];
   delete socketRooms[roomId];
   delete draftResults[roomId];
+  delete draftPools[roomId];
   delete characterStates[roomId];
   delete battleSelections[roomId];
   console.log('🧹 已清理房间数据: ' + roomId);
@@ -1223,7 +1226,245 @@ io.on('connection', (socket) => {
           players: room.players,
           desc: finalType === 'random' ? '随机抽取角色' : '正常抽取角色'
         });
+        // ── 服务端启动选角 ──
+        const playerNames = room.players.map(p => p.name);
+        if (finalType === 'random') {
+          executeRandomDraft(roomId, playerNames);
+        } else {
+          startPoolDraft(roomId, playerNames);
+        }
       }
+    }
+  });
+
+  // ═══════════════════════════════════════
+  //  池选 draft：正常模式（服务端管理）
+  // ═══════════════════════════════════════
+
+  // 同步读取角色列表
+  function getCharactersSync() {
+    const now = Date.now();
+    if (!_charCache || now - _charCacheTime > 30000) {
+      try { _charCache = JSON.parse(fs.readFileSync(CHARS_FILE, 'utf8')); _charCacheTime = now; } catch (e) { _charCache = []; }
+    }
+    return _charCache;
+  }
+
+  // 发下一轮池（最多10张）
+  function dealNextPool(roomId) {
+    const dp = draftPools[roomId];
+    if (!dp || dp.deck.length === 0) return [];
+    const count = Math.min(10, dp.deck.length);
+    dp.pool = dp.deck.splice(0, count);
+    return dp.pool;
+  }
+
+  // 广播当前 draft 状态给房间所有人
+  function broadcastDraftState(roomId) {
+    const dp = draftPools[roomId];
+    if (!dp) return;
+    const currentPlayer = dp.currentTurnIndex < dp.pickOrder.length
+      ? dp.pickOrder[dp.currentTurnIndex] : null;
+    io.to(roomId).emit('draftUpdate', {
+      pool: dp.pool,
+      currentPlayer,
+      hands: dp.hands,
+      currentTurnIndex: dp.currentTurnIndex,
+      totalPicks: dp.pickOrder.length,
+      pickOrderPreview: dp.pickOrder.slice(dp.currentTurnIndex, dp.currentTurnIndex + 6)
+    });
+  }
+
+  // 正常模式：启动池选 draft
+  function startPoolDraft(roomId, playerNames) {
+    const chars = getCharactersSync();
+    const shuffled = [...chars].sort(() => Math.random() - 0.5);
+
+    // 蛇形（循环）选角顺序：P1→P2→P3→P4→P1→...
+    const pickOrder = [];
+    const picksPerPlayer = 6;
+    const totalPicks = playerNames.length * picksPerPlayer;
+    for (let i = 0; i < totalPicks; i++) {
+      pickOrder.push(playerNames[i % playerNames.length]);
+    }
+
+    const hands = {};
+    playerNames.forEach(n => { hands[n] = []; });
+
+    draftPools[roomId] = {
+      deck: shuffled,
+      pool: [],
+      pickOrder,
+      currentTurnIndex: 0,
+      hands,
+      phase: 'picking',
+      draftType: 'normal'
+    };
+
+    // 发第一轮池
+    dealNextPool(roomId);
+
+    // 通知所有玩家
+    const currentPlayer = pickOrder[0];
+    io.to(roomId).emit('draftPoolStart', {
+      type: 'normal',
+      pool: draftPools[roomId].pool,
+      currentPlayer,
+      hands,
+      currentTurnIndex: 0,
+      totalPicks,
+      pickOrderPreview: pickOrder.slice(0, 6),
+      pickOrder // 完整顺序供客户端显示"你是第几个选"
+    });
+  }
+
+  // 随机模式：直接分配角色（每人仅看自己的）
+  function executeRandomDraft(roomId, playerNames) {
+    const chars = getCharactersSync();
+    const pool = [...chars];
+    const result = {};
+
+    playerNames.forEach(name => {
+      result[name] = [];
+      for (let i = 0; i < 6; i++) {
+        if (pool.length === 0) break;
+        const idx = Math.floor(Math.random() * pool.length);
+        result[name].push(pool.splice(idx, 1)[0]);
+      }
+    });
+
+    draftResults[roomId] = result;
+    saveDraftResults();
+
+    if (rooms[roomId]) {
+      rooms[roomId].started = true;
+      saveRooms();
+    }
+
+    // 每位玩家只能看到自己的角色
+    playerNames.forEach(name => {
+      const socket = findSocketByPlayerName(roomId, name);
+      if (socket) {
+        socket.emit('draftRandomResult', {
+          type: 'random',
+          myChars: result[name],
+          allPlayerNames: playerNames
+        });
+      }
+    });
+
+    // 通知所有人选角完成
+    io.to(roomId).emit('draftAllDone', {
+      type: 'random',
+      msg: '角色已随机分配完成！'
+    });
+  }
+
+  // 玩家从池中选角
+  socket.on('draftPick', (data) => {
+    const { roomId, characterName, playerName } = data;
+    const dp = draftPools[roomId];
+    if (!dp || dp.phase !== 'picking') {
+      socket.emit('error', '选角状态异常');
+      return;
+    }
+
+    const currentPlayer = dp.pickOrder[dp.currentTurnIndex];
+    if (currentPlayer !== playerName) {
+      socket.emit('error', '还没轮到你选角');
+      return;
+    }
+
+    // 在池中查找角色
+    const charIdx = dp.pool.findIndex(c => c.name === characterName);
+    if (charIdx === -1) {
+      socket.emit('error', '该角色不在当前池中');
+      return;
+    }
+
+    // 移除并加入手牌
+    const picked = dp.pool.splice(charIdx, 1)[0];
+    dp.hands[playerName].push(picked);
+    touchRoom(roomId);
+
+    console.log(`🎯 ${playerName} 从池中选取了 ${characterName}（手牌 ${dp.hands[playerName].length}/6）`);
+
+    // 推进回合
+    dp.currentTurnIndex++;
+
+    const allDone = dp.currentTurnIndex >= dp.pickOrder.length;
+
+    // 如果池空了且还没选完，发下一轮
+    if (dp.pool.length === 0 && !allDone) {
+      dealNextPool(roomId);
+    }
+
+    if (allDone) {
+      // 选角完成
+      dp.phase = 'complete';
+      draftResults[roomId] = dp.hands;
+      saveDraftResults();
+
+      if (rooms[roomId]) {
+        rooms[roomId].started = true;
+        saveRooms();
+      }
+
+      io.to(roomId).emit('draftAllDone', {
+        type: 'normal',
+        hands: dp.hands,
+        msg: '选角完成！'
+      });
+    } else {
+      // 广播更新状态
+      broadcastDraftState(roomId);
+    }
+
+    saveSocketRooms();
+  });
+
+  // 查询 draft 状态（重连用）
+  socket.on('getDraftState', (roomId) => {
+    const dp = draftPools[roomId];
+    if (!dp) {
+      // 检查是否已完成
+      if (draftResults[roomId]) {
+        socket.emit('draftAllDone', {
+          type: 'finished',
+          hands: draftResults[roomId],
+          msg: '选角已完成'
+        });
+      }
+      return;
+    }
+    const playerName = socket.playerName;
+    if (dp.draftType === 'random' && draftResults[roomId]) {
+      socket.emit('draftRandomResult', {
+        type: 'random',
+        myChars: draftResults[roomId][playerName] || [],
+        allPlayerNames: Object.keys(draftResults[roomId])
+      });
+      socket.emit('draftAllDone', {
+        type: 'random',
+        msg: '角色已随机分配完成！'
+      });
+    } else if (dp.phase === 'picking') {
+      socket.emit('draftPoolStart', {
+        type: 'normal',
+        pool: dp.pool,
+        currentPlayer: dp.pickOrder[dp.currentTurnIndex],
+        hands: dp.hands,
+        currentTurnIndex: dp.currentTurnIndex,
+        totalPicks: dp.pickOrder.length,
+        pickOrderPreview: dp.pickOrder.slice(dp.currentTurnIndex, dp.currentTurnIndex + 6),
+        pickOrder: dp.pickOrder
+      });
+    } else if (dp.phase === 'complete') {
+      socket.emit('draftAllDone', {
+        type: 'normal',
+        hands: dp.hands,
+        msg: '选角已完成'
+      });
     }
   });
 
@@ -1374,6 +1615,7 @@ io.on('connection', (socket) => {
       finishedRooms[roomId] = Date.now();
       // ── 清理作战选将和角色状态 ──
       delete battleSelections[roomId];
+      delete draftPools[roomId];
       await saveBattleSelections(); // 持久化删除
       delete characterStates[roomId];
       room.gameEndVotes = {};
