@@ -585,6 +585,13 @@ function escHTML(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function renderStrategyTags(tags) {
+  if (!tags || !tags.length) return '';
+  return '<div class="strategy-tags">' + tags.map(t =>
+    '<span class="strategy-tag ' + t + '">' + escHTML(t) + '</span>'
+  ).join('') + '</div>';
+}
+
 function renderCharGrid() {
   const grid = document.getElementById('charGrid');
 
@@ -638,6 +645,7 @@ function renderCharGrid() {
       </div>
       <div class="char-meta"><span class="tier">Tier ${escHTML(c.tier)}</span></div>
       <div class="skill-tags">${skillTags}</div>
+      ${renderStrategyTags(c.tags)}
       <div class="card-actions">
         <button class="btn-detail" onclick="event.stopPropagation();openFullscreen(${idx})">🔍 详情</button>
         ${deployBtnHTML}
@@ -687,7 +695,7 @@ function openFullscreen(idx) {
 
   document.getElementById('fsAvatar').innerHTML = getCharImageHTML_Big(c.name);
   document.getElementById('fsCharName').innerText = c.name;
-  document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?');
+  document.getElementById('fsCharTier').innerHTML = 'Tier ' + (c.tier || '?') + (c.tags && c.tags.length ? ' &middot; ' + c.tags.map(t => '<span class="strategy-tag ' + t + '">' + escHTML(t) + '</span>').join(' ') : '');
   document.getElementById('fsFaction').innerText = c.faction || '无阵营';
 
   const skills = [];

@@ -654,6 +654,7 @@ function parseCSV(csvText) {
       else if (nk === '附加技' || nk === '额外技' || nk === '额外' || nk === 'extra') normalized.extra = obj[k];
       else if (nk === '保留' || nk === 'retain') normalized.retain = (obj[k] && (obj[k].toLowerCase() === 'true' || obj[k] === '1' || obj[k] === '是' || obj[k] === 'yes'));
       else if (nk === '备注' || nk === 'note') normalized.note = obj[k];
+      else if (nk === '标签' || nk === '定位' || nk === 'tags') normalized.tags = obj[k];
     });
     result.push(normalized);
   }

@@ -495,6 +495,13 @@ function escHTML(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function renderStrategyTags(tags) {
+  if (!tags || !tags.length) return '';
+  return '<div class="strategy-tags">' + tags.map(t =>
+    '<span class="strategy-tag ' + t + '">' + escHTML(t) + '</span>'
+  ).join('') + '</div>';
+}
+
 function renderBattleGrid() {
   const grid = document.getElementById('battleGrid');
   const playerNames = Object.keys(allChars);
@@ -553,6 +560,7 @@ function renderBattleGrid() {
         </div>
         <div class="char-tier">Tier ${escHTML(c.tier||'?')}</div>
         <div class="skill-tags">${skillTags}</div>
+        ${renderStrategyTags(c.tags)}
         <div class="click-hint">👆 点击查看完整技能详情</div>
       </div>`;
     } else {
@@ -596,7 +604,7 @@ function openFullscreen(playerName, charName) {
 
   document.getElementById('fsAvatar').innerHTML = getCharImageHTML_Big(c.name, playerName);
   document.getElementById('fsCharName').innerText = c.name;
-  document.getElementById('fsCharTier').innerText = 'Tier ' + (c.tier || '?') + '（' + playerName + '）';
+  document.getElementById('fsCharTier').innerHTML = 'Tier ' + (c.tier || '?') + '（' + playerName + '）' + (c.tags && c.tags.length ? ' &middot; ' + c.tags.map(t => '<span class="strategy-tag ' + t + '">' + escHTML(t) + '</span>').join(' ') : '');
   document.getElementById('fsFaction').innerText = c.faction || '无阵营';
 
   const skills = [];

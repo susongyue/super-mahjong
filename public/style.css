@@ -349,6 +349,50 @@ body {
   border-color: var(--skill-extra);
 }
 
+/* ── 策略标签 ── */
+.strategy-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 4px 0;
+}
+.strategy-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1.5px solid;
+  white-space: nowrap;
+}
+.strategy-tag.速攻 { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+.strategy-tag.蓄力 { background: #e8eaf6; color: #283593; border-color: #9fa8da; }
+.strategy-tag.防守 { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; }
+.strategy-tag.高打点 { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+.strategy-tag.交换 { background: #e3f2fd; color: #0d47a1; border-color: #90caf9; }
+.strategy-tag.控制 { background: #fce4ec; color: #880e4f; border-color: #f48fb1; }
+.strategy-tag.赌注 { background: #fff8e1; color: #f57f17; border-color: #ffe082; }
+.strategy-tag.额外巡目 { background: #f3e5f5; color: #4a148c; border-color: #ce93d8; }
+.strategy-tag.万能牌 { background: #e0f7fa; color: #006064; border-color: #80deea; }
+.strategy-tag.封印 { background: #efebe9; color: #3e2723; border-color: #bcaaa4; }
+.strategy-tag.复制 { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; }
+.strategy-tag.决斗 { background: #ffebee; color: #b71c1c; border-color: #ef5350; }
+
+/* 全屏详情中策略标签更大 */
+.fs-strategy-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.fs-strategy-tags .strategy-tag {
+  padding: 4px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 /* ── 弹窗 / Modal ── */
 .modal-overlay {
   position: fixed;
