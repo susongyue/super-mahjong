@@ -207,6 +207,16 @@
     grid-template-columns: repeat(5, 1fr);
     gap: 8px;
   }
+  .draft-pool-grid .draft-char {
+    padding: 8px 10px;
+  }
+  .draft-pool-grid .draft-char .draft-avatar,
+  .draft-pool-grid .draft-char .draft-avatar-placeholder {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+  }
+  .draft-pool-grid .draft-char .draft-avatar-placeholder { font-size: 15px; }
+  .draft-pool-grid .draft-char-row { gap: 6px; }
 
   .draft-char-pickable {
     cursor: pointer;
@@ -293,24 +303,25 @@
 
   /* CSV */
   .admin-section {
-    margin-top: 20px;
+    margin-top: 24px;
     background: var(--card);
     border-radius: 14px;
     padding: 20px;
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
   }
-  .admin-section h3 { color: var(--text-secondary); margin-bottom: 8px; font-size: 14px; }
+  .admin-section h3 { color: var(--text-secondary); margin-bottom: 10px; font-size: 14px; }
   #csvDrop {
     border: 2px dashed var(--border-strong);
     border-radius: 12px;
-    padding: 20px;
+    padding: 24px 20px;
     text-align: center;
     cursor: pointer;
     transition: all .2s;
   }
   #csvDrop:hover { border-color: var(--accent); background: #fff5f5; }
-  .char-count { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+  #csvDrop p { margin: 0; color: var(--text-secondary); font-size: 14px; }
+  .char-count { font-size: 13px; color: var(--text-secondary); margin-top: 10px; }
   .char-count span { color: var(--gold); font-weight: 700; }
 
   /* 移动端 */

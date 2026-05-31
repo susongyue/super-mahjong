@@ -130,6 +130,7 @@
     @media (max-width: 540px) {
       .room-item { padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 8px; }
       .room-item .room-id { font-size: 13px; }
+      .room-item .btn-join-room { width: 100%; }
       .history-item { padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 4px; }
       .history-item .hist-room { font-size: 12px; }
       .reconnect-area { padding: 10px 12px; flex-direction: column; align-items: flex-start; }
@@ -480,7 +481,7 @@ async function viewHistoryDetail(roomId) {
           }
           return avatarHTML + cname;
         }).join(' ');
-        draftHtml += '<div style="font-size:13px;color:var(--text-secondary);margin:4px 0;padding-left:12px;line-height:32px;">' +
+        draftHtml += '<div style="font-size:13px;color:var(--text-secondary);margin:4px 0;padding-left:12px;line-height:28px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;">' +
           '• ' + player + '：' + charItems + '</div>';
       }
     }

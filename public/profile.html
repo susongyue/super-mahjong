@@ -146,20 +146,29 @@
     }
     .save-row button { flex: 1; }
 
-    .toast {
+    .profile-toast {
       position: fixed;
-      top: 80px;
+      top: 76px;
       left: 50%;
       transform: translateX(-50%);
-      background: #333;
+      background: var(--text);
       color: #fff;
-      padding: 12px 28px;
+      padding: 12px 24px;
       border-radius: 10px;
       font-size: 14px;
       font-weight: 600;
-      z-index: 9999;
-      animation: fadeIn .3s;
+      z-index: 999;
+      animation: slideDown .3s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
       pointer-events: none;
+      max-width: 90vw;
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+      .profile-toast { top: 64px; font-size: 13px; padding: 10px 20px; }
+    }
+    @media (max-width: 540px) {
+      .profile-toast { top: 56px; font-size: 12px; padding: 8px 16px; border-radius: 8px; }
     }
     .stats-grid {
       display: grid;
@@ -232,7 +241,7 @@
     <div class="stats-grid" id="statsGrid">
       <div class="stat-item"><div class="stat-num">...</div><div class="stat-label">对局数</div></div>
       <div class="stat-item"><div class="stat-num">...</div><div class="stat-label">总回合</div></div>
-      <div class="stat-item"><div class="stat-num">...</div><div class="stat-label">胜场</div></div>
+      <div class="stat-item"><div class="stat-num">...</div><div class="stat-label">场均回合</div></div>
     </div>
   </div>
 
@@ -520,7 +529,7 @@ async function loadStats() {
 
 function showToast(msg) {
   const t = document.createElement('div');
-  t.className = 'toast';
+  t.className = 'profile-toast';
   t.innerText = msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2000);
