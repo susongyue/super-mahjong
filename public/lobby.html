@@ -175,8 +175,15 @@
 <script>
 const user = localStorage.user;
 if (!user) location.href = '/login.html';
-document.getElementById('navUser').innerHTML =
-  '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + (localStorage.avatar || '🀄') + ' ' + (localStorage.nickname || user) + '</span>';
+(function updateNav() {
+  const avatar = localStorage.avatar || '🀄';
+  const nickname = localStorage.nickname || user;
+  let avatarHTML = avatar.startsWith('/avatars/')
+    ? '<img src="' + avatar + '" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;">'
+    : avatar;
+  document.getElementById('navUser').innerHTML =
+    '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + avatarHTML + ' ' + nickname + '</span>';
+})();
 
 let myReconnectInfo = null; // 重连信息： { roomId, phase }
 let charImageMap = {}; // 角色名→头像文件名映射

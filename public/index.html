@@ -43,7 +43,23 @@
     background: #fff5f5;
   }
   .player-name { font-size: 16px; font-weight: 700; }
-  .player-status { font-size: 13px; color: var(--text-secondary); }
+  .player-username-sub { font-size: 11px; color: var(--text-secondary); display: block; }
+  .player-avatar-mini {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #ff6b6b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    overflow: hidden;
+    color: #fff;
+    margin-right: 10px;
+  }
+  .player-info { flex: 1; min-width: 0; }
+  .player-status { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
   .player-status .ready { color: var(--green); font-weight: 600; }
   .player-status .unready { color: var(--accent); font-weight: 600; }
 
@@ -219,8 +235,15 @@ if (!roomId) location.href = '/lobby.html';
 })();
 
 document.getElementById('roomIdDisplay').innerText = roomId;
-document.getElementById('navUser').innerHTML =
-  '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + (localStorage.avatar || '🀄') + ' ' + (localStorage.nickname || username) + '</span>';
+(function updateNav() {
+  const avatar = localStorage.avatar || '🀄';
+  const nickname = localStorage.nickname || username;
+  let avatarHTML = avatar.startsWith('/avatars/')
+    ? '<img src="' + avatar + '" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;">'
+    : avatar;
+  document.getElementById('navUser').innerHTML =
+    '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + avatarHTML + ' ' + nickname + '</span>';
+})();
 
 const socket = io();
 let myVote = '';
@@ -230,6 +253,11 @@ function showToast(msg) {
   t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2500);
+}
+
+function escHTML(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 socket.emit('joinRoom', { roomId, playerName: username });
@@ -242,13 +270,22 @@ function renderPlayers(players) {
   let html = '';
   players.forEach(p => {
     const isSelf = p.name === username;
-    html += `<div class="player-card${isSelf ? ' self' : ''}">
-      <span class="player-name">${isSelf ? '⭐ ' : ''}${p.name}</span>
-      <span class="player-status">
-        ${p.ready ? '<span class="ready">✅ 已准备</span>' : '<span class="unready">❌ 未准备</span>'}
-        ${p.vote ? ' · 已投票' : ''}
-      </span>
-    </div>`;
+    const displayName = p.nickname || p.name;
+    const avatar = p.avatar || '🀄';
+    const avatarHTML = avatar.startsWith('/avatars/')
+      ? '<img src="' + avatar + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">'
+      : '<span>' + avatar + '</span>';
+    html += '<div class="player-card' + (isSelf ? ' self' : '') + '">' +
+      '<div class="player-avatar-mini">' + avatarHTML + '</div>' +
+      '<div class="player-info">' +
+        '<span class="player-name">' + (isSelf ? '⭐ ' : '') + escHTML(displayName) + '</span>' +
+        (displayName !== p.name ? '<span class="player-username-sub">@' + escHTML(p.name) + '</span>' : '') +
+      '</div>' +
+      '<span class="player-status">' +
+        (p.ready ? '<span class="ready">✅ 已准备</span>' : '<span class="unready">❌ 未准备</span>') +
+        (p.vote ? ' · 已投票' : '') +
+      '</span>' +
+    '</div>';
   });
   document.getElementById('playerList').innerHTML = html || '<p class="no-data">暂无玩家</p>';
 }

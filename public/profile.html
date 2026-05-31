@@ -25,6 +25,7 @@
       margin-bottom: 12px;
       box-shadow: 0 4px 16px rgba(231,76,60,0.25);
       border: 3px solid #fff;
+      overflow: hidden;
     }
     .profile-nickname {
       font-size: 22px;
@@ -87,6 +88,7 @@
       border: 2px solid var(--border);
       background: var(--card-secondary);
       transition: all .2s;
+      overflow: hidden;
     }
     .avatar-option:hover {
       border-color: var(--accent);
@@ -97,6 +99,45 @@
       background: var(--accent-light);
       box-shadow: 0 0 0 3px rgba(231,76,60,0.2);
     }
+    .avatar-option img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .custom-upload-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .custom-upload-btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 2px dashed var(--border-strong);
+      background: var(--card-secondary);
+      color: var(--text-secondary);
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .custom-upload-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+    .custom-upload-name {
+      font-size: 12px;
+      color: var(--text-secondary);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #fileInput { display: none; }
 
     .save-row {
       display: flex;
@@ -185,6 +226,11 @@
     <div class="form-row">
       <label>选择头像</label>
       <div class="avatar-grid" id="avatarGrid"></div>
+      <div class="custom-upload-wrap">
+        <button class="custom-upload-btn" onclick="document.getElementById('fileInput').click()">📷 上传自定义头像</button>
+        <span class="custom-upload-name" id="uploadFileName"></span>
+        <input type="file" id="fileInput" accept="image/*" onchange="previewCustomAvatar(event)">
+      </div>
     </div>
 
     <div class="form-row">
@@ -227,9 +273,13 @@
 
 </div>
 
+<script src="/socket.io/socket.io.js"></script>
 <script>
 const username = localStorage.user;
 if (!username) location.href = '/login.html';
+
+// WebSocket 连接（用于通知其他玩家资料变更）
+const profileSocket = io({ transports: ['polling', 'websocket'] });
 
 const AVATARS = [
   '🀄','🀅','🎭','🎪','👑','⭐','🔥','💎',
@@ -240,6 +290,9 @@ const AVATARS = [
 
 let currentProfile = { nickname: username, avatar: '🀄', bio: '' };
 let selectedAvatar = '🀄';
+let selectedAvatarType = 'emoji'; // 'emoji' | 'custom'
+let customAvatarFile = null;     // File 对象，待上传
+let customAvatarUrl = '';        // 已上传的 URL
 
 // ─── 初始化 ───
 (async function init() {
@@ -252,11 +305,16 @@ let selectedAvatar = '🀄';
     if (r.success) {
       currentProfile = { nickname: r.nickname, avatar: r.avatar, bio: r.bio || '' };
       selectedAvatar = currentProfile.avatar;
+      // 判断头像类型
+      if (selectedAvatar.startsWith('/avatars/')) {
+        selectedAvatarType = 'custom';
+        customAvatarUrl = selectedAvatar;
+      }
     }
   } catch (e) { /* 使用本地缓存 */ }
 
   // 渲染
-  document.getElementById('profileAvatarDisplay').innerText = selectedAvatar;
+  updateProfileAvatarDisplay();
   document.getElementById('profileNickname').innerText = currentProfile.nickname;
   document.getElementById('profileUsername').innerText = '@' + username;
   document.getElementById('editNickname').value = currentProfile.nickname;
@@ -269,21 +327,70 @@ let selectedAvatar = '🀄';
 function updateNavUser() {
   const name = localStorage.nickname || username;
   const av = localStorage.avatar || '🀄';
-  document.getElementById('navUser').innerHTML = av + ' ' + name;
+  const avatarHTML = av.startsWith('/avatars/')
+    ? '<img src="' + av + '" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;">'
+    : av;
+  document.getElementById('navUser').innerHTML = avatarHTML + ' ' + name;
+}
+
+function updateProfileAvatarDisplay() {
+  const el = document.getElementById('profileAvatarDisplay');
+  if (selectedAvatarType === 'custom' && (customAvatarUrl || selectedAvatar.startsWith('/avatars/'))) {
+    const url = customAvatarUrl || selectedAvatar;
+    el.innerHTML = '<img src="' + url + '" alt="头像" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+  } else {
+    el.innerText = selectedAvatar;
+  }
 }
 
 function renderAvatarGrid() {
   const grid = document.getElementById('avatarGrid');
-  grid.innerHTML = AVATARS.map(a =>
-    '<div class="avatar-option' + (a === selectedAvatar ? ' selected' : '') +
+  let html = AVATARS.map(a =>
+    '<div class="avatar-option' + (selectedAvatarType === 'emoji' && a === selectedAvatar ? ' selected' : '') +
     '" onclick="pickAvatar(\'' + a + '\')">' + a + '</div>'
   ).join('');
+
+  // 如果已有自定义头像，显示自定义选项
+  if (customAvatarUrl) {
+    html += '<div class="avatar-option' + (selectedAvatarType === 'custom' ? ' selected' : '') +
+      '" onclick="pickCustomAvatar()"><img src="' + customAvatarUrl + '" alt="自定义头像"></div>';
+  }
+
+  grid.innerHTML = html;
 }
 
 function pickAvatar(av) {
   selectedAvatar = av;
-  document.getElementById('profileAvatarDisplay').innerText = av;
+  selectedAvatarType = 'emoji';
+  updateProfileAvatarDisplay();
   renderAvatarGrid();
+}
+
+function pickCustomAvatar() {
+  selectedAvatarType = 'custom';
+  updateProfileAvatarDisplay();
+  renderAvatarGrid();
+}
+
+function previewCustomAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('⚠️ 图片不能超过2MB');
+    event.target.value = '';
+    return;
+  }
+  document.getElementById('uploadFileName').innerText = file.name;
+  customAvatarFile = file;
+  // 显示预览
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    customAvatarUrl = e.target.result;
+    document.getElementById('profileAvatarDisplay').innerHTML = '<img src="' + customAvatarUrl + '" alt="头像" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+    selectedAvatarType = 'custom';
+    renderAvatarGrid();
+  };
+  reader.readAsDataURL(file);
 }
 
 // ─── 保存资料 ───
@@ -295,19 +402,45 @@ async function saveProfile() {
   if (nickname.length > 12) return showToast('昵称最多12个字符');
   if (bio.length > 40) return showToast('签名最多40个字符');
 
+  let finalAvatar = selectedAvatar;
+  // 如果有新选择的图片文件，先上传
+  if (customAvatarFile && customAvatarUrl && customAvatarUrl.startsWith('data:')) {
+    try {
+      const uploadRes = await fetch('/api/upload-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, image: customAvatarUrl })
+      }).then(x => x.json());
+      if (uploadRes.success) {
+        finalAvatar = uploadRes.avatar;
+        customAvatarUrl = uploadRes.avatar;
+        customAvatarFile = null;
+        document.getElementById('uploadFileName').innerText = '';
+      } else {
+        return showToast('❌ ' + uploadRes.msg);
+      }
+    } catch (e) {
+      return showToast('头像上传失败，请重试');
+    }
+  }
+
   try {
     const r = await fetch('/api/profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, nickname, avatar: selectedAvatar, bio })
+      body: JSON.stringify({ username, nickname, avatar: finalAvatar, bio })
     }).then(x => x.json());
 
     if (r.success) {
       currentProfile = { nickname: r.nickname, avatar: r.avatar, bio: r.bio };
+      selectedAvatar = r.avatar;
       localStorage.nickname = r.nickname;
       localStorage.avatar = r.avatar;
       updateNavUser();
-      document.getElementById('profileNickname').innerText = r.nickname;
+      updateProfileAvatarDisplay();
+      renderAvatarGrid();
+      // 通知其他玩家资料变更
+      profileSocket.emit('profileChanged', { username, nickname: r.nickname, avatar: r.avatar });
       showToast('✅ 资料已保存');
     } else {
       showToast('❌ ' + r.msg);

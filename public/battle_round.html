@@ -76,6 +76,10 @@
       font-weight: 800;
       color: var(--text);
     }
+    .player-battle-card .player-username-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
     .player-battle-card .player-tag {
       font-size: 11px;
       color: var(--accent);
@@ -331,13 +335,21 @@ if (!roomId) location.href = '/lobby.html';
   }
 })();
 
-document.getElementById('navUser').innerHTML =
-  '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + (localStorage.avatar || '🀄') + ' ' + (localStorage.nickname || username) + '</span>';
+(function updateNav() {
+  const avatar = localStorage.avatar || '🀄';
+  const nickname = localStorage.nickname || username;
+  let avatarHTML = avatar.startsWith('/avatars/')
+    ? '<img src="' + avatar + '" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;">'
+    : avatar;
+  document.getElementById('navUser').innerHTML =
+    '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + avatarHTML + ' ' + nickname + '</span>';
+})();
 document.getElementById('roomDisplay').innerText = roomId;
 document.getElementById('nameDisplay').innerText = username;
 
 let allChars = {}; // { playerName: [ {name, tier, faction, limit, innate, passive, extra, note, retain}, ... ] }
 let battleSelections = {};
+let playerProfiles = {}; // { playerName: { nickname, avatar } } — 用于展示昵称和头像
 
 const SKILL_TYPES = {
   limit:   { label:'限定', icon:'🔥', cls:'limit', order:1 },
@@ -368,7 +380,16 @@ socket.on('joinSuccess', () => {
 });
 
 // 玩家列表更新时也刷新（用于加入后同步）
-socket.on('roomPlayersUpdate', () => {
+socket.on('roomPlayersUpdate', (data) => {
+  // 缓存/更新玩家资料（昵称+头像），每次收到都更新以支持资料变更同步
+  if (data && data.players) {
+    data.players.forEach(p => {
+      playerProfiles[p.name] = {
+        nickname: p.nickname || p.name,
+        avatar: p.avatar || '🀄'
+      };
+    });
+  }
   if (joinDone) {
     loadBattleData();
   }
@@ -388,6 +409,14 @@ socket.on('battleRoundData', (data) => {
         if (d && Object.keys(d).length > 0) allChars = d;
       }).catch(()=>{});
     }
+  }
+  // 缓存玩家资料
+  if (data.players && data.players.length) {
+    data.players.forEach(p => {
+      if (!playerProfiles[p.name]) {
+        playerProfiles[p.name] = { nickname: p.nickname || p.name, avatar: p.avatar || '🀄' };
+      }
+    });
   }
   renderBattleGrid();
 });
@@ -529,6 +558,14 @@ function renderBattleGrid() {
     const deployedCharName = battleSelections[pname];
     const playerChars = allChars[pname] || [];
 
+    // 玩家资料（昵称+头像）
+    const prof = playerProfiles[pname] || { nickname: pname, avatar: '🀄' };
+    const displayName = prof.nickname || pname;
+    const avatar = prof.avatar || '🀄';
+    const avatarHTML = avatar.startsWith('/avatars/')
+      ? '<img src="' + avatar + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">'
+      : avatar;
+
     // 找到出战的角色完整数据
     const deployedChar = playerChars.find(c => c.name === deployedCharName);
     const isRetain = deployedChar && deployedChar.retain === true;
@@ -569,13 +606,12 @@ function renderBattleGrid() {
       charCardHTML = `<div class="no-selection">⚠️ 未选择出战角色</div>`;
     }
 
-    const initial = pname.charAt(0);
-
     return `<div class="player-battle-card${isSelf ? ' is-self' : ''}">
       <div class="player-header">
-        <div class="player-avatar">${initial}</div>
+        <div class="player-avatar">${avatarHTML}</div>
         <div>
-          <div class="player-name">${isSelf ? '⭐ ' : ''}${escHTML(pname)}</div>
+          <div class="player-name">${isSelf ? '⭐ ' : ''}${escHTML(displayName)}</div>
+          ${displayName !== pname ? '<div class="player-username-sub">@' + escHTML(pname) + '</div>' : ''}
           ${isSelf ? '<div class="player-tag">我</div>' : ''}
         </div>
       </div>

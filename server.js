@@ -9,8 +9,8 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
 app.use(express.static('public', {
   setHeaders: (res, filePath) => {
@@ -22,6 +22,7 @@ app.use(express.static('public', {
   }
 }));
 app.use('/png', express.static('png')); // 角色头像图片
+app.use('/avatars', express.static('public/avatars')); // 用户自定义头像
 
 // ── Supabase 客户端 ──
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rvdvdgriyleoiuglzgch.supabase.co';
@@ -651,6 +652,59 @@ app.post('/api/change-password', async (req, res) => {
   res.json({ success: true, msg: '密码修改成功' });
 });
 
+// ── 上传自定义头像（base64） ──
+app.post('/api/upload-avatar', async (req, res) => {
+  const { username, image } = req.body;
+  if (!username || !image) return res.json({ success: false, msg: '缺少参数' });
+
+  // 确保内存缓存存在
+  if (!users[username] || typeof users[username] !== 'object') {
+    const dbUser = await findUserInDB(username);
+    if (!dbUser) return res.json({ success: false, msg: '用户不存在' });
+  }
+
+  // 解析 base64（支持 data:image/...;base64,xxx 格式）
+  let base64 = image;
+  const mimeMatch = image.match(/^data:(image\/\w+);base64,(.*)$/);
+  if (mimeMatch) {
+    base64 = mimeMatch[2];
+    var ext = mimeMatch[1].split('/')[1]; // png, jpeg, gif, webp
+  } else {
+    var ext = 'png';
+  }
+  if (ext === 'jpeg') ext = 'jpg';
+
+  const buf = Buffer.from(base64, 'base64');
+  if (buf.length > 2 * 1024 * 1024) return res.json({ success: false, msg: '图片不能超过 2MB' });
+
+  // 确保目录存在
+  const avatarsDir = path.join(__dirname, 'public', 'avatars');
+  if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
+
+  const filename = username + '_' + Date.now() + '.' + ext;
+  const filePath = path.join(avatarsDir, filename);
+
+  try {
+    fs.writeFileSync(filePath, buf);
+
+    // 删除旧自定义头像文件（如果之前有上传过）
+    const oldAvatar = users[username].avatar || '';
+    if (oldAvatar.startsWith('/avatars/')) {
+      const oldPath = path.join(__dirname, 'public', oldAvatar);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    const avatarUrl = '/avatars/' + filename;
+    users[username].avatar = avatarUrl;
+    await updateUserInDB(username, { avatar: avatarUrl });
+
+    res.json({ success: true, msg: '头像上传成功', avatar: avatarUrl });
+  } catch (e) {
+    console.log('⚠️ 头像上传失败: ' + e.message);
+    res.json({ success: false, msg: '上传失败，请重试' });
+  }
+});
+
 // 创建房间（lobby 流程）
 app.post('/api/create-room', async (req, res) => {
   const { username } = req.body;
@@ -1093,12 +1147,32 @@ io.on('connection', (socket) => {
 
     const isExist = room.players.some(p => p.id === socket.id);
     if (!isExist) {
+      // 获取用户昵称和头像
+      const userObj = users[playerName];
+      let nickname = playerName;
+      let avatar = '🀄';
+      if (userObj && typeof userObj === 'object') {
+        nickname = userObj.nickname || playerName;
+        avatar = userObj.avatar || '🀄';
+      }
       room.players.push({
         id: socket.id,
         name: playerName || `玩家${Math.floor(Math.random() * 1000)}`,
+        nickname: nickname,
+        avatar: avatar,
         ready: false,
         vote: ''
       });
+    } else {
+      // 重连时刷新昵称和头像
+      const existPlayer = room.players.find(p => p.id === socket.id);
+      if (existPlayer) {
+        const userObj = users[existPlayer.name];
+        if (userObj && typeof userObj === 'object') {
+          existPlayer.nickname = userObj.nickname || existPlayer.name;
+          existPlayer.avatar = userObj.avatar || '🀄';
+        }
+      }
     }
 
     socket.join(roomId);
@@ -1343,7 +1417,8 @@ io.on('connection', (socket) => {
         round: 1,
         draft: draftResults[roomId] || {},
         selections: battleSelections[roomId] || {},
-        totalPlayers: 0
+        totalPlayers: 0,
+        players: []
       });
     }
 
@@ -1356,13 +1431,45 @@ io.on('connection', (socket) => {
       } catch (e) { /* ignore */ }
     }
 
+    // 构建玩家资料列表（用于前端展示昵称和头像）
+    const playerProfiles = room.players.map(p => ({
+      name: p.name,
+      nickname: p.nickname || p.name,
+      avatar: p.avatar || '🀄'
+    }));
+
     socket.emit('battleRoundData', {
       roomId,
       round: room.round || 1,
       draft: draftResults[roomId] || {},
       selections: battleSelections[roomId] || {},
-      totalPlayers: room.players.length
+      totalPlayers: room.players.length,
+      players: playerProfiles
     });
+  });
+
+  // ── 用户资料变更广播 ──
+  socket.on('profileChanged', (data) => {
+    const { username: playerName, nickname, avatar } = data || {};
+    if (!playerName) return;
+
+    // 更新所有该用户所在房间中的玩家记录
+    Object.keys(socketRooms).forEach(rid => {
+      const room = socketRooms[rid];
+      const player = room.players.find(p => p.name === playerName);
+      if (player) {
+        if (nickname) player.nickname = nickname;
+        if (avatar) player.avatar = avatar;
+        // 广播更新后的玩家列表
+        io.to(rid).emit('roomPlayersUpdate', { players: room.players, roomId: rid });
+      }
+    });
+
+    // 也更新内存中的用户缓存
+    if (users[playerName] && typeof users[playerName] === 'object') {
+      if (nickname) users[playerName].nickname = nickname;
+      if (avatar) users[playerName].avatar = avatar;
+    }
   });
 
   socket.on('disconnect', () => {

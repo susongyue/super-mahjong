@@ -427,8 +427,15 @@ if (!roomId) location.href = '/lobby.html';
   } catch (e) { /* 网络错误允许继续 */ }
 })();
 
-document.getElementById('navUser').innerHTML =
-  '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + (localStorage.avatar || '🀄') + ' ' + (localStorage.nickname || username) + '</span>';
+(function updateNav() {
+  const avatar = localStorage.avatar || '🀄';
+  const nickname = localStorage.nickname || username;
+  let avatarHTML = avatar.startsWith('/avatars/')
+    ? '<img src="' + avatar + '" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;">'
+    : avatar;
+  document.getElementById('navUser').innerHTML =
+    '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + avatarHTML + ' ' + nickname + '</span>';
+})();
 document.getElementById('roomDisplay').innerText = roomId;
 document.getElementById('nameDisplay').innerText = username;
 
@@ -438,6 +445,7 @@ let charStates = {};         // { charName: {resting:bool} }
 let mySelection = null;      // 当前选择的角色名
 let totalPlayers = 0;
 let readyPlayerNames = [];   // 已准备的玩家名（不包含角色信息）
+let playerProfiles = {};     // { playerName: { nickname, avatar } }
 let fsCurrentIdx = -1;       // 全屏弹窗中查看的角色索引
 
 // ══════════ Socket ══════════
@@ -459,6 +467,13 @@ socket.on('roomState', (data) => {
 // 玩家列表更新
 socket.on('roomPlayersUpdate', (data) => {
   totalPlayers = data.players ? data.players.length : totalPlayers;
+  // 缓存/更新玩家资料（每次更新以支持资料变更同步）
+  if (data && data.players) {
+    data.players.forEach(p => {
+      playerProfiles[p.name] = { nickname: p.nickname || p.name, avatar: p.avatar || '🀄' };
+    });
+  }
+  updateSelectionUI();
 });
 
 // 角色状态更新（仅自己的）
@@ -775,8 +790,12 @@ function updateSelectionUI() {
   document.getElementById('progressText').innerText = '已准备 ' + selectedCount + '/' + total + ' 人';
   document.getElementById('progressBar').style.width = percent + '%';
 
-  // 显示已准备的玩家名（不显示选择了谁）
-  const names = readyPlayerNames.map(p => '<span>' + p + '</span>');
+  // 显示已准备的玩家昵称（使用昵称而非用户名）
+  const names = readyPlayerNames.map(p => {
+    const prof = playerProfiles[p];
+    const displayName = prof ? prof.nickname : p;
+    return '<span>' + displayName + '</span>';
+  });
   const waitingCount = total - selectedCount;
   if (waitingCount > 0) {
     names.push('<span style="color:var(--text-secondary);">等待 ' + waitingCount + ' 人...</span>');
