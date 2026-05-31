@@ -59,7 +59,8 @@
   </div>
 
   <div class="login-panel" id="reg">
-    <input class="input" id="reg-user" placeholder="请输入用户名" autocomplete="username" style="margin-bottom:10px">
+    <input class="input" id="reg-user" placeholder="请输入用户名（登录用）" autocomplete="username" style="margin-bottom:10px">
+    <input class="input" id="reg-nick" placeholder="设置昵称（选填，默认同用户名）" style="margin-bottom:10px">
     <input class="input" id="reg-pwd" type="password" placeholder="请设置密码" autocomplete="new-password" style="margin-bottom:14px">
     <button class="btn btn-primary" onclick="register()" style="width:100%">注 册</button>
   </div>
@@ -79,17 +80,23 @@ async function login() {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: u, password: p })
   }).then(x => x.json());
-  if (r.success) { localStorage.user = u; location.href = '/lobby.html'; }
+  if (r.success) {
+    localStorage.user = u;
+    localStorage.nickname = r.nickname || u;
+    localStorage.avatar = r.avatar || '🀄';
+    location.href = '/lobby.html';
+  }
   else alert(r.msg);
 }
 
 async function register() {
   const u = document.getElementById('reg-user').value.trim();
+  const n = document.getElementById('reg-nick').value.trim();
   const p = document.getElementById('reg-pwd').value;
   if (!u || !p) return alert('请填写用户名和密码');
   const r = await fetch('/api/register', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: u, password: p })
+    body: JSON.stringify({ username: u, password: p, nickname: n || u, avatar: '🀄' })
   }).then(x => x.json());
   alert(r.success ? '注册成功！请切换到登录页登录' : r.msg);
 }

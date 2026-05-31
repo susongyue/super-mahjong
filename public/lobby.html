@@ -124,6 +124,7 @@
   <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
   <div class="nav-links">
     <a href="/lobby.html" class="active">大厅</a>
+    <a href="/profile.html">个人中心</a>
   </div>
   <span class="nav-user" id="navUser"></span>
 </nav>
@@ -174,7 +175,8 @@
 <script>
 const user = localStorage.user;
 if (!user) location.href = '/login.html';
-document.getElementById('navUser').innerText = '👤 ' + user;
+document.getElementById('navUser').innerHTML =
+  '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + (localStorage.avatar || '🀄') + ' ' + (localStorage.nickname || user) + '</span>';
 
 let myReconnectInfo = null; // 重连信息： { roomId, phase }
 let charImageMap = {}; // 角色名→头像文件名映射

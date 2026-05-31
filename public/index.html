@@ -156,6 +156,7 @@
   <div class="nav-links">
     <a href="/lobby.html">大厅</a>
     <a href="#" class="active">当前对局</a>
+    <a href="/profile.html">个人中心</a>
   </div>
   <span class="nav-user" id="navUser"></span>
 </nav>
@@ -218,7 +219,8 @@ if (!roomId) location.href = '/lobby.html';
 })();
 
 document.getElementById('roomIdDisplay').innerText = roomId;
-document.getElementById('navUser').innerText = '👤 ' + username;
+document.getElementById('navUser').innerHTML =
+  '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + (localStorage.avatar || '🀄') + ' ' + (localStorage.nickname || username) + '</span>';
 
 const socket = io();
 let myVote = '';

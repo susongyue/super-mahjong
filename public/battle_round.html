@@ -242,6 +242,7 @@
     <a href="/lobby.html">大厅</a>
     <a href="/game.html">选择出战</a>
     <a href="/battle_round.html" class="active">回合对战</a>
+    <a href="/profile.html">个人中心</a>
   </div>
   <span class="nav-user" id="navUser"></span>
 </nav>
@@ -330,7 +331,8 @@ if (!roomId) location.href = '/lobby.html';
   }
 })();
 
-document.getElementById('navUser').innerText = '👤 ' + username;
+document.getElementById('navUser').innerHTML =
+  '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + (localStorage.avatar || '🀄') + ' ' + (localStorage.nickname || username) + '</span>';
 document.getElementById('roomDisplay').innerText = roomId;
 document.getElementById('nameDisplay').innerText = username;
 

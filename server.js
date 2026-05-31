@@ -61,7 +61,7 @@ async function loadFromDB() {
     const { data: userData } = await supabase.from('users').select('*');
     if (userData) {
       users = {};
-      userData.forEach(u => { users[u.username] = u.password; });
+      userData.forEach(u => { users[u.username] = { password: u.password, nickname: u.nickname || u.username, avatar: u.avatar || '🀄', bio: u.bio || '' }; });
       console.log('✅ 从 Supabase 加载 ' + userData.length + ' 个用户');
     }
 
@@ -155,7 +155,7 @@ async function findUserInDB(username) {
     const { data, error } = await supabase.from('users').select('*').eq('username', username).single();
     if (error) { console.log('⚠️ findUserInDB 查询失败: ' + error.message); return null; }
     if (data) {
-      users[data.username] = data.password; // 回填到内存缓存
+      users[data.username] = { password: data.password, nickname: data.nickname || data.username, avatar: data.avatar || '🀄', bio: data.bio || '' }; // 回填到内存缓存
       return data;
     }
     return null;
@@ -163,13 +163,22 @@ async function findUserInDB(username) {
 }
 
 // ── 保存到 Supabase ──
-async function saveUserToDB(username, password) {
+async function saveUserToDB(username, password, nickname, avatar, bio) {
   try {
-    const { error } = await supabase.from('users').insert({ username, password });
+    const { error } = await supabase.from('users').insert({ username, password, nickname: nickname || username, avatar: avatar || '🀄', bio: bio || '' });
     if (error) { console.log('⚠️ saveUserToDB 失败: ' + error.message); return false; }
     console.log('✅ 用户 ' + username + ' 已写入 Supabase');
     return true;
   } catch (e) { console.log('⚠️ saveUserToDB 异常: ' + e.message); return false; }
+}
+
+async function updateUserInDB(username, fields) {
+  try {
+    const updateData = { ...fields, updated_at: new Date().toISOString() };
+    const { error } = await supabase.from('users').update(updateData).eq('username', username);
+    if (error) { console.log('⚠️ updateUserInDB 失败: ' + error.message); return false; }
+    return true;
+  } catch (e) { console.log('⚠️ updateUserInDB 异常: ' + e.message); return false; }
 }
 
 async function saveRooms() {
@@ -523,19 +532,22 @@ if (!fs.existsSync(CHARS_FILE) && fs.existsSync(CSV_FILE)) {
 
 // 注册
 app.post('/api/register', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, nickname, avatar } = req.body;
   if (!username || !password) return res.json({ success: false, msg: '用户名和密码不能为空' });
 
   // 先检查数据库是否已存在（避免内存缓存不完整导致重复注册）
   const existing = await findUserInDB(username);
   if (existing) return res.json({ success: false, msg: '用户名已存在' });
 
+  const displayNickname = nickname || username;
+  const userAvatar = avatar || '🀄';
+
   // 直接写入数据库
-  const ok = await saveUserToDB(username, password);
+  const ok = await saveUserToDB(username, password, displayNickname, userAvatar, '');
   if (!ok) return res.json({ success: false, msg: '注册失败，数据库写入异常，请重试' });
 
   // 更新内存缓存
-  users[username] = password;
+  users[username] = { password, nickname: displayNickname, avatar: userAvatar, bio: '' };
   console.log('✅ 注册成功: ' + username + ' (用户总数: ' + Object.keys(users).length + ')');
   res.json({ success: true, msg: '注册成功' });
 });
@@ -546,10 +558,15 @@ app.post('/api/login', async (req, res) => {
   if (!username || !password) return res.json({ success: false, msg: '用户名和密码不能为空' });
 
   // 先查内存缓存
-  let pwd = users[username];
-  if (pwd) {
-    // 内存命中，直接校验
-    if (pwd !== password) return res.json({ success: false, msg: '密码错误' });
+  let userObj = users[username];
+  if (userObj) {
+    // 内存命中，兼容旧格式：可能是字符串（旧密码）或对象（新格式）
+    let storedPwd = typeof userObj === 'string' ? userObj : userObj.password;
+    // 如果是旧格式字符串，自动升级为新格式对象
+    if (typeof userObj === 'string') {
+      users[username] = { password: userObj, nickname: username, avatar: '🀄', bio: '' };
+    }
+    if (storedPwd !== password) return res.json({ success: false, msg: '密码错误' });
   } else {
     // 内存未命中，从 Supabase 查询
     console.log('🔍 内存缓存缺失 ' + username + '，尝试从 Supabase 查询...');
@@ -557,7 +574,81 @@ app.post('/api/login', async (req, res) => {
     if (!dbUser) return res.json({ success: false, msg: '用户不存在' });
     if (dbUser.password !== password) return res.json({ success: false, msg: '密码错误' });
   }
-  res.json({ success: true, msg: '登录成功' });
+
+  const profile = users[username] || { nickname: username, avatar: '🀄' };
+  res.json({ success: true, msg: '登录成功', nickname: profile.nickname, avatar: profile.avatar });
+});
+
+// ── 获取用户资料 ──
+app.get('/api/profile', (req, res) => {
+  const { username } = req.query;
+  if (!username) return res.json({ success: false, msg: '缺少用户名' });
+
+  const userObj = users[username];
+  if (userObj && typeof userObj === 'object') {
+    return res.json({
+      success: true,
+      username,
+      nickname: userObj.nickname || username,
+      avatar: userObj.avatar || '🀄',
+      bio: userObj.bio || ''
+    });
+  }
+  // 兼容旧格式或不存在
+  return res.json({ success: true, username, nickname: username, avatar: '🀄', bio: '' });
+});
+
+// ── 更新用户资料（昵称、头像、简介） ──
+app.put('/api/profile', async (req, res) => {
+  const { username, nickname, avatar, bio } = req.body;
+  if (!username) return res.json({ success: false, msg: '缺少用户名' });
+
+  // 确保内存缓存存在
+  if (!users[username] || typeof users[username] !== 'object') {
+    // 从数据库加载
+    const dbUser = await findUserInDB(username);
+    if (!dbUser) return res.json({ success: false, msg: '用户不存在' });
+  }
+
+  const updateFields = {};
+  if (nickname !== undefined) { users[username].nickname = nickname; updateFields.nickname = nickname; }
+  if (avatar !== undefined) { users[username].avatar = avatar; updateFields.avatar = avatar; }
+  if (bio !== undefined) { users[username].bio = bio; updateFields.bio = bio; }
+
+  const ok = await updateUserInDB(username, updateFields);
+  if (!ok) return res.json({ success: false, msg: '更新失败，数据库异常' });
+
+  res.json({
+    success: true,
+    msg: '资料已更新',
+    nickname: users[username].nickname,
+    avatar: users[username].avatar,
+    bio: users[username].bio
+  });
+});
+
+// ── 修改密码 ──
+app.post('/api/change-password', async (req, res) => {
+  const { username, oldPassword, newPassword } = req.body;
+  if (!username || !oldPassword || !newPassword) return res.json({ success: false, msg: '请填写完整信息' });
+  if (newPassword.length < 3) return res.json({ success: false, msg: '新密码至少3位' });
+
+  let userObj = users[username];
+  if (!userObj || typeof userObj !== 'object') {
+    const dbUser = await findUserInDB(username);
+    if (!dbUser) return res.json({ success: false, msg: '用户不存在' });
+    userObj = users[username];
+  }
+
+  const currentPwd = typeof userObj === 'string' ? userObj : userObj.password;
+  if (currentPwd !== oldPassword) return res.json({ success: false, msg: '原密码错误' });
+
+  // 更新密码
+  users[username].password = newPassword;
+  const ok = await updateUserInDB(username, { password: newPassword });
+  if (!ok) return res.json({ success: false, msg: '修改失败，数据库异常' });
+
+  res.json({ success: true, msg: '密码修改成功' });
 });
 
 // 创建房间（lobby 流程）

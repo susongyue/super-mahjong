@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>个人中心 - 超能力立直麻将</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { padding-top: 70px; }
+
+    .profile-header {
+      text-align: center;
+      padding: 24px 20px 16px;
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      font-size: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      color: #fff;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 16px rgba(231,76,60,0.25);
+      border: 3px solid #fff;
+    }
+    .profile-nickname {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .profile-username {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .section-box {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 20px;
+      margin: 12px 0;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .section-box h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-row { margin-bottom: 12px; }
+    .form-row label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .form-row .hint {
+      font-size: 11px;
+      color: #999;
+      margin-top: 3px;
+    }
+
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .avatar-option {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 2px solid var(--border);
+      background: var(--card-secondary);
+      transition: all .2s;
+    }
+    .avatar-option:hover {
+      border-color: var(--accent);
+      transform: scale(1.08);
+    }
+    .avatar-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      box-shadow: 0 0 0 3px rgba(231,76,60,0.2);
+    }
+
+    .save-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .save-row button { flex: 1; }
+
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      animation: fadeIn .3s;
+      pointer-events: none;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .stat-item {
+      text-align: center;
+      background: var(--card-secondary);
+      border-radius: 10px;
+      padding: 12px 8px;
+      border: 1px solid var(--border);
+    }
+    .stat-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    @media (max-width: 540px) {
+      .avatar-grid { grid-template-columns: repeat(6, 1fr); }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
+  <div class="nav-links">
+    <a href="/lobby.html">大厅</a>
+    <a href="#" class="active">个人中心</a>
+  </div>
+  <span class="nav-user" id="navUser" onclick="location.href='/profile.html'" style="cursor:pointer;"></span>
+</nav>
+
+<div class="container" style="max-width:560px;">
+
+  <div class="profile-header" id="profileHeader">
+    <div class="profile-avatar" id="profileAvatarDisplay">🀄</div>
+    <div class="profile-nickname" id="profileNickname">---</div>
+    <div class="profile-username" id="profileUsername">@---</div>
+  </div>
+
+  <!-- 统计数据 -->
+  <div class="section-box">
+    <h3>📊 我的战绩</h3>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-item"><div class="stat-num">...</div><div class="stat-label">对局数</div></div>
+      <div class="stat-item"><div class="stat-num">...</div><div class="stat-label">总回合</div></div>
+      <div class="stat-item"><div class="stat-num">...</div><div class="stat-label">胜场</div></div>
+    </div>
+  </div>
+
+  <!-- 修改资料 -->
+  <div class="section-box">
+    <h3>✏️ 修改资料</h3>
+
+    <div class="form-row">
+      <label>选择头像</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+
+    <div class="form-row">
+      <label>昵称</label>
+      <input class="input" id="editNickname" placeholder="设置你的昵称" maxlength="12">
+      <div class="hint">1-12个字符，在对局中展示给其他玩家</div>
+    </div>
+
+    <div class="form-row">
+      <label>个性签名</label>
+      <input class="input" id="editBio" placeholder="写一句话介绍自己吧" maxlength="40">
+      <div class="hint">最多40个字符</div>
+    </div>
+
+    <div class="save-row">
+      <button class="btn btn-primary" onclick="saveProfile()">💾 保存资料</button>
+    </div>
+  </div>
+
+  <!-- 修改密码 -->
+  <div class="section-box">
+    <h3>🔒 修改密码</h3>
+    <div class="form-row">
+      <label>原密码</label>
+      <input class="input" id="oldPwd" type="password" placeholder="输入当前密码">
+    </div>
+    <div class="form-row">
+      <label>新密码</label>
+      <input class="input" id="newPwd" type="password" placeholder="输入新密码（至少3位）">
+    </div>
+    <div class="save-row">
+      <button class="btn btn-cyan" onclick="changePassword()">🔑 修改密码</button>
+    </div>
+  </div>
+
+  <!-- 退出登录 -->
+  <div class="section-box" style="text-align:center; border-color:#ffcdd2; background:#fff5f5;">
+    <button class="btn" style="background:#e74c3c;color:#fff;width:100%;" onclick="logout()">🚪 退出登录</button>
+  </div>
+
+</div>
+
+<script>
+const username = localStorage.user;
+if (!username) location.href = '/login.html';
+
+const AVATARS = [
+  '🀄','🀅','🎭','🎪','👑','⭐','🔥','💎',
+  '🐉','🦊','🐱','🐼','🐲','🦄','🐺','🦅',
+  '🌸','🍀','🌙','☀️','🌈','❄️','⚡','💫',
+  '🎯','🎲','♠️','♥️','♦️','♣️','🎴','🏆'
+];
+
+let currentProfile = { nickname: username, avatar: '🀄', bio: '' };
+let selectedAvatar = '🀄';
+
+// ─── 初始化 ───
+(async function init() {
+  // 显示基本导航信息
+  updateNavUser();
+
+  // 加载资料
+  try {
+    const r = await fetch('/api/profile?username=' + encodeURIComponent(username)).then(x => x.json());
+    if (r.success) {
+      currentProfile = { nickname: r.nickname, avatar: r.avatar, bio: r.bio || '' };
+      selectedAvatar = currentProfile.avatar;
+    }
+  } catch (e) { /* 使用本地缓存 */ }
+
+  // 渲染
+  document.getElementById('profileAvatarDisplay').innerText = selectedAvatar;
+  document.getElementById('profileNickname').innerText = currentProfile.nickname;
+  document.getElementById('profileUsername').innerText = '@' + username;
+  document.getElementById('editNickname').value = currentProfile.nickname;
+  document.getElementById('editBio').value = currentProfile.bio;
+
+  renderAvatarGrid();
+  loadStats();
+})();
+
+function updateNavUser() {
+  const name = localStorage.nickname || username;
+  const av = localStorage.avatar || '🀄';
+  document.getElementById('navUser').innerHTML = av + ' ' + name;
+}
+
+function renderAvatarGrid() {
+  const grid = document.getElementById('avatarGrid');
+  grid.innerHTML = AVATARS.map(a =>
+    '<div class="avatar-option' + (a === selectedAvatar ? ' selected' : '') +
+    '" onclick="pickAvatar(\'' + a + '\')">' + a + '</div>'
+  ).join('');
+}
+
+function pickAvatar(av) {
+  selectedAvatar = av;
+  document.getElementById('profileAvatarDisplay').innerText = av;
+  renderAvatarGrid();
+}
+
+// ─── 保存资料 ───
+async function saveProfile() {
+  const nickname = document.getElementById('editNickname').value.trim();
+  const bio = document.getElementById('editBio').value.trim();
+
+  if (!nickname) return showToast('昵称不能为空');
+  if (nickname.length > 12) return showToast('昵称最多12个字符');
+  if (bio.length > 40) return showToast('签名最多40个字符');
+
+  try {
+    const r = await fetch('/api/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, nickname, avatar: selectedAvatar, bio })
+    }).then(x => x.json());
+
+    if (r.success) {
+      currentProfile = { nickname: r.nickname, avatar: r.avatar, bio: r.bio };
+      localStorage.nickname = r.nickname;
+      localStorage.avatar = r.avatar;
+      updateNavUser();
+      document.getElementById('profileNickname').innerText = r.nickname;
+      showToast('✅ 资料已保存');
+    } else {
+      showToast('❌ ' + r.msg);
+    }
+  } catch (e) {
+    showToast('网络错误，请重试');
+  }
+}
+
+// ─── 修改密码 ───
+async function changePassword() {
+  const oldPwd = document.getElementById('oldPwd').value;
+  const newPwd = document.getElementById('newPwd').value;
+  if (!oldPwd || !newPwd) return showToast('请填写完整信息');
+  if (newPwd.length < 3) return showToast('新密码至少3位');
+
+  try {
+    const r = await fetch('/api/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, oldPassword: oldPwd, newPassword: newPwd })
+    }).then(x => x.json());
+
+    if (r.success) {
+      document.getElementById('oldPwd').value = '';
+      document.getElementById('newPwd').value = '';
+      showToast('✅ 密码修改成功');
+    } else {
+      showToast('❌ ' + r.msg);
+    }
+  } catch (e) {
+    showToast('网络错误，请重试');
+  }
+}
+
+// ─── 退出登录 ───
+function logout() {
+  if (!confirm('确定要退出登录吗？')) return;
+  localStorage.clear();
+  location.href = '/login.html';
+}
+
+// ─── 加载战绩 ───
+async function loadStats() {
+  try {
+    const list = await fetch('/api/game-history?username=' + encodeURIComponent(username)).then(x => x.json());
+    const totalGames = list.length;
+    const totalRounds = list.reduce((a, h) => a + (h.totalRounds || 0), 0);
+
+    // 简单统计：参与对局即计为"胜场"（后续可根据详细结果细化）
+    document.getElementById('statsGrid').innerHTML =
+      '<div class="stat-item"><div class="stat-num">' + totalGames + '</div><div class="stat-label">对局数</div></div>' +
+      '<div class="stat-item"><div class="stat-num">' + totalRounds + '</div><div class="stat-label">总回合</div></div>' +
+      '<div class="stat-item"><div class="stat-num">' + (list.length ? Math.round(totalRounds / totalGames) : 0) + '</div><div class="stat-label">场均回合</div></div>';
+  } catch (e) {
+    document.getElementById('statsGrid').innerHTML =
+      '<div class="stat-item"><div class="stat-num">-</div><div class="stat-label">加载失败</div></div>';
+  }
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerText = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+</script>
+</body>
+</html>
