@@ -6,11 +6,11 @@
   <title>个人中心 - 超能力立直麻将</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    body { padding-top: 70px; }
+    body { padding-top: 56px; }
 
     .profile-header {
       text-align: center;
-      padding: 24px 20px 16px;
+      padding: 20px 16px 12px;
     }
     .profile-avatar {
       width: 80px;
@@ -22,7 +22,7 @@
       justify-content: center;
       background: linear-gradient(135deg, var(--accent), #ff6b6b);
       color: #fff;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       box-shadow: 0 4px 16px rgba(231,76,60,0.25);
       border: 3px solid #fff;
       overflow: hidden;
@@ -42,14 +42,14 @@
       background: var(--card);
       border-radius: 14px;
       padding: 20px;
-      margin: 12px 0;
+      margin: 10px 0;
       box-shadow: var(--shadow);
       border: 1px solid var(--border);
     }
     .section-box h3 {
       font-size: 15px;
       font-weight: 700;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       color: var(--accent);
       display: flex;
       align-items: center;
@@ -184,9 +184,26 @@
       margin-top: 2px;
     }
 
+    @media (max-width: 768px) {
+      .profile-header { padding: 14px 14px 10px; }
+      .profile-avatar { width: 64px; height: 64px; font-size: 34px; }
+      .profile-nickname { font-size: 20px; }
+      .section-box { padding: 16px; margin: 8px 0; }
+      .section-box h3 { font-size: 14px; margin-bottom: 10px; }
+      .stat-num { font-size: 20px; }
+      .stat-item { padding: 10px 6px; }
+    }
     @media (max-width: 540px) {
-      .avatar-grid { grid-template-columns: repeat(6, 1fr); }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .avatar-grid { grid-template-columns: repeat(6, 1fr); gap: 6px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .profile-header { padding: 10px 12px 8px; }
+      .profile-avatar { width: 52px; height: 52px; font-size: 28px; }
+      .profile-nickname { font-size: 18px; }
+      .section-box { padding: 12px; margin: 6px 0; border-radius: 12px; }
+      .section-box h3 { font-size: 13px; margin-bottom: 8px; }
+      .avatar-option { font-size: 22px; border-radius: 8px; }
+      .custom-upload-btn { padding: 6px 12px; font-size: 12px; }
+      .save-row { margin-top: 12px; gap: 8px; }
     }
   </style>
 </head>

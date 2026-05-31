@@ -234,7 +234,35 @@
     }
 
     @media (max-width: 768px) {
-      .battle-grid { grid-template-columns: 1fr; }
+      body { padding-top: 44px; }
+      .battle-grid { grid-template-columns: 1fr; gap: 10px; }
+      .page-header { margin-bottom: 12px; }
+      .page-header h1 { font-size: 22px; }
+      .page-header .info { font-size: 12px; }
+      .player-battle-card { padding: 14px; border-radius: 12px; }
+      .player-battle-card .player-header { margin-bottom: 10px; padding-bottom: 8px; }
+      .player-battle-card .player-name { font-size: 16px; }
+      .player-battle-card .player-avatar { width: 36px; height: 36px; font-size: 16px; }
+      .battle-char-card { padding: 12px; border-radius: 10px; }
+      .battle-char-card .char-name { font-size: 17px; }
+      .battle-char-card .char-tier { font-size: 11px; margin-bottom: 6px; }
+      .battle-char-card .char-faction { font-size: 10px; padding: 2px 8px; margin-bottom: 6px; }
+      .battle-char-card .click-hint { font-size: 10px; margin-top: 4px; }
+    }
+    @media (max-width: 540px) {
+      body { padding-top: 42px; }
+      .battle-grid { gap: 8px; }
+      .page-header h1 { font-size: 18px; }
+      .player-battle-card { padding: 10px; }
+      .player-battle-card .player-header { margin-bottom: 8px; padding-bottom: 6px; }
+      .player-battle-card .player-name { font-size: 14px; }
+      .player-battle-card .player-avatar { width: 32px; height: 32px; font-size: 14px; }
+      .player-battle-card .player-tag { font-size: 10px; padding: 1px 6px; }
+      .battle-char-card { padding: 10px; }
+      .battle-char-card .char-name { font-size: 15px; }
+      .battle-char-card .char-tier { font-size: 10px; }
+      .battle-char-card .retain-badge { top: 4px; right: 4px; font-size: 9px; padding: 2px 6px; }
+      .no-selection { padding: 12px; font-size: 12px; }
     }
   </style>
 </head>

@@ -519,7 +519,6 @@ body {
   border-bottom: 2px solid var(--border);
   flex-shrink: 0;
 }
-.char-fullscreen-overlay .fs-header-left {}
 .char-fullscreen-overlay .fs-char-name {
   font-size: 28px;
   font-weight: 900;
@@ -928,45 +927,143 @@ body {
 /* 手机横屏 / 小平板 */
 @media (max-width: 768px) {
   .navbar {
-    padding: 0 14px;
-    height: 50px;
+    padding: 0 10px;
+    height: 44px;
   }
-  .navbar .logo { font-size: 12px; }
-  .navbar .nav-links a { font-size: 12px; padding: 4px 10px; }
-  .navbar .nav-user { font-size: 12px; }
+  .navbar .logo { font-size: 11px; letter-spacing: 0; }
+  .navbar .nav-links { gap: 2px; }
+  .navbar .nav-links a { font-size: 11px; padding: 3px 7px; border-radius: 6px; }
+  .navbar .nav-user { font-size: 11px; }
 
-  .container { padding: 14px 12px 30px; }
-  .section { padding: 18px 14px; border-radius: 12px; }
+  .container { padding: 10px 10px 24px; }
+  .section { padding: 14px 12px; border-radius: 12px; margin-bottom: 12px; }
+  .section h2 { font-size: 15px; margin-bottom: 10px; }
 
-  .btn { padding: 10px 16px; font-size: 13px; }
+  .btn { padding: 9px 14px; font-size: 12px; border-radius: 8px; }
+
+  .char-card { padding: 12px; border-radius: 12px; }
+  .char-card .char-name { font-size: 15px; }
+  .char-card .faction-badge { font-size: 10px; padding: 2px 8px; }
+  .char-card-header { gap: 8px; }
+
+  .char-avatar, .char-avatar-placeholder {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+  }
+  .char-avatar-placeholder { font-size: 18px; }
+
+  .skill-tag { padding: 4px 10px; font-size: 11px; }
 
   .modal-dialog .dialog-desc { font-size: 16px; }
+  .modal-dialog .dialog-title { font-size: 18px; }
+  .modal-dialog .dialog-body { padding: 14px 18px 18px; }
+  .modal-dialog .dialog-header { padding: 14px 18px 0; }
+
+  /* 全屏详情弹窗缩小 */
+  .char-fullscreen-overlay { padding: 8px; }
+  .char-fullscreen-overlay .fs-char-name { font-size: 22px; }
+  .char-fullscreen-overlay .fs-skill-text { font-size: 15px; line-height: 1.6; }
+  .char-fullscreen-overlay .fs-skill-block { padding: 12px; border-radius: 12px; }
+  .char-fullscreen-overlay .fs-skill-label { font-size: 12px; padding: 4px 12px; }
+  .char-fullscreen-overlay .fs-body { padding: 16px 0; gap: 12px; }
+  .char-fullscreen-overlay .fs-header { padding-bottom: 10px; }
+  .char-fullscreen-overlay .fs-footer { padding-top: 10px; }
+  .char-fullscreen-overlay .fs-faction-badge { font-size: 12px; padding: 3px 10px; margin-top: 4px; }
+  .char-fullscreen-overlay .fs-char-tier { font-size: 12px; }
+
+  .fs-avatar, .fs-avatar-placeholder {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+  }
+  .fs-avatar-placeholder { font-size: 24px; margin-right: 10px; }
+
+  .draft-avatar, .draft-avatar-placeholder {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+  }
+  .draft-avatar-placeholder { font-size: 16px; }
+
+  .fs-close {
+    width: 34px; height: 34px;
+    font-size: 20px;
+  }
+
+  .form-row { gap: 8px; }
+  .tab-bar button { padding: 8px; font-size: 13px; }
 }
 
 /* 手机竖屏 */
 @media (max-width: 540px) {
   .char-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 6px;
   }
-  .char-card { padding: 14px; cursor: pointer; }
-  .char-card .char-name { font-size: 15px; }
+  .char-card { padding: 10px; cursor: pointer; }
+  .char-card .char-name { font-size: 14px; }
+  .char-card .char-meta { font-size: 11px; margin-bottom: 6px; }
 
   .form-row { flex-direction: column; }
   .form-row .input { min-width: auto; }
   .form-row .btn { width: 100%; }
 
-  .section { padding: 14px 12px; }
-  .section h2 { font-size: 16px; }
+  .section { padding: 12px 10px; margin-bottom: 10px; }
+  .section h2 { font-size: 14px; margin-bottom: 8px; }
 
-  .modal-overlay { padding: 12px; }
-  .modal-dialog { border-radius: 14px; }
+  .btn { padding: 8px 12px; font-size: 12px; }
 
-  .char-fullscreen-overlay { padding: 12px; }
-  .char-fullscreen-overlay .fs-char-name { font-size: 24px; }
-  .char-fullscreen-overlay .fs-skill-text { font-size: 18px; }
-  .char-fullscreen-overlay .fs-skill-block { padding: 16px; }
+  .modal-overlay { padding: 8px; }
+  .modal-dialog { border-radius: 12px; }
 
-  .vote-section { flex-direction: column; align-items: stretch; }
-  .vote-btn { width: 100%; }
+  .char-fullscreen-overlay { padding: 8px; }
+  .char-fullscreen-overlay .fs-char-name { font-size: 20px; }
+  .char-fullscreen-overlay .fs-skill-text { font-size: 14px; line-height: 1.5; }
+  .char-fullscreen-overlay .fs-skill-block { padding: 10px; border-radius: 10px; }
+  .char-fullscreen-overlay .fs-skill-label { font-size: 11px; padding: 3px 10px; }
+  .char-fullscreen-overlay .fs-body { padding: 12px 0; gap: 10px; }
+  .char-fullscreen-overlay .fs-header { padding-bottom: 8px; }
+  .char-fullscreen-overlay .fs-faction-badge { font-size: 11px; padding: 2px 8px; margin-top: 4px; }
+  .char-fullscreen-overlay .fs-char-tier { font-size: 11px; }
+
+  .fs-avatar, .fs-avatar-placeholder {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+  }
+  .fs-avatar-placeholder { font-size: 20px; margin-right: 8px; }
+
+  .draft-avatar, .draft-avatar-placeholder {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+  }
+  .draft-avatar-placeholder { font-size: 14px; }
+
+  .skill-tag { padding: 3px 8px; font-size: 10px; border-radius: 14px; }
+  .skill-tag .tag-icon { font-size: 12px; }
+
+  .vote-section { flex-direction: column; align-items: stretch; gap: 8px; }
+  .vote-btn { width: 100%; font-size: 12px; padding: 8px 16px; }
+
+  .navbar { height: 42px; padding: 0 8px; }
+  .navbar .logo { font-size: 10px; }
+  .navbar .nav-links a { font-size: 10px; padding: 2px 5px; }
+  .navbar .nav-user { font-size: 10px; }
+
+  .container { padding: 8px 8px 20px; }
+
+  .char-avatar, .char-avatar-placeholder {
+    width: 38px; height: 38px;
+    border-radius: 8px;
+  }
+  .char-avatar-placeholder { font-size: 16px; }
+  .char-card-header { gap: 6px; }
+
+  .strategy-tag { padding: 1px 8px; font-size: 10px; }
+
+  .round-badge { font-size: 12px; padding: 4px 12px; }
+  .vote-info { font-size: 11px; }
+  .vote-count { font-size: 11px; padding: 3px 10px; }
+
+  .tab-bar { margin-bottom: 12px; }
+  .tab-bar button { padding: 7px; font-size: 12px; }
+
+  .fs-strategy-tags .strategy-tag { font-size: 11px; padding: 3px 10px; }
 }

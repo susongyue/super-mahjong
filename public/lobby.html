@@ -6,7 +6,7 @@
   <title>大厅 - 超能力立直麻将</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    body { padding-top: 70px; }
+    body { padding-top: 56px; }
 
     .room-item {
       background: var(--card-secondary);
@@ -116,6 +116,26 @@
     .status-ready { background: #e8f5e9; color: #2e7d32; }
     .status-waiting { background: #fff3e0; color: #e65100; }
     .status-ended { background: #f3e5f5; color: #7b1fa2; }
+
+    @media (max-width: 768px) {
+      .room-item { padding: 10px 14px; margin: 5px 0; }
+      .room-item .room-id { font-size: 14px; }
+      .room-item .room-meta { font-size: 12px; }
+      .history-item { padding: 10px 14px; margin: 5px 0; }
+      .history-item .hist-room { font-size: 13px; }
+      .reconnect-area { padding: 12px 14px; margin-bottom: 10px; }
+      .btn-reconnect { padding: 8px 16px; font-size: 13px; }
+      .section-divider { margin: 14px 0 8px; }
+    }
+    @media (max-width: 540px) {
+      .room-item { padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 8px; }
+      .room-item .room-id { font-size: 13px; }
+      .history-item { padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 4px; }
+      .history-item .hist-room { font-size: 12px; }
+      .reconnect-area { padding: 10px 12px; flex-direction: column; align-items: flex-start; }
+      .reconnect-area .reconnect-info { font-size: 13px; }
+      .btn-reconnect { padding: 8px 14px; font-size: 12px; width: 100%; text-align: center; }
+    }
   </style>
 </head>
 <body>

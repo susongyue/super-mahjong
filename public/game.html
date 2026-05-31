@@ -316,7 +316,32 @@
     }
 
     @media (max-width: 900px) { .char-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
-    @media (max-width: 540px) { .char-grid { grid-template-columns: 1fr; gap: 8px; } }
+    @media (max-width: 768px) {
+      body { padding-top: 44px; }
+      .page-header { margin-bottom: 12px; }
+      .page-header h1 { font-size: 22px; }
+      .page-header .info { font-size: 12px; }
+      .selection-progress { padding: 12px 14px; margin-bottom: 12px; border-radius: 10px; }
+      .progress-text { font-size: 13px; }
+      .selection-list { font-size: 11px; }
+      .char-card .card-actions { gap: 4px; }
+      .char-card .btn-detail, .char-card .btn-deploy { padding: 6px 8px; font-size: 11px; }
+      .fs-deploy-btn { padding: 12px 24px; font-size: 14px; margin-top: 12px; }
+      .fs-retain-info { padding: 8px 12px; font-size: 12px; margin-top: 8px; }
+    }
+    @media (max-width: 540px) {
+      body { padding-top: 42px; }
+      .char-grid { grid-template-columns: 1fr; gap: 6px; }
+      .page-header h1 { font-size: 18px; }
+      .page-header .info { font-size: 11px; }
+      .selection-progress { padding: 10px 12px; gap: 6px; }
+      .char-card { padding: 10px; }
+      .char-card .card-actions { flex-direction: column; gap: 3px; }
+      .char-card .btn-detail, .char-card .btn-deploy { padding: 5px 6px; font-size: 11px; }
+      .char-card .resting-badge, .char-card .retain-badge { top: 4px; font-size: 9px; padding: 2px 6px; }
+      .fs-deploy-btn { padding: 10px 20px; font-size: 13px; }
+      .fs-retain-info { padding: 6px 10px; font-size: 11px; }
+    }
   </style>
 </head>
 <body>
