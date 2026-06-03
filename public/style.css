@@ -999,8 +999,8 @@ body {
 /* 手机竖屏 */
 @media (max-width: 540px) {
   .char-grid {
-    grid-template-columns: 1fr;
-    gap: 6px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
   .char-card { padding: 10px; cursor: pointer; }
   .char-card .char-name { font-size: 14px; }
