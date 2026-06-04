@@ -5,10 +5,10 @@
 
 // ── 技能类型定义 ──
 window.SKILL_TYPES = {
-  limit:   { label: '限定', icon: '🔥', cls: 'limit', order: 1 },
-  innate:  { label: '固有', icon: '⚡', cls: 'innate', order: 2 },
-  passive: { label: '被动', icon: '🛡️', cls: 'passive', order: 3 },
-  extra:   { label: '附加', icon: '✨', cls: 'extra', order: 4 }
+  limit:   { label: '限定', icon: '', cls: 'limit', order: 1 },
+  innate:  { label: '固有', icon: '', cls: 'innate', order: 2 },
+  passive: { label: '被动', icon: '', cls: 'passive', order: 3 },
+  extra:   { label: '附加', icon: '', cls: 'extra', order: 4 }
 };
 
 window.Components = {
@@ -38,7 +38,7 @@ window.Components = {
     overlay.className = 'modal-overlay';
     overlay.innerHTML = '<div class="modal-dialog">' +
       '<div class="dialog-header"><div class="dialog-title">' + icon + ' ' + label + '技能</div>' +
-      '<button class="dialog-close" onclick="this.closest(\'.modal-overlay\').remove()">✕</button></div>' +
+      '<button class="dialog-close" onclick="this.closest(\'.modal-overlay\').remove()">X</button></div>' +
       '<div class="dialog-body"><div class="dialog-skill-type ' + cls + '">' + icon + ' ' + label + '</div>' +
       '<div class="dialog-desc">' + window.Utils.escHTML(text) + '</div></div></div>';
     document.body.appendChild(overlay);
@@ -98,19 +98,19 @@ window.Components = {
     if (isRestingRetain) extraClasses += ' resting-retain';
 
     const badges = [];
-    if (isRestingRetain) badges.push('<div class="resting-badge retain-active">🛡️ 轮休·可出战</div>');
-    else if (isResting) badges.push('<div class="resting-badge">😴 休息中</div>');
-    if (isRetain && !isResting) badges.push('<div class="retain-badge">🛡️ 保留</div>');
+    if (isRestingRetain) badges.push('<div class="resting-badge retain-active">轮休·可出战</div>');
+    else if (isResting) badges.push('<div class="resting-badge">休息中</div>');
+    if (isRetain && !isResting) badges.push('<div class="retain-badge">保留</div>');
 
     const img = u.charImageHTML([charData], charData.name, 'normal');
     const skillTagsHTML = this.renderSkillTags(charData);
     const strategyHTML = this.renderStrategyTags(charData.tags);
 
     const deployBtn = isBlocked
-      ? '<button class="btn-detail" onclick="event.stopPropagation();' + (onDetail || '') + '">🔍 详情</button>'
+      ? '<button class="btn-detail" onclick="event.stopPropagation();' + (onDetail || '') + '">详情</button>'
       : isSelected
-        ? '<button class="btn-deploy deployed" onclick="event.stopPropagation();' + (onDeploy ? onDeploy.replace('deploy', 'cancel') : '') + '">✅ 已出战</button>'
-        : '<button class="btn-deploy" onclick="event.stopPropagation();' + (onDeploy || '') + '">⚔️ 出战</button>';
+        ? '<button class="btn-deploy deployed" onclick="event.stopPropagation();' + (onDeploy ? onDeploy.replace('deploy', 'cancel') : '') + '"> 已出战</button>'
+        : '<button class="btn-deploy" onclick="event.stopPropagation();' + (onDeploy || '') + '">出战</button>';
 
     return '<div class="char-card' + extraClasses + '" onclick="' + (onDetail || '') + '">' +
       badges.join('') +
@@ -128,7 +128,7 @@ window.Components = {
       (strategyHTML ? '<div class="tag-area">' + strategyHTML + '</div>' : '') +
       // ④ 操作按钮区域
       '<div class="card-actions">' +
-        '<button class="btn-detail" onclick="event.stopPropagation();' + (onDetail || '') + '">🔍 详情</button>' +
+        '<button class="btn-detail" onclick="event.stopPropagation();' + (onDetail || '') + '">详情</button>' +
         deployBtn +
       '</div>' +
     '</div>';
@@ -155,21 +155,21 @@ window.Components = {
     const bodyHTML = skills.map(s => {
       const st = window.SKILL_TYPES[s.key];
       return '<div class="fs-skill-block"><span class="fs-skill-label ' + st.cls + '">' + st.icon + ' ' + st.label + '技能</span><div class="fs-skill-text">' + u.escHTML(s.text) + '</div></div>';
-    }).join('') + (charData.note ? '<div class="fs-skill-block"><span class="fs-skill-label" style="background:#1a1a2e;color:#667eea;border-color:#667eea;">📝 备注</span><div class="fs-skill-text">' + u.escHTML(charData.note) + '</div></div>' : '');
+    }).join('') + (charData.note ? '<div class="fs-skill-block"><span class="fs-skill-label note">备注</span><div class="fs-skill-text">' + u.escHTML(charData.note) + '</div></div>' : '');
 
     let deployBtnHTML = '';
     if (isBlocked && !isRetain) {
-      deployBtnHTML = '<button class="fs-deploy-btn blocked" disabled>🔒 休息中，无法出战</button>';
+      deployBtnHTML = '<button class="fs-deploy-btn blocked" disabled>休息中，无法出战</button>';
     } else if (isSelected) {
-      deployBtnHTML = '<button class="fs-deploy-btn deployed" id="fsDeployBtnTemp">✅ 已出战（点击取消）</button>';
+      deployBtnHTML = '<button class="fs-deploy-btn deployed" id="fsDeployBtnTemp">已出战（点击取消）</button>';
     } else {
-      deployBtnHTML = '<button class="fs-deploy-btn" id="fsDeployBtnTemp">⚔️ 出战</button>';
+      deployBtnHTML = '<button class="fs-deploy-btn" id="fsDeployBtnTemp">出战</button>';
     }
 
     const retainInfo = (isResting && isRetain)
-      ? '<div class="fs-retain-info">🛡️ 该角色拥有<strong>保留</strong>效果，休息状态下仍可出战！</div>'
+      ? '<div class="fs-retain-info">该角色拥有<strong>保留</strong>效果，休息状态下仍可出战！</div>'
       : (isRetain && !isResting)
-        ? '<div class="fs-retain-info">🛡️ 该角色拥有<strong>保留</strong>效果，出战后仍可在下回合继续出战</div>'
+        ? '<div class="fs-retain-info">该角色拥有<strong>保留</strong>效果，出战后仍可在下回合继续出战</div>'
         : '';
 
     const tierHTML = 'Tier ' + (charData.tier || '?') + (playerName ? '（' + u.escHTML(playerName) + '）' : '') +
@@ -186,7 +186,7 @@ window.Components = {
           '<div class="fs-faction-badge">' + u.escHTML(charData.faction || '无阵营') + '</div>' +
         '</div>' +
       '</div>' +
-      '<button class="fs-close">✕</button></div>' +
+      '<button class="fs-close">X</button></div>' +
       '<div class="fs-body">' + bodyHTML + '</div>' +
       '<div id="fsRetainTemp">' + retainInfo + '</div>' +
       deployBtnHTML +

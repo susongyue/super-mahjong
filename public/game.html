@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="themes.css">
   <meta name="theme-color" content="#000000">
+  <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
-    body { padding-top: 56px; }
     .container { max-width: 800px; }
 
     .page-header {
@@ -27,17 +27,17 @@
       background: var(--surface-1);
       border-radius: var(--r-xl);
       padding: 16px 20px; margin-bottom: 18px;
-      border: 1px solid var(--hairline);
+      border: 2px solid var(--hairline);
       display: flex; align-items: center; justify-content: space-between;
       flex-wrap: wrap; gap: 10px;
     }
     .progress-text {
-      font-size: 15px; font-weight: 700; color: var(--ink);
+      font-size: 15px; font-weight: 700; color: var(--text-primary);
     }
     .progress-bar-wrap {
       flex: 1; min-width: 150px; height: 14px;
       background: var(--surface-2); border-radius: 7px;
-      overflow: hidden; border: 1px solid var(--hairline);
+      overflow: hidden; border: 2px solid var(--hairline);
     }
     .progress-bar-fill {
       height: 100%;
@@ -51,7 +51,8 @@
 
     /* ── 出战页 3列卡片 - 四区域布局 ── */
     .char-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .char-card { padding: 0; cursor: pointer; }
+    .char-card { padding: 0; cursor: pointer; display: flex; flex-direction: column; }
+    .char-card .card-actions { margin-top: auto; }
 
     /* ① 头部区域：头像 + 阵营/名字 */
     .char-card-header {
@@ -67,8 +68,8 @@
       padding: 10px 14px;
       border-bottom: 1px solid var(--card-divider);
     }
-    .char-card .skill-tags { gap: 4px; margin-bottom: 0; }
-    .char-card .skill-tag { padding: 3px 8px; font-size: 11px; }
+    .char-card .skill-tags { gap: 2px; margin-bottom: 0; }
+    .char-card .skill-tag { padding: 3px 8px; font-size: 13px; }
     .char-card .skill-tag .tag-icon { font-size: 10px; }
 
     /* ③ 策略标签区域 */
@@ -77,7 +78,7 @@
       border-bottom: 1px solid var(--card-divider);
     }
     .char-card .strategy-tags { gap: 4px; margin: 0; }
-    .char-card .strategy-tag { padding: 2px 8px; font-size: 10px; }
+    .char-card .strategy-tag { padding: 3px 8px; font-size: 12px; }
 
     /* ④ 操作按钮区域 */
     .char-card .card-actions {
@@ -99,14 +100,14 @@
       border-radius: 0 0 var(--r-xl) 0; font-size: 13px;
       font-weight: 700; cursor: pointer;
       border: none;
-      background: var(--accent-blue); color: #000;
+      background: #09ff0081; color: var(--on-primary);
       transition: all .2s; text-align: center;
     }
     .char-card .btn-deploy:hover:not(:disabled) {
-      background: var(--btn-accent-hover); filter: brightness(1.1);
+      background: #09ff00; filter: brightness(1.1);
     }
     .char-card .btn-deploy:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
-    .char-card .btn-deploy.deployed { background: var(--green); color: #000; }
+    .char-card .btn-deploy.deployed { background: var(--green); color: var(--on-primary); }
 
     .char-card .faction-badge { margin-bottom: 4px; }
     .char-card .char-name { font-size: 15px; }
@@ -114,7 +115,6 @@
 
     @media (max-width: 900px) { .char-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
     @media (max-width: 768px) {
-      body { padding-top: 44px; }
       .page-header { margin-bottom: 14px; }
       .page-header h1 { font-size: 22px; }
       .page-header .info { font-size: 13px; }
@@ -122,27 +122,90 @@
       .progress-text { font-size: 13px; }
       .selection-list { font-size: 11px; }
       .char-grid { gap: 10px; }
+      .char-card { padding: 0; }
       .char-card-header { padding: 10px; gap: 8px; }
       .char-card .skill-area { padding: 8px 10px; }
       .char-card .tag-area { padding: 6px 10px; }
-      .char-card .skill-tag { padding: 2px 7px; font-size: 10px; }
-      .char-card .strategy-tag { padding: 1px 6px; font-size: 9px; }
+      .char-card .skill-tag { padding: 3px 8px; font-size: 13px; }
+      .char-card .strategy-tag { padding: 3px 8px; font-size: 12px; }
       .char-card .btn-detail, .char-card .btn-deploy { padding: 10px 8px; font-size: 12px; }
     }
     @media (max-width: 540px) {
-      body { padding-top: 42px; }
       .char-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .page-header h1 { font-size: 18px; }
       .page-header .info { font-size: 11px; }
       .selection-progress { padding: 10px 12px; gap: 6px; }
+      .char-card { padding: 0; }
       .char-card-header { padding: 8px 8px; gap: 6px; }
       .char-card .skill-area { padding: 6px 8px; }
       .char-card .tag-area { padding: 5px 8px; }
-      .char-card .skill-tag { padding: 2px 6px; font-size: 9px; }
-      .char-card .strategy-tag { padding: 1px 5px; font-size: 8px; }
+      .char-card .skill-tag { padding: 3px 8px; font-size: 13px; }
+      .char-card .strategy-tag { padding: 3px 8px; font-size: 12px; }
       .char-card .btn-detail, .char-card .btn-deploy { padding: 9px 6px; font-size: 11px; }
       .char-card .char-name { font-size: 13px; }
       .char-card .faction-badge { font-size: 9px; padding: 2px 6px; }
+    }
+
+    /* ── 投票面板（桌面端固定右侧） ── */
+    .vote-panel {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 200px;
+      background: var(--surface-1);
+      border: 2px solid var(--hairline);
+      border-radius: var(--r-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-md);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .vote-panel-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-align: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .vote-panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .vote-panel-body .vote-btn {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    .vote-panel-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .vote-panel-footer .vote-count {
+      font-size: 13px;
+      padding: 4px 10px;
+      justify-content: center;
+    }
+    .vote-names {
+      font-size: 11px;
+      color: var(--ink-muted);
+      line-height: 1.5;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+    @media (max-width: 1024px) {
+      .vote-panel {
+        position: static;
+        transform: none;
+        width: 100%;
+        margin-top: 20px;
+        box-sizing: border-box;
+      }
     }
   </style>
 </head>
@@ -161,11 +224,11 @@
 
 <div class="container">
   <div class="page-header">
-    <h1>⚔️选择出战角色</h1>
+    <h1>选择出战角色</h1>
     <div class="info">
       房间：<strong id="roomDisplay"></strong> |
       玩家：<strong id="nameDisplay"></strong> |
-      🏁第 <strong id="roundNum">1</strong> 回合
+      第 <strong id="roundNum">1</strong> 回合
     </div>
   </div>
 
@@ -181,7 +244,7 @@
 
   <div class="section">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 style="margin-bottom:0;">🎯你的角色（点击查看详情）</h2>
+      <h2 style="margin-bottom:0;">你的角色（点击查看详情）</h2>
       <span id="mySelectionBadge" style="font-size:13px;color:var(--ink-muted);"></span>
     </div>
     <div class="char-grid" id="charGrid">
@@ -189,18 +252,22 @@
     </div>
   </div>
 
-  <div class="section">
-    <h2 style="margin-bottom:12px;">📊对局投票</h2>
-    <div class="vote-section">
-      <button class="vote-btn vote-btn-game" id="btnEndGame">🏁 投票结束对局</button>
-      <div class="vote-info">
-        <span id="gameVoteInfo" class="vote-count game">对局投票 0/0</span>
-      </div>
-    </div>
-    <div id="voteNames" style="margin-top:10px;font-size:12px;color:var(--ink-muted);"></div>
-  </div>
 </div>
 
+<!-- 投票面板（桌面端固定右侧） -->
+<div class="vote-panel" id="votePanel">
+  <div class="vote-panel-title">对局投票</div>
+  <div class="vote-panel-body">
+    <button class="vote-btn vote-btn-game" id="btnEndGame">投票结束对局</button>
+  </div>
+  <div class="vote-panel-footer">
+    <span id="gameVoteInfo" class="vote-count game">对局 0/0</span>
+  </div>
+  <div id="voteNames" class="vote-names"></div>
+</div>
+
+<!-- 全屏模糊背景 -->
+<div class="char-fullscreen-backdrop hidden" id="charFullscreenBackdrop"></div>
 <!-- 全屏角色详情弹窗 -->
 <div class="char-fullscreen-overlay hidden" id="charFullscreen">
   <div class="fs-header">
@@ -212,11 +279,11 @@
         <div class="fs-faction-badge" id="fsFaction"></div>
       </div>
     </div>
-    <button class="fs-close" id="fsCloseBtn">✕</button>
+    <button class="fs-close" id="fsCloseBtn">X</button>
   </div>
   <div class="fs-body" id="fsBody"></div>
   <div id="fsRetainInfo"></div>
-  <button class="fs-deploy-btn" id="fsDeployBtn">⚔️出战</button>
+  <button class="fs-deploy-btn" id="fsDeployBtn">出战</button>
   <div class="fs-footer">
     <span class="fs-footer-hint">按ESC关闭</span>
   </div>
@@ -279,14 +346,14 @@ socket.on('roomPlayersUpdate', function (data) {
   totalPlayers = data.players ? data.players.length : totalPlayers;
   if (data && data.players) {
     data.players.forEach(function (p) {
-      playerProfiles[p.name] = { nickname: p.nickname || p.name, avatar: p.avatar || '🀄' };
+      playerProfiles[p.name] = { nickname: p.nickname || p.name, avatar: p.avatar || '' };
     });
   }
   updateSelectionUI();
 });
 
 socket.on('characterStatesUpdate', function (data) {
-  charStates = data || {};
+  charStates = (data && data.states) || {};
   renderCharGrid();
 });
 
@@ -296,7 +363,7 @@ socket.on('battleState', function (data) {
   readyPlayerNames = data.readyPlayerNames || [];
   if (data.mySelection) {
     mySelection = data.mySelection;
-    document.getElementById('mySelectionBadge').innerHTML = '✅已选择：<strong>' + Utils.escHTML(mySelection) + '</strong>';
+    document.getElementById('mySelectionBadge').innerHTML = '已选择：<strong>' + Utils.escHTML(mySelection) + '</strong>';
     renderCharGrid();
   }
   updateSelectionUI();
@@ -310,10 +377,10 @@ socket.on('battleReadyUpdate', function (data) {
 
 socket.on('battleSelectionConfirm', function (data) {
   mySelection = data.characterName;
-  document.getElementById('mySelectionBadge').innerHTML = '✅已选择：<strong>' + Utils.escHTML(mySelection) + '</strong>';
+  document.getElementById('mySelectionBadge').innerHTML = '已选择：<strong>' + Utils.escHTML(mySelection) + '</strong>';
   renderCharGrid();
   updateSelectionUI();
-  Utils.showToast('✅已选择 ' + data.characterName + ' ,等待其他玩家...');
+  Utils.showToast('已选择 ' + data.characterName + ' ,等待其他玩家...');
 });
 
 socket.on('battleSelectionCancel', function () {
@@ -335,11 +402,11 @@ socket.on('roundAdvanced', function (data) {
   document.getElementById('mySelectionBadge').innerText = '';
   loadChars();
   updateSelectionUI();
-  Utils.showToast('🎉 第 ' + data.round + ' 回合开始！请选择出战角色');
+  Utils.showToast('第 ' + data.round + ' 回合开始！请选择出战角色');
 });
 
 socket.on('gameEndVoteUpdate', function (data) {
-  document.getElementById('gameVoteInfo').innerText = '对局投票 ' + data.voted + '/' + data.total;
+  document.getElementById('gameVoteInfo').innerText = '对局 ' + data.voted + '/' + data.total;
   document.getElementById('gameVoteInfo').className = data.voted >= data.total ? 'vote-count done' : 'vote-count game';
 });
 
@@ -352,7 +419,7 @@ socket.on('gameEnded', function (data) {
 });
 
 socket.on('error', function (msg) {
-  Utils.showToast('⚠️ ' + msg);
+  Utils.showToast(msg);
 });
 
 // ══════════ 角色加载 ══════════
@@ -384,9 +451,9 @@ function renderCharGrid() {
     if (isRestingRetain) extraClasses += ' resting-retain';
 
     var badges = [];
-    if (isRestingRetain) badges.push('<div class="resting-badge retain-active">🛡️轮休·可出战</div>');
-    else if (isResting) badges.push('<div class="resting-badge">😴休息中</div>');
-    if (isRetain) badges.push('<div class="retain-badge">🛡️保留</div>');
+    if (isRestingRetain) badges.push('<div class="resting-badge retain-active">轮休·可出战</div>');
+    else if (isResting) badges.push('<div class="resting-badge">休息中</div>');
+    if (isRetain) badges.push('<div class="retain-badge">保留</div>');
 
     // 技能标签（使用 Components 模块）
     var skillTagsHTML = Components.renderSkillTags(c, false);
@@ -397,11 +464,11 @@ function renderCharGrid() {
     // 出战按钮状态
     var deployBtnHTML = '';
     if (isBlocked) {
-      deployBtnHTML = '<button class="btn-detail">🔍查看详情</button>';
+      deployBtnHTML = '<button class="btn-detail">查看详情</button>';
     } else if (isSelected) {
-      deployBtnHTML = '<button class="btn-deploy deployed">✅已出战</button>';
+      deployBtnHTML = '<button class="btn-deploy deployed">已出战</button>';
     } else {
-      deployBtnHTML = '<button class="btn-deploy">⚔️出战</button>';
+      deployBtnHTML = '<button class="btn-deploy">出战</button>';
     }
 
     return '<div class="char-card' + extraClasses + '" data-idx="' + idx + '">' +
@@ -421,7 +488,7 @@ function renderCharGrid() {
       (strategyHTML ? '<div class="tag-area">' + strategyHTML + '</div>' : '') +
       // ④ 操作按钮区域
       '<div class="card-actions">' +
-        '<button class="btn-detail">🔍 详情</button>' +
+        '<button class="btn-detail"> 详情</button>' +
         deployBtnHTML +
       '</div>' +
     '</div>';
@@ -430,15 +497,17 @@ function renderCharGrid() {
   // 事件委托：卡片点击、按钮点击
   grid.querySelectorAll('.char-card').forEach(function (card) {
     card.addEventListener('click', function (e) {
+      if (e.target.closest('.btn-detail') || e.target.closest('.btn-deploy')) return;
       var idx = parseInt(card.dataset.idx);
-      openFullscreen(idx);
+      openFullscreen(idx, card);
     });
   });
   grid.querySelectorAll('.btn-detail').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
-      var idx = parseInt(btn.closest('.char-card').dataset.idx);
-      openFullscreen(idx);
+      var card = btn.closest('.char-card');
+      var idx = parseInt(card.dataset.idx);
+      openFullscreen(idx, card);
     });
   });
   grid.querySelectorAll('.btn-deploy').forEach(function (btn) {
@@ -461,15 +530,15 @@ function deployChar(idx) {
   var isResting = charStates[c.name] && charStates[c.name].resting;
   var isRetain = c.retain === true;
   if (isResting && !isRetain) {
-    Utils.showToast('⚠️ 该角色正在休息中，等待全部角色出战过后即可恢复');
+    Utils.showToast('该角色正在休息中，等待全部角色出战过后即可恢复');
     return;
   }
   if (isResting && isRetain) {
-    Utils.showToast('🛡️ 保留效果发动！该角色不受休息限制');
+    Utils.showToast(' 保留效果发动！该角色不受休息限制');
   }
   mySelection = c.name;
   socket.emit('selectBattleCharacter', { roomId: roomId, characterName: c.name, playerName: username });
-  document.getElementById('mySelectionBadge').innerHTML = '✅ 已选择：<strong>' + Utils.escHTML(c.name) + '</strong>';
+  document.getElementById('mySelectionBadge').innerHTML = ' 已选择：<strong>' + Utils.escHTML(c.name) + '</strong>';
   renderCharGrid();
   closeFullscreen();
 }
@@ -485,10 +554,14 @@ function cancelDeploy(idx) {
 }
 
 // ══════════ 全屏角色详情 ══════════
-function openFullscreen(idx) {
+var fsAnimating = false;
+var fsCurrentCard = null;
+
+function openFullscreen(idx, cardEl) {
   var c = myChars[idx];
-  if (!c) return;
+  if (!c || fsAnimating) return;
   fsCurrentIdx = idx;
+  fsCurrentCard = cardEl;
 
   document.getElementById('fsAvatar').innerHTML = Utils.charImageHTML(myChars, c.name, 'big');
   document.getElementById('fsCharName').innerText = c.name;
@@ -509,7 +582,7 @@ function openFullscreen(idx) {
       '<div class="fs-skill-text">' + Utils.escHTML(s.text) + '</div>' +
     '</div>';
   }).join('') + (c.note ?
-    '<div class="fs-skill-block"><span class="fs-skill-label" style="background:rgba(0,153,255,0.1);color:var(--accent-blue);border-color:rgba(0,153,255,0.3);">📝 备注</span><div class="fs-skill-text">' + Utils.escHTML(c.note) + '</div></div>'
+    '<div class="fs-skill-block"><span class="fs-skill-label note">备注</span><div class="fs-skill-text">' + Utils.escHTML(c.note) + '</div></div>'
     : '');
 
   var deployBtn = document.getElementById('fsDeployBtn');
@@ -522,34 +595,156 @@ function openFullscreen(idx) {
   deployBtn.disabled = false;
 
   if (isBlocked) {
-    deployBtn.innerText = '🔒 休息中，无法出战';
+    deployBtn.innerText = '休息中，无法出战';
     deployBtn.classList.add('blocked');
     deployBtn.disabled = true;
   } else if (isSelected) {
-    deployBtn.innerText = '✅ 已出战（点击取消）';
+    deployBtn.innerText = ' 已出战（点击取消）';
     deployBtn.classList.add('deployed');
     deployBtn.onclick = function () { cancelDeploy(fsCurrentIdx); };
   } else {
-    deployBtn.innerText = '⚔️ 出战';
+    deployBtn.innerText = '出战';
     deployBtn.onclick = function () { deployChar(fsCurrentIdx); };
   }
 
   var retainInfo = document.getElementById('fsRetainInfo');
   if (isResting && isRetain) {
-    retainInfo.innerHTML = '<div class="fs-retain-info">🛡️ 该角色拥有<strong>保留</strong>效果，休息状态下仍可出战！</div>';
+    retainInfo.innerHTML = '<div class="fs-retain-info"> 该角色拥有<strong>保留</strong>效果，休息状态下仍可出战！</div>';
   } else if (isRetain && !isResting) {
-    retainInfo.innerHTML = '<div class="fs-retain-info">🛡️ 该角色拥有<strong>保留</strong>效果，出战后仍可在下回合继续出战</div>';
+    retainInfo.innerHTML = '<div class="fs-retain-info"> 该角色拥有<strong>保留</strong>效果，出战后仍可在下回合继续出战</div>';
   } else {
     retainInfo.innerHTML = '';
   }
 
-  document.getElementById('charFullscreen').classList.remove('hidden');
+  // ── 展开动画 ──
+  var overlay = document.getElementById('charFullscreen');
+  var backdrop = document.getElementById('charFullscreenBackdrop');
+  var rect = cardEl.getBoundingClientRect();
+
+  overlay.classList.remove('hidden');
+  backdrop.classList.remove('hidden');
+
+  gsap.set(backdrop, { autoAlpha: 0, backdropFilter: 'blur(0px)' });
+  gsap.set(overlay, {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    right: 'auto',
+    bottom: 'auto',
+    borderRadius: getComputedStyle(cardEl).borderRadius,
+    backgroundColor: getComputedStyle(cardEl).backgroundColor || 'var(--surface-1)',
+    autoAlpha: 1,
+    overflow: 'hidden',
+    padding: 0
+  });
+
+  var contentEls = overlay.querySelectorAll('.fs-header, .fs-body, .fs-footer, #fsRetainInfo, #fsDeployBtn');
+  gsap.set(contentEls, { opacity: 0 });
+
+  fsAnimating = true;
   document.body.style.overflow = 'hidden';
+
+  var targetW = Math.min(900, window.innerWidth * 0.92);
+  var targetLeft = (window.innerWidth - targetW) / 2;
+
+  var tl = gsap.timeline({
+    onComplete: function () {
+      fsAnimating = false;
+      gsap.set(overlay, { overflow: 'auto', clearProps: 'padding' });
+    }
+  });
+
+  // 背景逐渐模糊
+  tl.to(backdrop, {
+    autoAlpha: 1,
+    backdropFilter: 'blur(20px) saturate(180%)',
+    duration: 0.35,
+    ease: 'power3.out'
+  }, 0);
+
+  // 面板从卡片位置展开到全屏
+  tl.to(overlay, {
+    top: 20,
+    left: targetLeft,
+    width: targetW,
+    height: 'calc(100vh - 40px)',
+    borderRadius: 'var(--r-xl)',
+    padding: '16px',
+    backgroundColor: 'var(--canvas)',
+    duration: 0.35,
+    ease: 'power3.out'
+  }, 0);
+
+  tl.to(contentEls, {
+    opacity: 1,
+    duration: 0.2,
+    stagger: 0.03,
+    clearProps: 'opacity'
+  }, '-=0.15');
 }
 
 function closeFullscreen() {
-  document.getElementById('charFullscreen').classList.add('hidden');
-  document.body.style.overflow = '';
+  if (fsAnimating) return;
+
+  var overlay = document.getElementById('charFullscreen');
+  var backdrop = document.getElementById('charFullscreenBackdrop');
+  var cardEl = fsCurrentCard || document.querySelector('.char-card[data-idx="' + fsCurrentIdx + '"]');
+
+  if (!cardEl || !document.body.contains(cardEl)) {
+    var tl2 = gsap.timeline({
+      onComplete: function () {
+        overlay.classList.add('hidden');
+        backdrop.classList.add('hidden');
+        gsap.set(overlay, { clearProps: 'all' });
+        gsap.set(backdrop, { clearProps: 'all' });
+        document.body.style.overflow = '';
+        fsCurrentCard = null;
+      }
+    });
+    tl2.to([overlay, backdrop], { autoAlpha: 0, duration: 0.2 });
+    return;
+  }
+
+  var rect = cardEl.getBoundingClientRect();
+  var contentEls = overlay.querySelectorAll('.fs-header, .fs-body, .fs-footer, #fsRetainInfo, #fsDeployBtn');
+
+  fsAnimating = true;
+
+  var tl = gsap.timeline({
+    onComplete: function () {
+      overlay.classList.add('hidden');
+      backdrop.classList.add('hidden');
+      gsap.set(overlay, { clearProps: 'all' });
+      gsap.set(backdrop, { clearProps: 'all' });
+      document.body.style.overflow = '';
+      fsAnimating = false;
+      fsCurrentCard = null;
+    }
+  });
+
+  tl.to(contentEls, { opacity: 0, duration: 0.1 });
+
+  // 背景模糊消退
+  tl.to(backdrop, {
+    autoAlpha: 0,
+    backdropFilter: 'blur(0px)',
+    duration: 0.28,
+    ease: 'power3.in'
+  }, 0);
+
+  tl.to(overlay, {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    borderRadius: getComputedStyle(cardEl).borderRadius,
+    padding: 0,
+    overflow: 'hidden',
+    backgroundColor: getComputedStyle(cardEl).backgroundColor || 'var(--surface-1)',
+    duration: 0.28,
+    ease: 'power3.in'
+  }, 0);
 }
 
 document.getElementById('fsCloseBtn').addEventListener('click', closeFullscreen);
@@ -584,7 +779,7 @@ document.getElementById('btnEndGame').addEventListener('click', function () {
   if (!confirm('确定要投票结束本局游戏吗？所有玩家同意后将结束对局。')) return;
   var btn = document.getElementById('btnEndGame');
   btn.disabled = true;
-  btn.innerText = '🏁 已投票结束对局';
+  btn.innerText = '已投票结束对局';
   socket.emit('voteEndGame', roomId);
 });
 

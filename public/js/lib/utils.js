@@ -40,7 +40,7 @@ window.Utils = {
   },
 
   /** 计时器倒计时 */
-  startCountdown(el, seconds, onComplete, prefix = '⏳', suffix = '秒后自动跳转...') {
+  startCountdown(el, seconds, onComplete, prefix = '', suffix = '秒后自动跳转...') {
     let remaining = seconds;
     const timer = setInterval(() => {
       if (remaining <= 0) {
@@ -68,7 +68,7 @@ window.Utils = {
 
   /** 玩家头像 HTML（用户自定义头像） */
   playerAvatarHTML(avatar) {
-    if (!avatar) avatar = '🀄';
+    if (!avatar) avatar = '';
     if (avatar.startsWith('/avatars/')) {
       return '<img src="' + avatar + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
     }

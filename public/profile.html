@@ -7,14 +7,14 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="themes.css">
   <meta name="theme-color" content="#000000">
+  <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
-    body { padding-top: 56px; }
 
     .profile-page { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 
     .profile-header {
       text-align: center;
-      padding: 32px 16px 20px;
+      padding: 20px 16px 20px;
     }
     .profile-avatar {
       width: 80px; height: 80px;
@@ -23,14 +23,14 @@
       display: inline-flex;
       align-items: center; justify-content: center;
       background: linear-gradient(135deg, var(--gradient-violet), var(--gradient-magenta));
-      color: #fff;
+      color: var(--text-primary);
       margin-bottom: 12px;
-      box-shadow: 0 4px 20px rgba(106,76,245,0.25);
+      box-shadow: var(--shadow-md);
       border: 3px solid var(--surface-2);
       overflow: hidden;
     }
     .profile-nickname {
-      font-size: 22px; font-weight: 800; color: var(--ink);
+      font-size: 22px; font-weight: 800; color: var(--text-primary);
     }
     .profile-username {
       font-size: 13px; color: var(--ink-muted); margin-top: 4px;
@@ -41,12 +41,12 @@
       border-radius: var(--r-lg);
       padding: 20px;
       margin: 12px 0;
-      border: 1px solid var(--hairline);
+      border: 2px solid var(--hairline);
       box-shadow: var(--shadow-sm);
     }
     .section-box h3 {
       font-size: 15px; font-weight: 700;
-      margin-bottom: 14px; color: var(--ink);
+      margin-bottom: 14px; color: var(--text-primary);
       display: flex; align-items: center; gap: 8px;
     }
 
@@ -67,18 +67,18 @@
     .avatar-option {
       width: 100%; aspect-ratio: 1;
       border-radius: var(--r-sm);
-      font-size: 28px;
+      font-size: 40px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       border: 2px solid var(--surface-2);
-      background: var(--surface-1);
+      background: var(--charcoal-placeholder);
       transition: all .2s;
       overflow: hidden;
     }
     .avatar-option:hover { border-color: var(--accent-blue); transform: scale(1.08); }
     .avatar-option.selected {
       border-color: var(--accent-blue);
-      box-shadow: 0 0 0 3px rgba(0,153,255,0.2);
+      box-shadow: 0 0 0 3px var(--accent-blue-glow);
     }
     .avatar-option img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
 
@@ -89,8 +89,8 @@
     .custom-upload-btn {
       padding: 8px 18px; border-radius: var(--r-pill);
       font-size: 13px; font-weight: 600; cursor: pointer;
-      border: 1px solid var(--surface-2);
-      background: var(--surface-1); color: var(--ink-muted);
+      border: 1px solid var(--green);
+      background: var(--surface-1); color: var(--text-primary);
       transition: all .2s; white-space: nowrap;
     }
     .custom-upload-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
@@ -118,20 +118,20 @@
       padding: 20px;
       margin: 12px 0 24px;
       background: var(--surface-1);
-      border: 1px solid rgba(255,90,90,0.2);
+      border: 1px solid var(--red-border);
       border-radius: var(--r-lg);
     }
     .logout-btn {
-      background: rgba(255,90,90,0.12) !important;
-      color: #ff5a5a !important;
+      background: var(--red-bg) !important;
+      color: var(--red) !important;
       width: 100%;
       padding: 12px 24px;
       border-radius: var(--r-pill);
       font-size: 14px; font-weight: 700; cursor: pointer;
-      border: 1px solid rgba(255,90,90,0.2);
+      border: 1px solid var(--red-border);
       transition: all .2s;
     }
-    .logout-btn:hover { background: rgba(255,90,90,0.2) !important; }
+    .logout-btn:hover { background: var(--hover-overlay-strong) !important; }
 
     @media (max-width: 768px) {
       .profile-header { padding: 20px 14px 14px; }
@@ -155,7 +155,7 @@
 <body>
 
 <nav class="navbar">
-  <a class="logo" href="/lobby.html">🀄 Super Reach Mahjong</a>
+  <a class="logo" href="/lobby.html"> Super Reach Mahjong</a>
   <div class="nav-links">
     <a href="/lobby.html">大厅</a>
     <a href="/profile.html" class="active">个人中心</a>
@@ -166,14 +166,14 @@
 <div class="profile-page">
 
   <div class="profile-header" id="profileHeader">
-    <div class="profile-avatar" id="profileAvatarDisplay">🀄</div>
+    <div class="profile-avatar" id="profileAvatarDisplay"></div>
     <div class="profile-nickname" id="profileNickname">---</div>
     <div class="profile-username" id="profileUsername">@---</div>
   </div>
 
   <!-- 统计数据 -->
   <div class="section-box">
-    <h3>📊 我的战绩</h3>
+    <h3>我的战绩</h3>
     <div class="stats-grid" id="statsGrid">
       <div class="stat-item"><div class="stat-num">...</div><div class="stat-label">对局数</div></div>
       <div class="stat-item"><div class="stat-num">...</div><div class="stat-label">总回合</div></div>
@@ -183,13 +183,13 @@
 
   <!-- 修改资料 -->
   <div class="section-box">
-    <h3>✏️ 修改资料</h3>
+    <h3>修改资料</h3>
 
     <div class="form-row">
       <label>选择头像</label>
       <div class="avatar-grid" id="avatarGrid"></div>
       <div class="custom-upload-wrap">
-        <button class="custom-upload-btn" onclick="document.getElementById('fileInput').click()">📷 上传自定义头像</button>
+        <button class="custom-upload-btn" onclick="document.getElementById('fileInput').click()">上传自定义头像</button>
         <span class="custom-upload-name" id="uploadFileName"></span>
         <input type="file" id="fileInput" accept="image/*" onchange="previewCustomAvatar(event)">
       </div>
@@ -208,13 +208,13 @@
     </div>
 
     <div class="save-row">
-      <button class="btn btn-primary" onclick="saveProfile()">💾 保存资料</button>
+      <button class="btn btn-primary" onclick="saveProfile()">保存资料</button>
     </div>
   </div>
 
   <!-- 修改密码 -->
   <div class="section-box">
-    <h3>🔒 修改密码</h3>
+    <h3>修改密码</h3>
     <div class="form-row">
       <label>原密码</label>
       <input class="input" id="oldPwd" type="password" placeholder="输入当前密码">
@@ -224,13 +224,19 @@
       <input class="input" id="newPwd" type="password" placeholder="输入新密码（至少3位）">
     </div>
     <div class="save-row">
-      <button class="btn btn-cyan" onclick="changePassword()">🔑 修改密码</button>
+      <button class="btn btn-primary" onclick="changePassword()">修改密码</button>
     </div>
+  </div>
+
+  <!-- 外观设置 -->
+  <div class="section-box">
+    <h3>外观设置</h3>
+    <div id="themeOptions"></div>
   </div>
 
   <!-- 退出登录 -->
   <div class="logout-section">
-    <button class="logout-btn" onclick="Auth.logout()">🚪 退出登录</button>
+    <button class="logout-btn" onclick="Auth.logout()">退出登录</button>
   </div>
 
 </div>
@@ -250,14 +256,11 @@ const username = Auth.user();
 Auth.renderNav(document.getElementById('navUser'));
 
 const AVATARS = [
-  '🀄','🀅','🎭','🎪','👑','⭐','🔥','💎',
-  '🐉','🦊','🐱','🐼','🐲','🦄','🐺','🦅',
-  '🌸','🍀','🌙','☀️','🌈','❄️','⚡','💫',
-  '🎯','🎲','♠️','♥️','♦️','♣️','🎴','🏆'
+  '👑','⭐','🐲','🦄','🌸','🍀','🌙','☀️','🌈','❄️','⚡','💫','🎯','🎲','🎴','🏆'
 ];
 
-let currentProfile = { nickname: username, avatar: '🀄', bio: '' };
-let selectedAvatar = '🀄';
+let currentProfile = { nickname: username, avatar: '', bio: '' };
+let selectedAvatar = '';
 let selectedAvatarType = 'emoji';
 let customAvatarFile = null;
 let customAvatarUrl = '';
@@ -340,7 +343,7 @@ function previewCustomAvatar(event) {
   const file = event.target.files[0];
   if (!file) return;
   if (file.size > 2 * 1024 * 1024) {
-    Utils.showToast('⚠️ 图片不能超过2MB');
+    Utils.showToast('图片不能超过2MB');
     event.target.value = '';
     return;
   }
@@ -404,7 +407,7 @@ async function saveProfile() {
         setTimeout(() => profileSocket.disconnect(), 1000);
       }
 
-      Utils.showToast('✅ 资料已保存');
+      Utils.showToast(' 资料已保存');
     } else {
       Utils.showToast('❌ ' + (r.msg || '保存失败'));
     }
@@ -425,7 +428,7 @@ async function changePassword() {
     if (r.success) {
       document.getElementById('oldPwd').value = '';
       document.getElementById('newPwd').value = '';
-      Utils.showToast('✅ 密码修改成功');
+      Utils.showToast(' 密码修改成功');
     } else {
       Utils.showToast('❌ ' + (r.msg || '修改失败'));
     }
@@ -451,6 +454,21 @@ async function loadStats() {
       '<div class="stat-item"><div class="stat-num">-</div><div class="stat-label">加载失败</div></div>';
   }
 }
+
+// ─── 主题选择初始化 ───
+function initThemePicker() {
+  var container = document.getElementById('themeOptions');
+  if (!container || typeof Theme === 'undefined') return;
+  var current = Theme.get();
+  container.innerHTML = Theme.list.map(function(t) {
+    return '<div class="theme-opt' + (t.id === current ? ' active' : '') +
+      '" onclick="Theme.set(\'' + t.id + '\'); initThemePicker();">' +
+      '<span class="dot" style="background:' + t.dot + '"></span>' +
+      t.name + (t.dark ? ' 🌙' : ' ☀️') +
+      '</div>';
+  }).join('');
+}
+initThemePicker();
 </script>
 
 </body>

@@ -24,7 +24,7 @@ window.Auth = {
 
   /** 获取头像 */
   avatar() {
-    return localStorage.avatar || '🀄';
+    return localStorage.avatar || '';
   },
 
   /** 获取房间号 */

@@ -7,11 +7,12 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="themes.css">
   <meta name="theme-color" content="#000000">
+  <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
     body {
       display: grid;
       place-items: center;
-      padding: 80px 20px 20px;
+      padding: 56px 20px 20px;
     }
 
     .login-box {
@@ -21,12 +22,12 @@
       width: 100%;
       max-width: 400px;
       text-align: center;
-      border: 1px solid var(--hairline);
+      border: 2px solid var(--hairline);
       box-shadow: var(--shadow-lg);
     }
     .login-box h1 {
       margin-bottom: 6px;
-      color: var(--ink);
+      color: var(--text-primary);
       font-size: 28px;
       font-weight: 900;
       letter-spacing: -1px;
@@ -63,7 +64,7 @@
 </head>
 <body>
 <nav class="navbar">
-  <span class="logo">🀄 Super Reach Mahjong</span>
+  <span class="logo"> Super Reach Mahjong</span>
 </nav>
 
 <div class="login-box" id="loginBox">
@@ -113,7 +114,7 @@ document.getElementById('loginBtn').addEventListener('click', async function () 
   if (r.success) {
     localStorage.user = u;
     localStorage.nickname = r.nickname || u;
-    localStorage.avatar = r.avatar || '🀄';
+    localStorage.avatar = r.avatar || '';
     location.href = '/lobby.html';
   } else {
     Utils.showToast(r.msg || '登录失败');

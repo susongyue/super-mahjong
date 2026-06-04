@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="themes.css">
   <meta name="theme-color" content="#000000">
+  <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
-    body { padding-top: 56px; }
-    .container { max-width: 1000px; }
+    .container { max-width: 800px; }
 
     .page-header {
       text-align: center; margin-bottom: 20px;
@@ -23,90 +23,174 @@
     }
 
     .battle-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
     }
+    .battle-grid > * { min-width: 0; }
 
     .player-battle-card {
       background: var(--surface-1);
-      border-radius: var(--r-xl);
-      padding: 20px;
-      border: 1px solid var(--hairline);
+      border-radius: var(--r-lg);
+      padding: 12px;
+      border: 2px solid var(--hairline-strong);
+      box-shadow: var(--shadow-sm);
       transition: all .25s;
     }
     .player-battle-card:hover {
-      border-color: var(--hairline-soft);
-      box-shadow: var(--shadow-sm);
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-md);
     }
     .player-battle-card.is-self {
       border-color: var(--accent-blue);
       background: var(--accent-blue-glow);
+      box-shadow: var(--shadow-selected);
     }
     .player-battle-card .player-header {
       display: flex; align-items: center; gap: 8px;
-      margin-bottom: 14px; padding-bottom: 12px;
+      margin-bottom: 10px; padding-bottom: 8px;
       border-bottom: 1px solid var(--hairline);
     }
     .player-battle-card .player-avatar {
-      width: 44px; height: 44px; border-radius: 50%;
+      width: 36px; height: 36px; border-radius: 50%;
       background: linear-gradient(135deg, var(--gradient-violet), var(--gradient-magenta));
-      color: var(--ink); font-size: 20px; font-weight: 800;
+      color: var(--text-primary); font-size: 16px; font-weight: 800;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; overflow: hidden;
     }
     .player-battle-card.is-self .player-avatar {
       background: linear-gradient(135deg, var(--gradient-magenta), var(--gradient-coral));
     }
+    .player-battle-card .player-header-info {
+      flex: 1; min-width: 0;
+    }
+    .player-battle-card .player-name-row {
+      display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap;
+    }
     .player-battle-card .player-name {
-      font-size: 18px; font-weight: 800; color: var(--ink);
+      font-size: 15px; font-weight: 800; color: var(--text-primary);
+      line-height: 1.2;
     }
     .player-battle-card .player-username-sub {
-      font-size: 11px; color: var(--ink-muted);
+      font-size: 10px; color: var(--ink-muted);
+      margin-top: 1px;
     }
     .player-battle-card .player-tag {
-      font-size: 11px; color: var(--accent-blue); font-weight: 600;
+      font-size: 10px; color: var(--accent-blue); font-weight: 600;
       background: var(--accent-blue-glow);
-      padding: 2px 8px; border-radius: var(--r-pill);
+      padding: 1px 6px; border-radius: var(--r-pill);
+      line-height: 1.2;
     }
 
     .battle-char-wrapper { cursor: pointer; }
     .battle-char-card {
       background: var(--surface-2);
-      border-radius: var(--r-lg);
-      padding: 16px;
+      border-radius: var(--r-md);
+      padding: 0;
       border: 1px solid var(--hairline);
       transition: all .2s; position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 0;
+      overflow: hidden;
     }
     .battle-char-wrapper:hover .battle-char-card {
       border-color: var(--accent-blue);
       box-shadow: var(--shadow-blue);
       transform: translateY(-1px);
     }
-    .battle-char-card .char-faction {
-      color: var(--gold); font-size: 11px; font-weight: 700;
-      background: var(--gold-bg); display: inline-block;
-      padding: 3px 10px; border-radius: var(--r-pill);
-      margin-bottom: 8px; border: 1px solid var(--gold-border);
+
+    /* ── 2×2 网格单元格（均分 25%） ── */
+    .battle-char-card .char-cell {
+      padding: 8px;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
-    .battle-char-card .char-name {
-      font-size: 20px; font-weight: 800; color: var(--ink); margin-bottom: 4px;
+    .battle-char-card .char-cell-avatar {
+      border-right: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+      padding: 10px;
     }
+    .battle-char-card .char-cell-info {
+      border-bottom: 1px solid var(--hairline);
+      gap: 4px;
+    }
+    .battle-char-card .char-cell-skills {
+      border-right: 1px solid var(--hairline);
+      gap: 4px;
+    }
+    .battle-char-card .char-cell-strategy {
+      gap: 4px;
+    }
+
     .battle-char-card .char-tier {
-      font-size: 13px; color: var(--accent-blue); font-weight: 600; margin-bottom: 10px;
+      font-size: 13px; color: var(--accent-blue); font-weight: 600;
     }
     .battle-char-card .skill-tags {
-      display: flex; flex-wrap: wrap; gap: 4px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      justify-items: center;
+      width: 100%;
+      margin: 0;
     }
     .battle-char-card .skill-tag {
-      font-size: 10px; padding: 3px 8px; cursor: default;
+      font-size: 12px; padding: 1px 5px; cursor: default;
+    }
+    .battle-char-card .strategy-tags {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      justify-items: center;
+      width: 100%;
+      margin: 0;
+    }
+    .battle-char-card .char-avatar,
+    .battle-char-card .char-avatar-placeholder {
+      width: 56px; height: 56px; border-radius: var(--r-md);
+      object-fit: cover; flex-shrink: 0;
+    }
+    .battle-char-card .char-avatar-placeholder {
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface-3);
+      color: var(--text-primary); font-size: 20px; font-weight: 800;
+    }
+    .battle-char-card .char-name-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .battle-char-card .char-name {
+      font-size: 14px; font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+      word-break: keep-all; overflow-wrap: break-word;
+    }
+    .battle-char-card .char-faction {
+      color: var(--gold); font-size: 10px; font-weight: 700;
+      background: var(--gold-bg); display: inline-block;
+      padding: 2px 8px; border-radius: var(--r-pill);
+      border: 1px solid var(--gold-border);
+      line-height: 1.2; flex-shrink: 0;
     }
     .battle-char-card .click-hint {
-      font-size: 11px; color: var(--ink-muted); text-align: center; margin-top: 8px;
+      font-size: 10px; color: var(--ink-muted); text-align: center;
+      grid-column: 1 / -1;
+      padding: 6px 8px;
+      background: var(--surface-2);
+      border-top: 1px solid var(--hairline);
     }
     .battle-char-card .retain-badge {
-      position: absolute; top: 8px; right: 8px;
+      position: absolute; top: 4px; right: 4px;
       background: var(--gold); color: var(--on-primary);
-      font-size: 10px; font-weight: 700; padding: 3px 8px;
+      font-size: 9px; font-weight: 700; padding: 2px 6px;
       border-radius: var(--r-pill);
+      z-index: 2;
     }
 
     .no-selection {
@@ -114,9 +198,18 @@
       color: var(--ink-muted); font-size: 14px;
     }
 
+    @media (max-width: 1024px) {
+      .battle-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .player-battle-card { padding: 14px; }
+      .player-battle-card .player-avatar { width: 40px; height: 40px; font-size: 18px; }
+      .player-battle-card .player-name { font-size: 16px; }
+      .battle-char-card .char-avatar,
+      .battle-char-card .char-avatar-placeholder { width: 48px; height: 48px; }
+      .battle-char-card .char-name { font-size: 16px; }
+      .battle-char-card .char-cell { padding: 10px; }
+    }
     @media (max-width: 768px) {
-      body { padding-top: 44px; }
-      .battle-grid { grid-template-columns: 1fr; gap: 10px; }
+      .battle-grid { grid-template-columns: 1fr; gap: 12px; }
       .page-header { margin-bottom: 12px; }
       .page-header h1 { font-size: 22px; }
       .page-header .info { font-size: 12px; }
@@ -124,33 +217,98 @@
       .player-battle-card .player-header { margin-bottom: 10px; padding-bottom: 8px; }
       .player-battle-card .player-name { font-size: 16px; }
       .player-battle-card .player-avatar { width: 36px; height: 36px; font-size: 16px; }
-      .battle-char-card { padding: 12px; border-radius: var(--r-md); }
+      .battle-char-card .char-avatar,
+      .battle-char-card .char-avatar-placeholder { width: 48px; height: 48px; }
       .battle-char-card .char-name { font-size: 17px; }
-      .battle-char-card .char-tier { font-size: 11px; margin-bottom: 6px; }
-      .battle-char-card .char-faction { font-size: 10px; padding: 2px 8px; margin-bottom: 6px; }
-      .battle-char-card .click-hint { font-size: 10px; margin-top: 4px; }
+      .battle-char-card .char-tier { font-size: 11px; }
+      .battle-char-card .char-faction { font-size: 10px; padding: 2px 8px; }
+      .battle-char-card .click-hint { font-size: 10px; }
+      .battle-char-card .char-cell { padding: 10px; }
     }
     @media (max-width: 540px) {
-      body { padding-top: 42px; }
-      .battle-grid { gap: 8px; }
+      .battle-grid { gap: 10px; }
       .page-header h1 { font-size: 18px; }
       .player-battle-card { padding: 10px; }
       .player-battle-card .player-header { margin-bottom: 8px; padding-bottom: 6px; }
       .player-battle-card .player-name { font-size: 14px; }
       .player-battle-card .player-avatar { width: 32px; height: 32px; font-size: 14px; }
       .player-battle-card .player-tag { font-size: 10px; padding: 1px 6px; }
-      .battle-char-card { padding: 10px; }
+      .battle-char-card .char-avatar,
+      .battle-char-card .char-avatar-placeholder { width: 40px; height: 40px; }
       .battle-char-card .char-name { font-size: 15px; }
       .battle-char-card .char-tier { font-size: 10px; }
       .battle-char-card .retain-badge { top: 4px; right: 4px; font-size: 9px; padding: 2px 6px; }
+      .battle-char-card .char-cell { padding: 6px; }
       .no-selection { padding: 14px; font-size: 13px; }
+    }
+
+    /* ── 投票面板（桌面端固定右侧） ── */
+    .vote-panel {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 200px;
+      background: var(--surface-1);
+      border: 2px solid var(--hairline);
+      border-radius: var(--r-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-md);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .vote-panel-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-align: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .vote-panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .vote-panel-body .vote-btn {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    .vote-panel-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .vote-panel-footer .vote-count {
+      font-size: 13px;
+      padding: 4px 10px;
+      justify-content: center;
+    }
+    .vote-names {
+      font-size: 11px;
+      color: var(--ink-muted);
+      line-height: 1.5;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+    @media (max-width: 1024px) {
+      .vote-panel {
+        position: static;
+        transform: none;
+        width: 100%;
+        margin-top: 20px;
+        box-sizing: border-box;
+      }
     }
   </style>
 </head>
 <body>
 
 <nav class="navbar">
-  <a class="logo" href="/lobby.html">🀄 Super Reach Mahjong</a>
+  <a class="logo" href="/lobby.html"> Super Reach Mahjong</a>
   <div class="nav-links">
     <a href="/lobby.html">大厅</a>
     <a href="/game.html">选择出战</a>
@@ -162,38 +320,38 @@
 
 <div class="container">
   <div class="page-header">
-    <h1>🎴 第 <span id="roundNum">1</span> 回合对战</h1>
+    <h1>第 <span id="roundNum">1</span> 回合对战</h1>
     <div class="info">
       房间：<strong id="roomDisplay"></strong> | 玩家：<strong id="nameDisplay"></strong>
     </div>
   </div>
 
   <div class="section">
-    <h2>⚔️ 玩家出战角色</h2>
+    <h2>玩家出战角色</h2>
     <div class="battle-grid" id="battleGrid">
       <div class="no-data">加载中...</div>
     </div>
   </div>
 
-  <div class="section">
-    <h2 style="margin-bottom:12px;">📊 投票推进</h2>
-    <div class="vote-section">
-      <button class="vote-btn vote-btn-round" id="btnEndRound">
-        ✅ 投票结束回合（重新选将）
-      </button>
-      <button class="vote-btn vote-btn-game" id="btnEndGame">
-        🏁 投票结束对局（回大厅）
-      </button>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span id="roundVoteInfo" class="vote-count round">回合投票 0/0</span>
-        <span id="gameVoteInfo" class="vote-count game">对局投票 0/0</span>
-      </div>
-    </div>
-    <div id="voteNames" style="margin-top:10px;font-size:12px;color:var(--ink-muted);"></div>
+</div>
+
+<!-- 投票面板（桌面端固定右侧） -->
+<div class="vote-panel" id="votePanel">
+  <div class="vote-panel-title">对局投票</div>
+  <div class="vote-panel-body">
+    <button class="vote-btn vote-btn-round" id="btnEndRound">投票结束回合</button>
+    <button class="vote-btn vote-btn-game" id="btnEndGame">投票结束对局</button>
   </div>
+  <div class="vote-panel-footer">
+    <span id="roundVoteInfo" class="vote-count round">回合 0/0</span>
+    <span id="gameVoteInfo" class="vote-count game">对局 0/0</span>
+  </div>
+  <div id="voteNames" class="vote-names"></div>
 </div>
 
 <!-- 全屏角色展示弹窗 -->
+<!-- 全屏模糊背景 -->
+<div class="char-fullscreen-backdrop hidden" id="charFullscreenBackdrop"></div>
 <div class="char-fullscreen-overlay hidden" id="charFullscreen">
   <div class="fs-header">
     <div class="fs-header-left">
@@ -204,7 +362,7 @@
         <div class="fs-faction-badge" id="fsFaction"></div>
       </div>
     </div>
-    <button class="fs-close" id="fsCloseBtn">✕</button>
+    <button class="fs-close" id="fsCloseBtn">X</button>
   </div>
   <div class="fs-body" id="fsBody"></div>
   <div id="fsRetainInfo"></div>
@@ -268,14 +426,14 @@ socket.on('joinSuccess', function () {
 socket.on('roomPlayersUpdate', function (data) {
   if (data && data.players) {
     data.players.forEach(function (p) {
-      playerProfiles[p.name] = { nickname: p.nickname || p.name, avatar: p.avatar || '🀄' };
+      playerProfiles[p.name] = { nickname: p.nickname || p.name, avatar: p.avatar || '' };
     });
   }
   if (joinDone) { loadBattleData(); }
 });
 
 socket.on('battleRoundData', function (data) {
-  console.log('📡 收到 socket 对战数据:', { draft: Object.keys(data.draft || {}).length, selections: Object.keys(data.selections || {}).length });
+  console.log('收到 socket 对战数据:', { draft: Object.keys(data.draft || {}).length, selections: Object.keys(data.selections || {}).length });
   if (data.draft && Object.keys(data.draft).length > 0) { allChars = data.draft; }
   if (data.selections && Object.keys(data.selections).length > 0) {
     battleSelections = data.selections;
@@ -288,7 +446,7 @@ socket.on('battleRoundData', function (data) {
   if (data.players && data.players.length) {
     data.players.forEach(function (p) {
       if (!playerProfiles[p.name]) {
-        playerProfiles[p.name] = { nickname: p.nickname || p.name, avatar: p.avatar || '🀄' };
+        playerProfiles[p.name] = { nickname: p.nickname || p.name, avatar: p.avatar || '' };
       }
     });
   }
@@ -300,12 +458,12 @@ socket.on('roomState', function (data) {
 });
 
 socket.on('roundAdvanced', function (data) {
-  Utils.createOverlay('<div class="redirect-spinner"></div><div>✅ 全部玩家同意，进入第 ' + data.round + ' 回合！请重新选择出战角色...</div>');
+  Utils.createOverlay('<div class="redirect-spinner"></div><div> 全部玩家同意，进入第 ' + data.round + ' 回合！请重新选择出战角色...</div>');
   setTimeout(function () { location.href = '/game.html'; }, 2000);
 });
 
 socket.on('roundEndVoteUpdate', function (data) {
-  document.getElementById('roundVoteInfo').innerText = '回合投票 ' + data.voted + '/' + data.total;
+  document.getElementById('roundVoteInfo').innerText = '回合 ' + data.voted + '/' + data.total;
   document.getElementById('roundVoteInfo').className = data.voted >= data.total ? 'vote-count done' : 'vote-count round';
   if (data.votedNames) {
     document.getElementById('voteNames').innerText = '已投票：' + data.votedNames.join('、');
@@ -313,7 +471,7 @@ socket.on('roundEndVoteUpdate', function (data) {
 });
 
 socket.on('gameEndVoteUpdate', function (data) {
-  document.getElementById('gameVoteInfo').innerText = '对局投票 ' + data.voted + '/' + data.total;
+  document.getElementById('gameVoteInfo').innerText = '对局 ' + data.voted + '/' + data.total;
   document.getElementById('gameVoteInfo').className = data.voted >= data.total ? 'vote-count done' : 'vote-count game';
 });
 
@@ -352,7 +510,7 @@ async function loadBattleData() {
     var draftCount = Object.keys(allChars).length;
     if (selCount > 0 && draftCount === 0 && loadRetry < MAX_RETRY) {
       loadRetry++;
-      console.log('⚠️ 角色池数据为空，第 ' + loadRetry + ' 次重试...');
+      console.log('角色池数据为空，第 ' + loadRetry + ' 次重试...');
       setTimeout(function () { loadBattleData(); }, 1000);
       return;
     }
@@ -370,6 +528,10 @@ async function loadBattleData() {
 
 function renderBattleGrid() {
   var grid = document.getElementById('battleGrid');
+
+  // 杀掉栅格内所有残留动画，防止重复渲染冲突
+  gsap.killTweensOf(grid.querySelectorAll('.player-battle-card, .battle-char-card, .battle-char-wrapper'));
+
   var playerNames = Object.keys(allChars);
 
   if (playerNames.length === 0) {
@@ -380,7 +542,7 @@ function renderBattleGrid() {
   var selKeys = Object.keys(battleSelections);
   if (selKeys.length === 0 && loadRetry < MAX_RETRY) {
     loadRetry++;
-    console.log('⚠️ 出战选择数据为空，第 ' + loadRetry + ' 次通过 socket 请求兜底...');
+    console.log('出战选择数据为空，第 ' + loadRetry + ' 次通过 socket 请求兜底...');
     socket.emit('requestBattleRoundData', roomId);
     setTimeout(function () { loadBattleData(); }, 800);
     return;
@@ -390,7 +552,7 @@ function renderBattleGrid() {
     var isSelf = pname === username;
     var deployedCharName = battleSelections[pname];
     var playerChars = allChars[pname] || [];
-    var prof = playerProfiles[pname] || { nickname: pname, avatar: '🀄' };
+    var prof = playerProfiles[pname] || { nickname: pname, avatar: '' };
     var displayName = prof.nickname || pname;
 
     var deployedChar = playerChars.find(function (c) { return c.name === deployedCharName; });
@@ -402,41 +564,53 @@ function renderBattleGrid() {
       var skillTagsHTML = Components.renderSkillTags(c, false);
       var strategyHTML = Components.renderStrategyTags(c.tags);
 
+      var avatarHTML = (function () {
+        var playerCharsForImg = allChars[pname] || [];
+        var cc = playerCharsForImg.find(function (x) { return x.name === c.name; });
+        if (cc && cc.image) {
+          return '<img class="char-avatar" src="/png/' + cc.image +
+            '" alt="' + Utils.escHTML(c.name) +
+            '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
+        }
+        return '<div class="char-avatar-placeholder">' + (c.name || '').charAt(0) + '</div>';
+      })();
+
       charCardHTML = '<div class="battle-char-card" data-pname="' + Utils.escHTML(pname) +
         '" data-cname="' + Utils.escHTML(c.name) + '">' +
-        (isRetain ? '<div class="retain-badge">🛡️ 保留</div>' : '') +
-        '<div class="char-card-header">' +
-          (function () {
-            var playerCharsForImg = allChars[pname] || [];
-            var cc = playerCharsForImg.find(function (x) { return x.name === c.name; });
-            if (cc && cc.image) {
-              return '<img class="char-avatar" src="/png/' + cc.image +
-                '" alt="' + Utils.escHTML(c.name) +
-                '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
-            }
-            return '<div class="char-avatar-placeholder">' + (c.name || '').charAt(0) + '</div>';
-          })() +
-          '<div class="char-info">' +
-            '<div class="char-faction">' + Utils.escHTML(c.faction || '无阵营') + '</div>' +
-            '<div class="char-name">' + Utils.escHTML(c.name) + '</div>' +
+        (isRetain ? '<div class="retain-badge"> 保留</div>' : '') +
+        // 左上：角色头像
+        '<div class="char-cell char-cell-avatar">' + avatarHTML + '</div>' +
+        // 右上：名字 + 阵营 + Tier
+        '<div class="char-cell char-cell-info">' +
+          '<div class="char-name-row">' +
+            '<span class="char-name">' + Utils.escHTML(c.name) + '</span>' +
+            '<span class="char-faction">' + Utils.escHTML(c.faction || '无阵营') + '</span>' +
           '</div>' +
+          '<div class="char-tier">Tier ' + Utils.escHTML(c.tier || '?') + '</div>' +
         '</div>' +
-        '<div class="char-tier">Tier ' + Utils.escHTML(c.tier || '?') + '</div>' +
-        (skillTagsHTML ? '<div class="skill-tags">' + skillTagsHTML + '</div>' : '') +
-        (strategyHTML || '') +
-        '<div class="click-hint">👆 点击查看完整技能详情</div>' +
+        // 左下：角色技能
+        '<div class="char-cell char-cell-skills">' +
+          (skillTagsHTML ? '<div class="skill-tags">' + skillTagsHTML + '</div>' : '') +
+        '</div>' +
+        // 右下：角色定位
+        '<div class="char-cell char-cell-strategy">' +
+          (strategyHTML || '') +
+        '</div>' +
+        '<div class="click-hint">点击查看完整技能详情</div>' +
       '</div>';
     } else {
-      charCardHTML = '<div class="no-selection">⚠️ 未选择出战角色</div>';
+      charCardHTML = '<div class="no-selection">未选择出战角色</div>';
     }
 
     return '<div class="player-battle-card' + (isSelf ? ' is-self' : '') + '">' +
       '<div class="player-header">' +
         '<div class="player-avatar">' + Utils.playerAvatarHTML(prof.avatar) + '</div>' +
-        '<div>' +
-          '<div class="player-name">' + (isSelf ? '⭐ ' : '') + Utils.escHTML(displayName) + '</div>' +
+        '<div class="player-header-info">' +
+          '<div class="player-name-row">' +
+            '<span class="player-name">' + Utils.escHTML(displayName) + '</span>' +
+            (isSelf ? '<span class="player-tag">我</span>' : '') +
+          '</div>' +
           (displayName !== pname ? '<div class="player-username-sub">@' + Utils.escHTML(pname) + '</div>' : '') +
-          (isSelf ? '<div class="player-tag">我</div>' : '') +
         '</div>' +
       '</div>' +
       '<div class="battle-char-wrapper" data-pname="' + Utils.escHTML(pname) +
@@ -452,20 +626,25 @@ function renderBattleGrid() {
       var wrapper = el.closest('.battle-char-wrapper') || el;
       var pname = wrapper.getAttribute('data-pname');
       var cname = wrapper.getAttribute('data-cname');
-      if (pname && cname) openFullscreen(pname, cname);
+      if (pname && cname) openFullscreen(pname, cname, wrapper);
     });
   });
 
-  gsap.from(grid.querySelectorAll('.player-battle-card'), {
-    opacity: 0, y: 20, stagger: 0.1, duration: 0.45, ease: 'power3.out'
-  });
+  gsap.fromTo(grid.querySelectorAll('.player-battle-card'),
+    { opacity: 0, y: 20 },
+    { opacity: 1, y: 0, stagger: 0.1, duration: 0.45, ease: 'power3.out', overwrite: 'auto' }
+  );
 }
 
 // ══════════ 全屏角色详情 ══════════
-function openFullscreen(playerName, charName) {
+var fsAnimating = false;
+var fsCurrentCard = null;
+
+function openFullscreen(playerName, charName, cardEl) {
   var playerChars = allChars[playerName] || [];
   var c = playerChars.find(function (ch) { return ch.name === charName; });
-  if (!c) { Utils.showToast('⚠️ 未找到角色数据'); return; }
+  if (!c || fsAnimating) { Utils.showToast('未找到角色数据'); return; }
+  fsCurrentCard = cardEl;
 
   // 头像 big
   var avatarHTML = '';
@@ -499,7 +678,7 @@ function openFullscreen(playerName, charName) {
 
   if (c.note) {
     bodyHTML += '<div class="fs-skill-block">' +
-      '<span class="fs-skill-label" style="background:rgba(0,153,255,0.1);color:var(--accent-blue);border-color:rgba(0,153,255,0.3);">📝 备注</span>' +
+      '<span class="fs-skill-label note">备注</span>' +
       '<div class="fs-skill-text">' + Utils.escHTML(c.note) + '</div>' +
     '</div>';
   }
@@ -508,18 +687,140 @@ function openFullscreen(playerName, charName) {
 
   var retainInfo = document.getElementById('fsRetainInfo');
   if (c.retain) {
-    retainInfo.innerHTML = '<div class="fs-retain-info">🛡️ 该角色拥有<strong>保留</strong>效果，出战后下回合仍可继续出战</div>';
+    retainInfo.innerHTML = '<div class="fs-retain-info"> 该角色拥有<strong>保留</strong>效果，出战后下回合仍可继续出战</div>';
   } else {
     retainInfo.innerHTML = '';
   }
 
-  document.getElementById('charFullscreen').classList.remove('hidden');
+  // ── 展开动画 ──
+  var overlay = document.getElementById('charFullscreen');
+  var backdrop = document.getElementById('charFullscreenBackdrop');
+  var rect = cardEl.getBoundingClientRect();
+
+  overlay.classList.remove('hidden');
+  backdrop.classList.remove('hidden');
+
+  gsap.set(backdrop, { autoAlpha: 0, backdropFilter: 'blur(0px)' });
+  gsap.set(overlay, {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    right: 'auto',
+    bottom: 'auto',
+    borderRadius: getComputedStyle(cardEl).borderRadius,
+    backgroundColor: getComputedStyle(cardEl).backgroundColor || 'var(--surface-2)',
+    autoAlpha: 1,
+    overflow: 'hidden',
+    padding: 0
+  });
+
+  var contentEls = overlay.querySelectorAll('.fs-header, .fs-body, .fs-footer, #fsRetainInfo');
+  gsap.set(contentEls, { opacity: 0 });
+
+  fsAnimating = true;
   document.body.style.overflow = 'hidden';
+
+  var targetW = Math.min(900, window.innerWidth * 0.92);
+  var targetLeft = (window.innerWidth - targetW) / 2;
+
+  var tl = gsap.timeline({
+    onComplete: function () {
+      fsAnimating = false;
+      gsap.set(overlay, { overflow: 'auto', clearProps: 'padding' });
+    }
+  });
+
+  // 背景逐渐模糊
+  tl.to(backdrop, {
+    autoAlpha: 1,
+    backdropFilter: 'blur(20px) saturate(180%)',
+    duration: 0.35,
+    ease: 'power3.out'
+  }, 0);
+
+  // 面板从卡片位置展开到全屏
+  tl.to(overlay, {
+    top: 20,
+    left: targetLeft,
+    width: targetW,
+    height: 'calc(100vh - 40px)',
+    borderRadius: 'var(--r-xl)',
+    padding: '16px',
+    backgroundColor: 'var(--canvas)',
+    duration: 0.35,
+    ease: 'power3.out'
+  }, 0);
+
+  tl.to(contentEls, {
+    opacity: 1,
+    duration: 0.2,
+    stagger: 0.03,
+    clearProps: 'opacity'
+  }, '-=0.15');
 }
 
 function closeFullscreen() {
-  document.getElementById('charFullscreen').classList.add('hidden');
-  document.body.style.overflow = '';
+  if (fsAnimating) return;
+
+  var overlay = document.getElementById('charFullscreen');
+  var backdrop = document.getElementById('charFullscreenBackdrop');
+  var cardEl = fsCurrentCard || document.querySelector('.battle-char-wrapper[data-pname][data-cname]');
+
+  if (!cardEl || !document.body.contains(cardEl)) {
+    var tl2 = gsap.timeline({
+      onComplete: function () {
+        overlay.classList.add('hidden');
+        backdrop.classList.add('hidden');
+        gsap.set(overlay, { clearProps: 'all' });
+        gsap.set(backdrop, { clearProps: 'all' });
+        document.body.style.overflow = '';
+        fsCurrentCard = null;
+      }
+    });
+    tl2.to([overlay, backdrop], { autoAlpha: 0, duration: 0.2 });
+    return;
+  }
+
+  var rect = cardEl.getBoundingClientRect();
+  var contentEls = overlay.querySelectorAll('.fs-header, .fs-body, .fs-footer, #fsRetainInfo');
+
+  fsAnimating = true;
+
+  var tl = gsap.timeline({
+    onComplete: function () {
+      overlay.classList.add('hidden');
+      backdrop.classList.add('hidden');
+      gsap.set(overlay, { clearProps: 'all' });
+      gsap.set(backdrop, { clearProps: 'all' });
+      document.body.style.overflow = '';
+      fsAnimating = false;
+      fsCurrentCard = null;
+    }
+  });
+
+  tl.to(contentEls, { opacity: 0, duration: 0.1 });
+
+  // 背景模糊消退
+  tl.to(backdrop, {
+    autoAlpha: 0,
+    backdropFilter: 'blur(0px)',
+    duration: 0.28,
+    ease: 'power3.in'
+  }, 0);
+
+  tl.to(overlay, {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    borderRadius: getComputedStyle(cardEl).borderRadius,
+    padding: 0,
+    overflow: 'hidden',
+    backgroundColor: getComputedStyle(cardEl).backgroundColor || 'var(--surface-2)',
+    duration: 0.28,
+    ease: 'power3.in'
+  }, 0);
 }
 
 document.getElementById('fsCloseBtn').addEventListener('click', closeFullscreen);
@@ -534,7 +835,7 @@ document.getElementById('btnEndRound').addEventListener('click', function () {
   var btn = document.getElementById('btnEndRound');
   if (btn.disabled) return;
   btn.disabled = true;
-  btn.innerText = '✅ 已投票结束回合';
+  btn.innerText = ' 已投票结束回合';
   socket.emit('voteEndRound', roomId);
 });
 
@@ -543,14 +844,17 @@ document.getElementById('btnEndGame').addEventListener('click', function () {
   var btn = document.getElementById('btnEndGame');
   if (btn.disabled) return;
   btn.disabled = true;
-  btn.innerText = '🏁 已投票结束对局';
+  btn.innerText = '已投票结束对局';
   socket.emit('voteEndGame', roomId);
 });
 
 // ── GSAP 入场动画 ──
 gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
 gsap.from('.page-header', { opacity: 0, y: -15, duration: 0.4, delay: 0.15, ease: 'power2.out' });
-gsap.from('.section', { opacity: 0, y: 20, stagger: 0.12, duration: 0.5, delay: 0.35, ease: 'power3.out' });
+gsap.fromTo('.section',
+  { opacity: 0, y: 20 },
+  { opacity: 1, y: 0, stagger: 0.12, duration: 0.5, delay: 0.35, ease: 'power3.out' }
+);
 </script>
 </body>
 </html>

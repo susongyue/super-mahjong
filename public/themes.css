@@ -16,9 +16,11 @@
   --hairline-soft: #1e1e28;
   --hairline-strong: #3a3a4a;
 
-  --ink: #ffffff;
+  --ink: #000000;
+  --ink-gui: #ffffff;
+  --text-primary: #ffffff;
   --ink-muted: #a0a0b0;
-  --on-primary: #000000;
+  --on-primary: #ffffff;
   --btn-charcoal-text: #e0e0e8;
   --btn-charcoal-bg: rgba(255,255,255,0.08);
   --btn-charcoal-hover: rgba(255,255,255,0.14);
@@ -26,13 +28,13 @@
 
   --accent-blue: #1ed760;
   --accent-blue-glow: rgba(30, 215, 96, 0.15);
-  --accent-blue-bg: rgba(30, 215, 96, 0.1);
+  --accent-blue-bg: rgba(30, 215, 95, 0.459);
   --accent-blue-border: rgba(30, 215, 96, 0.3);
   --accent-blue-strong: rgba(30, 215, 96, 0.2);
   --accent-blue-text: #1ed760;
   --gradient-magenta: #f3727f;
   --gradient-violet: #539df5;
-  --gradient-orange: #ffa42b;
+  --gradient-orange: #ff9100;
   --gradient-coral: #f3727f;
 
   --green: #1ed760; --green-dark: #1ab350;
@@ -65,8 +67,6 @@
   --card-skill-bg: rgba(255,255,255,0.02);
   --card-divider: rgba(255,255,255,0.05);
 
-  /* 星星背景 */
-  --star-color: rgba(255,255,255,0.6);
 }
 
 /* ── Notion 亮色 ── */
@@ -77,46 +77,48 @@
   --surface-2: #f0eeec;
   --surface-3: #e8e6e2;
   --navbar-bg: rgba(247, 246, 245, 0.92);
-  --hairline: #e0ded9;
-  --hairline-soft: #eae8e3;
-  --hairline-strong: #d0cec8;
+  --hairline: #c5d5c8;
+  --hairline-soft: #dce5dd;
+  --hairline-strong: #9ec0a0;
 
-  --ink: #37352f;
+  --ink: #000000;
+  --ink-gui: #ffffff;
+  --text-primary: #000000;
   --ink-muted: #787671;
-  --on-primary: #ffffff;
+  --on-primary: #000000;
   --btn-charcoal-text: #5d5b54;
   --btn-charcoal-bg: rgba(0,0,0,0.05);
   --btn-charcoal-hover: rgba(0,0,0,0.1);
   --overlay-bg: rgba(55,53,47,0.35);
 
-  --accent-blue: #4b3fd9;
-  --accent-blue-glow: rgba(75, 63, 217, 0.1);
-  --accent-blue-bg: rgba(75, 63, 217, 0.08);
-  --accent-blue-border: rgba(75, 63, 217, 0.25);
-  --accent-blue-strong: rgba(75, 63, 217, 0.15);
-  --accent-blue-text: #4b3fd9;
-  --gradient-magenta: #e6e0f5;
-  --gradient-violet: #4b3fd9;
-  --gradient-orange: #ffe8d4;
-  --gradient-coral: #fde0ec;
+  --accent-blue: #1ed760;
+  --accent-blue-glow: rgba(30, 215, 96, 0.15);
+  --accent-blue-bg: rgba(0, 255, 89, 0.199);
+  --accent-blue-border: rgba(30, 215, 96, 0.3);
+  --accent-blue-strong: rgba(30, 215, 96, 0.2);
+  --accent-blue-text: #1ed760;
+  --gradient-magenta: #f3727f;
+  --gradient-violet: #539df5;
+  --gradient-orange: #ff9100;
+  --gradient-coral: #f3727f;
 
-  --green: #0f7b4e; --green-dark: #0b5e3c;
-  --green-bg: rgba(15,123,78,0.08); --green-border: rgba(15,123,78,0.25);
-  --red: #e03e3e; --red-dark: #c53030;
-  --red-bg: rgba(224,62,62,0.08); --red-border: rgba(224,62,62,0.25);
-  --gold: #dfab01; --gold-bg: rgba(223,171,1,0.08); --gold-border: rgba(223,171,1,0.25);
-  --orange: #d9730d; --orange-bg: rgba(217,115,13,0.08); --orange-border: rgba(217,115,13,0.25);
-  --purple: #6940a5; --purple-bg: rgba(105,64,165,0.08); --purple-border: rgba(105,64,165,0.25);
-  --toast-bg: #37352f; --toast-color: #fff;
+  --green: #1ed760; --green-dark: #1ab350;
+  --green-bg: rgba(30,215,96,0.12); --green-border: rgba(30,215,96,0.35);
+  --red: #f3727f; --red-dark: #d95a67;
+  --red-bg: rgba(243,114,127,0.12); --red-border: rgba(243,114,127,0.3);
+  --gold: #ffa42b; --gold-bg: rgba(255,164,43,0.12); --gold-border: rgba(255,164,43,0.3);
+  --orange: #ff8c42; --orange-bg: rgba(255,140,66,0.12); --orange-border: rgba(255,140,66,0.3);
+  --purple: #a78bfa; --purple-bg: rgba(167,139,250,0.12); --purple-border: rgba(167,139,250,0.3);
+  --toast-bg: #1f1f28; --toast-color: #fff;
 
-  --shadow-sm: 0 1px 4px rgba(15,15,15,0.05);
-  --shadow-md: 0 2px 12px rgba(15,15,15,0.08);
-  --shadow-lg: 0 4px 24px rgba(15,15,15,0.12);
-  --shadow-blue: 0 0 0 1px rgba(75,63,217,0.15), 0 2px 12px rgba(75,63,217,0.08);
-  --shadow-selected: 0 0 0 2px rgba(75,63,217,0.3), 0 4px 20px rgba(75,63,217,0.12);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.12);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.15);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.2);
+  --shadow-blue: 0 0 0 1px rgba(30,215,96,0.2), 0 4px 20px rgba(30,215,96,0.1);
+  --shadow-selected: 0 0 0 2px rgba(30,215,96,0.4), 0 4px 24px rgba(30,215,96,0.18);
 
-  --btn-primary-hover: #4a4540;
-  --btn-accent-hover: #3528b8;
+  --btn-primary-hover: #18c052;
+  --btn-accent-hover: #18c052;
   --btn-blocked-bg: #e0ded9; --btn-blocked-color: #999;
   --hover-overlay: rgba(0,0,0,0.04); --hover-overlay-strong: rgba(0,0,0,0.08);
   --avatar-bg-1: #e5e3df; --avatar-bg-2: #d8d5d0;
@@ -124,15 +126,13 @@
   --charcoal-placeholder: rgba(0,0,0,0.04);
   --spinner-track: rgba(0,0,0,0.08);
 
-  --card-header-bg: rgba(0,0,0,0.02);
-  --card-skill-bg: rgba(0,0,0,0.015);
-  --card-divider: rgba(0,0,0,0.04);
-
-  --star-color: rgba(55,53,47,0.12);
+  --card-header-bg: rgba(0, 0, 0, 0.15);
+  --card-skill-bg: rgba(0, 0, 0, 0.2);
+  --card-divider: rgba(0, 0, 0, 0.2);
 }
 
 /* ══════════════════════════════════════════
-   Spotify 星星背景
+   圆点网格背景（暗色+亮色共享）
    ══════════════════════════════════════════ */
 body::before {
   content: '';
@@ -140,66 +140,13 @@ body::before {
   top: 0; left: 0; right: 0; bottom: 0;
   pointer-events: none;
   z-index: 0;
-  background:
-    /* 大星 */
-    radial-gradient(1px 1px at 10% 15%, var(--star-color), transparent),
-    radial-gradient(1px 1px at 25% 8%, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1.5px 1.5px at 40% 20%, var(--star-color), transparent),
-    radial-gradient(1px 1px at 55% 12%, rgba(255,255,255,0.3), transparent),
-    radial-gradient(1.5px 1.5px at 70% 18%, var(--star-color), transparent),
-    radial-gradient(1px 1px at 85% 10%, rgba(255,255,255,0.5), transparent),
-    radial-gradient(1px 1px at 15% 35%, rgba(255,255,255,0.35), transparent),
-    radial-gradient(1.5px 1.5px at 33% 28%, var(--star-color), transparent),
-    radial-gradient(1px 1px at 60% 32%, rgba(255,255,255,0.3), transparent),
-    radial-gradient(1px 1px at 78% 38%, var(--star-color), transparent),
-    radial-gradient(1.5px 1.5px at 92% 42%, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1px 1px at 5% 55%, var(--star-color), transparent),
-    radial-gradient(1px 1px at 28% 52%, rgba(255,255,255,0.25), transparent),
-    radial-gradient(1.5px 1.5px at 48% 58%, var(--star-color), transparent),
-    radial-gradient(1px 1px at 65% 55%, rgba(255,255,255,0.35), transparent),
-    radial-gradient(1px 1px at 82% 60%, var(--star-color), transparent),
-    radial-gradient(1.5px 1.5px at 18% 72%, rgba(255,255,255,0.3), transparent),
-    radial-gradient(1px 1px at 38% 68%, var(--star-color), transparent),
-    radial-gradient(1px 1px at 58% 75%, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1.5px 1.5px at 75% 80%, var(--star-color), transparent),
-    radial-gradient(1px 1px at 90% 78%, rgba(255,255,255,0.25), transparent),
-    radial-gradient(1px 1px at 12% 88%, var(--star-color), transparent),
-    radial-gradient(1.5px 1.5px at 45% 90%, rgba(255,255,255,0.3), transparent),
-    radial-gradient(1px 1px at 68% 92%, var(--star-color), transparent),
-    radial-gradient(1px 1px at 85% 95%, rgba(255,255,255,0.35), transparent),
-    /* 淡绿色调星星 */
-    radial-gradient(1px 1px at 20% 45%, rgba(30,215,96,0.25), transparent),
-    radial-gradient(1px 1px at 52% 22%, rgba(30,215,96,0.2), transparent),
-    radial-gradient(1.5px 1.5px at 73% 48%, rgba(30,215,96,0.18), transparent),
-    radial-gradient(1px 1px at 42% 82%, rgba(30,215,96,0.22), transparent),
-    radial-gradient(1px 1px at 88% 15%, rgba(30,215,96,0.2), transparent);
-  animation: twinkle 8s ease-in-out infinite alternate;
+  background-image: radial-gradient(circle, var(--hairline) 1px, transparent 2px);
+  background-size: 20px 20px;
+  opacity: 1;
 }
 
-@keyframes twinkle {
-  0% { opacity: 0.7; }
-  50% { opacity: 1; }
-  100% { opacity: 0.75; }
-}
-
-/* ══════════════════════════════════════════
-   Notion 圆点网格背景
-   ══════════════════════════════════════════ */
-[data-theme="notion"] body::before {
-  content: '';
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image: radial-gradient(circle, var(--hairline) 0.8px, transparent 0.8px);
-  background-size: 24px 24px;
-  animation: none;
-  opacity: 0.6;
-}
-
-/* 确保内容在星星/网点之上 */
-.navbar, .container, .profile-page, .theme-switcher, .theme-panel,
-.modal-overlay, .char-fullscreen-overlay, .redirect-overlay, .toast {
+/* 确保内容在网点背景之上 */
+.navbar, .container, .profile-page {
   position: relative;
   z-index: 1;
 }

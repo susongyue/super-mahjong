@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="themes.css">
   <meta name="theme-color" content="#000000">
+  <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
-    body { padding-top: 56px; }
 
     /* ── 房间列表项 ── */
     .room-item {
@@ -16,7 +16,7 @@
       border-radius: var(--r-md);
       padding: 14px 18px; margin: 8px 0;
       display: flex; justify-content: space-between; align-items: center;
-      gap: 12px; border: 1px solid var(--hairline);
+      gap: 12px; border: 2px solid var(--hairline);
       transition: box-shadow .2s, border-color .2s;
     }
     .room-item:hover { border-color: var(--hairline-soft); box-shadow: var(--shadow-sm); }
@@ -31,12 +31,12 @@
     /* ── 重连区域 ── */
     .btn-reconnect {
       background: var(--gradient-orange);
-      color: #000; border: none;
+      color: var(--text-primary); border: none;
       border-radius: var(--r-pill);
-      padding: 10px 20px; font-size: 14px; font-weight: 700;
+      padding: 10px 20px; font-size: 14px;;
       cursor: pointer; transition: all .2s;
     }
-    .btn-reconnect:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,164,43,0.25); }
+    .btn-reconnect:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px var(--gold-border); }
     .reconnect-area {
       background: var(--orange-bg);
       border: 1px solid var(--orange-border);
@@ -57,7 +57,7 @@
       background: var(--surface-2);
       border-radius: var(--r-md);
       padding: 12px 18px; margin: 8px 0;
-      border: 1px solid var(--hairline);
+      border: 2px solid var(--hairline);
       display: flex; justify-content: space-between; align-items: center;
       gap: 10px; cursor: pointer; transition: box-shadow .2s, border-color .2s;
     }
@@ -74,7 +74,7 @@
 
     /* ── 区域分隔 ── */
     .section-divider {
-      border-top: 1px solid var(--hairline); margin: 20px 0 12px;
+      border-top: 2px solid var(--hairline); margin: 20px 0 12px;
     }
     .section-header {
       display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
@@ -87,14 +87,14 @@
       border-radius: var(--r-xl);
       padding: 24px; max-width: 500px; width: 90%;
       box-shadow: var(--shadow-lg);
-      border: 1px solid var(--hairline);
+      border: 2px solid var(--hairline);
       max-height: 80vh; overflow-y: auto;
     }
     .history-popup h3 {
       color: var(--accent-blue); margin-top: 0; font-size: 18px; font-weight: 700;
     }
     .history-popup .popup-row {
-      font-size: 14px; line-height: 1.9; color: var(--ink);
+      font-size: 14px; line-height: 1.9; color: var(--text-primary);
     }
     .history-popup .popup-row strong { font-weight: 700; }
     .history-popup .draft-char-item {
@@ -104,17 +104,15 @@
     .history-popup .draft-char-avatar {
       width: 28px; height: 28px; border-radius: 8px;
       object-fit: cover; vertical-align: middle; margin-right: 4px;
-      border: 1px solid var(--hairline);
-    }
+      border: 2px solid var(--hairline);
     .history-popup .draft-char-placeholder {
       display: inline-flex; width: 28px; height: 28px; border-radius: 8px;
-      background: linear-gradient(135deg, #333, #555); color: var(--ink-muted);
+      background: linear-gradient(135deg, var(--avatar-bg-1), var(--avatar-bg-2)); color: var(--ink-muted);
       align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
       vertical-align: middle; margin-right: 4px;
     }
 
     @media (max-width: 768px) {
-      body { padding-top: 44px; }
       .room-item { padding: 10px 14px; margin: 5px 0; }
       .room-item .room-id { font-size: 14px; }
       .room-item .room-meta { font-size: 12px; }
@@ -139,7 +137,7 @@
 <body>
 
 <nav class="navbar">
-  <a class="logo" href="/lobby.html">🀄 Super Reach Mahjong</a>
+  <a class="logo" href="/lobby.html">Super Reach Mahjong</a>
   <div class="nav-links">
     <a href="/lobby.html" class="active">大厅</a>
     <a href="/profile.html">个人中心</a>
@@ -152,21 +150,21 @@
   <div class="section" id="reconnectSection" style="display:none">
     <div class="reconnect-area">
       <div class="reconnect-info">
-        🔄 您有未完成的对局
+        您有未完成的对局
         <span id="reconnectDetail"></span>
       </div>
-      <button class="btn-reconnect" id="btnReconnect">⚡ 重连进入对局</button>
+      <button class="btn-reconnect" id="btnReconnect">重连进入对局</button>
     </div>
   </div>
 
   <div class="section">
     <h2>开始游戏</h2>
     <div class="form-row">
-      <button class="btn btn-primary" id="btnCreate">🏠 创建对局房间</button>
+      <button class="btn btn-primary" id="btnCreate">创建对局房间</button>
     </div>
     <div class="form-row" style="margin-top:12px">
       <input class="input" id="roomId" placeholder="输入房间号加入或重连">
-      <button class="btn btn-cyan" id="btnJoin">🚪 进入房间</button>
+      <button class="btn btn-cyan" id="btnJoin">进入房间</button>
     </div>
   </div>
 
@@ -182,7 +180,7 @@
   <div class="section">
     <div class="section-header">
       <h2>我的对局历史</h2>
-      <button class="btn btn-cyan" style="font-size:12px;padding:6px 14px;" id="btnRefreshHistory">🔄 刷新</button>
+      <button class="btn btn-cyan" style="font-size:12px;padding:6px 14px;" id="btnRefreshHistory">刷新</button>
     </div>
     <div id="historyList">
       <div class="no-data">加载中...</div>
@@ -411,7 +409,7 @@ async function loadHistory() {
       var date = h.endedAt ? new Date(h.endedAt).toLocaleString('zh-CN') : '未知';
       return '<div class="history-item" data-room="' + h.roomId + '">' +
         '<div>' +
-        '<div class="hist-room">🏆 房间 ' + h.roomId + '</div>' +
+        '<div class="hist-room">房间 ' + h.roomId + '</div>' +
         '<div class="hist-meta">' + h.playerCount + '人对局 | ' + h.totalRounds + ' 回合 | 房主: ' + Utils.escHTML(h.host || '未知') + '</div>' +
         '<div class="hist-meta">玩家: ' + Utils.escHTML((h.players || []).join('、')) + '</div>' +
         '</div>' +
@@ -467,7 +465,7 @@ async function viewHistoryDetail(roomId) {
 
     var popup = Utils.createOverlay(
       '<div class="history-popup">' +
-        '<h3>🏆 对局详情</h3>' +
+        '<h3>对局详情</h3>' +
         '<div class="popup-row">' +
         '<div>房间号：<strong>' + detail.roomId + '</strong></div>' +
         '<div>房主：' + Utils.escHTML(detail.host || '未知') + '</div>' +

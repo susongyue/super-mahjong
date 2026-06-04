@@ -7,8 +7,8 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="themes.css">
 <meta name="theme-color" content="#000000">
+<script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
-  body { padding-top: 56px; }
 
   /* ── 房间头部 ── */
   .room-header {
@@ -17,15 +17,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--hairline);
+    border-bottom: 2px solid var(--hairline);
   }
   .room-header h2 { color: var(--gold); font-size: 18px; font-weight: 700; }
   .room-id { color: var(--ink-muted); font-size: 13px; }
-  .room-id strong { color: var(--ink); }
+  .room-id strong { color: var(--text-primary); }
 
   /* ── 区域标题 ── */
   .section-title {
-    font-size: 15px; font-weight: 700; color: var(--ink);
+    font-size: 15px; font-weight: 700; color: var(--text-primary);
     margin-bottom: 10px; letter-spacing: -0.3px;
   }
 
@@ -38,20 +38,20 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
   }
   .player-card.self {
     border-color: var(--accent-blue);
     background: var(--accent-blue-glow);
   }
-  .player-name { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .player-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
   .player-username-sub { font-size: 11px; color: var(--ink-muted); display: block; }
   .player-avatar-mini {
     width: 36px; height: 36px; border-radius: 50%;
     background: linear-gradient(135deg, var(--gradient-violet), var(--gradient-magenta));
     display: flex; align-items: center; justify-content: center;
     font-size: 18px; flex-shrink: 0; overflow: hidden;
-    color: var(--ink);
+    color: var(--text-primary);
   }
   .player-info { flex: 1; min-width: 0; }
   .player-status { font-size: 13px; color: var(--ink-muted); white-space: nowrap; }
@@ -64,7 +64,7 @@
     background: var(--surface-1);
     border-radius: var(--r-xl);
     padding: var(--sp-lg);
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
   }
   #voteArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; font-weight: 700; }
   #voteTip { margin-top: 10px; font-size: 13px; color: var(--ink-muted); }
@@ -76,7 +76,7 @@
     background: var(--surface-1);
     border-radius: var(--r-xl);
     padding: var(--sp-lg);
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
   }
   #draftArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; font-weight: 700; }
 
@@ -95,7 +95,7 @@
     background: var(--surface-2);
     border-radius: var(--r-lg);
     padding: 14px 18px; margin-bottom: 14px;
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
     text-align: center;
     transition: all .3s;
   }
@@ -111,13 +111,13 @@
   }
   .turn-badge.your-turn {
     background: var(--accent-blue);
-    color: var(--ink);
+    color: var(--text-primary);
     animation: pulse-turn 1.2s infinite;
   }
   .turn-badge.waiting-turn {
     background: var(--surface-1);
-    color: var(--ink-muted);
-    border: 1px solid var(--hairline);
+      color: var(--ink-muted);
+      border: 2px solid var(--hairline);
   }
   @keyframes pulse-turn {
     0%, 100% { transform: scale(1); }
@@ -129,7 +129,7 @@
   /* ── Draft 区域分隔 ── */
   .draft-section { margin-bottom: 16px; }
   .draft-section-title {
-    font-size: 14px; font-weight: 700; color: var(--ink);
+    font-size: 14px; font-weight: 700; color: var(--text-primary);
     margin-bottom: 8px;
   }
 
@@ -149,25 +149,25 @@
     background: var(--surface-2);
     padding: 10px 12px;
     border-radius: var(--r-md);
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
   }
   .draft-char-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
   .draft-char .faction-badge { color: var(--gold); font-size: 11px; font-weight: 700; margin-bottom: 2px; }
   .draft-char .char-tier { font-size: 11px; color: var(--ink-muted); }
   .draft-char .char-skill { font-size: 11px; color: var(--ink-muted); margin-top: 3px; line-height: 1.4; }
-  .draft-char .char-skill strong { color: var(--ink); }
+  .draft-char .char-skill strong { color: var(--text-primary); }
 
   .draft-avatar {
     width: 40px; height: 40px; border-radius: var(--r-sm);
-    object-fit: cover; border: 1px solid var(--hairline);
+    object-fit: cover; border: 2px solid var(--hairline);
     background: var(--surface-2); flex-shrink: 0;
   }
   .draft-avatar-placeholder {
     width: 40px; height: 40px; border-radius: var(--r-sm);
-    background: linear-gradient(135deg, #333, #555);
+    background: linear-gradient(135deg, var(--avatar-bg-1), var(--avatar-bg-2));
     display: flex; align-items: center; justify-content: center;
     font-size: 17px; font-weight: 800; color: var(--ink-muted);
-    border: 1px solid var(--hairline); flex-shrink: 0;
+    border: 2px solid var(--hairline); flex-shrink: 0;
   }
 
   /* 池网格中更小的头像 */
@@ -193,14 +193,14 @@
     margin-bottom: 12px; padding: 10px 14px;
     background: var(--surface-2);
     border-radius: var(--r-md);
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
   }
   .draft-player-hand.my-hand {
     background: var(--accent-blue-glow);
     border-color: var(--accent-blue);
   }
   .draft-player-hand .dp-name {
-    color: var(--ink); font-size: 14px; font-weight: 700; margin-bottom: 6px;
+    color: var(--text-primary); font-size: 14px; font-weight: 700; margin-bottom: 6px;
   }
   .draft-player-hand.my-hand .dp-name { color: var(--accent-blue); }
   .dp-count { font-size: 12px; color: var(--ink-muted); font-weight: 400; }
@@ -210,7 +210,7 @@
     background: var(--surface-2);
     border-radius: var(--r-md);
     padding: 10px 14px;
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
   }
   .draft-pick-preview { display: flex; flex-wrap: wrap; gap: 6px; }
   .pick-order-item {
@@ -218,7 +218,7 @@
     padding: 4px 12px; border-radius: var(--r-pill);
     font-size: 12px; font-weight: 500;
     background: var(--surface-1); color: var(--ink-muted);
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
   }
 
   /* 隐藏卡片 */
@@ -240,7 +240,7 @@
     font-size: 13px; margin-top: 20px; padding: 12px;
     background: var(--surface-2);
     border-radius: var(--r-md);
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
   }
 
   /* ── 管理区域 ── */
@@ -249,7 +249,7 @@
     background: var(--surface-1);
     border-radius: var(--r-xl);
     padding: 20px;
-    border: 1px solid var(--hairline);
+    border: 2px solid var(--hairline);
   }
   .admin-section h3 { color: var(--ink-muted); margin-bottom: 10px; font-size: 14px; }
   #csvDrop {
@@ -270,7 +270,6 @@
 
   /* ── 响应式 ── */
   @media (max-width: 768px) {
-    body { padding-top: 44px; }
     .room-header { padding: 10px 14px; flex-direction: column; align-items: flex-start; gap: 2px; }
     .room-header h2 { font-size: 16px; }
     .draft-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
@@ -296,7 +295,6 @@
     .turn-order-hint { font-size: 11px; }
   }
   @media (max-width: 540px) {
-    body { padding-top: 42px; }
     .draft-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
     .player-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 10px; }
     .player-name { font-size: 13px; }
@@ -330,7 +328,7 @@
 <body>
 
 <nav class="navbar">
-  <a class="logo" href="/lobby.html">🀄 Super Reach Mahjong</a>
+  <a class="logo" href="/lobby.html"> Super Reach Mahjong</a>
   <div class="nav-links">
     <a href="/lobby.html">大厅</a>
     <a href="#" class="active">当前对局</a>
@@ -355,22 +353,22 @@
   <div id="voteArea" class="hidden">
     <h3>选择角色抽取方式</h3>
     <div class="vote-section">
-      <button class="vote-btn vote-btn-round" id="voteRandom">🎲 随机抽取</button>
-      <button class="vote-btn vote-btn-game" id="voteNormal">📋 正常抽取</button>
+      <button class="vote-btn vote-btn-round" id="voteRandom">随机抽取</button>
+      <button class="vote-btn vote-btn-game" id="voteNormal">正常抽取</button>
     </div>
     <div id="voteTip"></div>
     <div id="voteResult"></div>
   </div>
 
   <div id="draftArea" class="hidden">
-    <h3>🎯 角色选取</h3>
+    <h3>角色选取</h3>
     <div id="draftContent"></div>
-    <div class="redirect-hint" id="redirectHint">⏳ 即将自动跳转到对局页面...</div>
+    <div class="redirect-hint" id="redirectHint">即将自动跳转到对局页面...</div>
   </div>
 
   <div class="admin-section">
-    <h3>📂 角色数据管理（点击上传CSV覆盖服务器角色池）</h3>
-    <div id="csvDrop"><p>📁 点击或拖放 CSV 文件</p></div>
+    <h3>角色数据管理（点击上传CSV覆盖服务器角色池）</h3>
+    <div id="csvDrop"><p>点击或拖放 CSV 文件</p></div>
     <div class="char-count">服务器角色总数：<span id="charCount">0</span></div>
   </div>
 </div>
@@ -426,11 +424,11 @@ function renderPlayers(players) {
     html += '<div class="player-card' + (isSelf ? ' self' : '') + '">' +
       '<div class="player-avatar-mini">' + Utils.playerAvatarHTML(p.avatar) + '</div>' +
       '<div class="player-info">' +
-        '<span class="player-name">' + (isSelf ? '⭐ ' : '') + Utils.escHTML(displayName) + '</span>' +
+        '<span class="player-name">' + Utils.escHTML(displayName) + '</span>' +
         (displayName !== p.name ? '<span class="player-username-sub">@' + Utils.escHTML(p.name) + '</span>' : '') +
       '</div>' +
       '<span class="player-status">' +
-        (p.ready ? '<span class="ready">✓ 已准备</span>' : '<span class="unready">— 未准备</span>') +
+        (p.ready ? '<span class="ready">已准备</span>' : '<span class="unready">未准备</span>') +
         (p.vote ? ' · 已投票' : '') +
       '</span>' +
     '</div>';
@@ -470,7 +468,7 @@ socket.on('voteResult', function (data) {
   document.getElementById('voteResult').innerText = '投票结束！最终选择：' + data.desc;
   document.getElementById('draftArea').classList.remove('hidden');
   document.getElementById('draftContent').innerHTML =
-    '<p style="text-align:center;padding:20px;color:var(--ink-muted)">⏳ 正在准备角色池...</p>';
+    '<p style="text-align:center;padding:20px;color:var(--ink-muted)">正在准备角色池...</p>';
   document.getElementById('redirectHint').classList.add('hidden');
   gsap.from('#draftArea', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' });
 });
@@ -492,13 +490,10 @@ function renderDraftCharCard(c, clickable) {
       draftCharImageHTML(c) +
       '<div style="flex:1;min-width:0;">' +
         '<div class="faction-badge">' + Utils.escHTML(c.faction || '无阵营') + '</div>' +
-        '<div style="font-weight:bold;font-size:14px;color:var(--ink)">' + Utils.escHTML(c.name) + '</div>' +
-        '<div class="char-tier">Tier: ' + c.tier + (c.limit ? ' | 限' + c.limit : '') + '</div>' +
+        '<div style="font-weight:bold;font-size:14px;color:var(--text-primary)">' + Utils.escHTML(c.name) + '</div>' +
+        '<div class="char-tier">Tier: ' + c.tier + '</div>' +
       '</div>' +
     '</div>' +
-    (c.passive ? '<div class="char-skill"><strong>被动</strong> ' + Utils.escHTML(c.passive) + '</div>' : '') +
-    (c.innate  ? '<div class="char-skill"><strong>天赋</strong> ' + Utils.escHTML(c.innate) + '</div>' : '') +
-    (c.extra   ? '<div class="char-skill"><strong>额外</strong> ' + Utils.escHTML(c.extra) + '</div>' : '') +
   '</div>';
 }
 
@@ -533,30 +528,30 @@ function renderPoolDraftUI(data) {
     ? '你是第 <strong>' + (myFirstPos + 1) + '</strong> 顺位（循环选取）'
     : '';
 
-  var html = '<div class="draft-phase-label">📋 池选模式 — 每轮发10张角色，轮流选取</div>' +
+  var html = '<div class="draft-phase-label">池选模式 — 每轮发10张角色，轮流选取</div>' +
     '<div class="draft-turn-info' + (isMyTurn ? ' my-turn' : '') + '">' +
       (isMyTurn
-        ? '<div class="turn-badge your-turn">🎯 轮到你选角了！</div>'
-        : '<div class="turn-badge waiting-turn">⏳ 等待 <strong>' + Utils.escHTML(currentPlayer) + '</strong> 选取...</div>') +
+        ? '<div class="turn-badge your-turn">轮到你选角了！</div>'
+        : '<div class="turn-badge waiting-turn">等待 <strong>' + Utils.escHTML(currentPlayer) + '</strong> 选取...</div>') +
       '<div class="turn-progress">进度：' + currentTurnIndex + '/' + totalPicks + ' 次选择</div>' +
       '<div class="turn-order-hint">' + myTurnHint + '</div>' +
     '</div>' +
 
     '<div class="draft-section">' +
-      '<div class="draft-section-title">📦 当前角色池（' + pool.length + '张）' + (pool.length === 0 ? ' — 等待发牌...' : '') + '</div>' +
+      '<div class="draft-section-title">当前角色池（' + pool.length + '张）' + (pool.length === 0 ? ' — 等待发牌...' : '') + '</div>' +
       '<div class="draft-pool-grid">' +
         pool.map(function (c) { return renderDraftCharCard(c, isMyTurn); }).join('') +
       '</div>' +
     '</div>';
 
   // 各玩家手牌
-  html += '<div class="draft-section"><div class="draft-section-title">👥 各玩家已选角色</div>';
+  html += '<div class="draft-section"><div class="draft-section-title">各玩家已选角色</div>';
   Object.entries(hands).forEach(function (entry) {
     var name = entry[0], chars = entry[1];
     var isMe = name === username;
     html += '<div class="draft-player-hand' + (isMe ? ' my-hand' : '') + '" data-player="' + Utils.escHTML(name) + '">' +
       '<div class="dp-name">' +
-        (isMe ? '⭐ ' : '') + Utils.escHTML(name) +
+        Utils.escHTML(name) +
         ' <span class="dp-count">（' + chars.length + '/6）</span>' +
       '</div>' +
       '<div class="draft-grid draft-hand-grid">' +
@@ -570,7 +565,7 @@ function renderPoolDraftUI(data) {
   // 预览下几个选角顺序
   if (pickOrderPreview && pickOrderPreview.length > 0) {
     html += '<div class="draft-section draft-preview">' +
-      '<div class="draft-section-title">🔜 即将选取的玩家</div>' +
+      '<div class="draft-section-title">即将选取的玩家</div>' +
       '<div class="draft-pick-preview">' +
         pickOrderPreview.slice(0, 6).map(function (n, i) {
           return '<span class="pick-order-item">' + (i + currentTurnIndex + 1) + '. ' + Utils.escHTML(n) + '</span>';
@@ -601,8 +596,8 @@ function updatePoolDraftUI(data) {
   if (turnInfo) {
     turnInfo.className = 'draft-turn-info' + (isMyTurn ? ' my-turn' : '');
     turnInfo.innerHTML = (isMyTurn
-      ? '<div class="turn-badge your-turn">🎯 轮到你选角了！</div>'
-      : '<div class="turn-badge waiting-turn">⏳ 等待 <strong>' + Utils.escHTML(currentPlayer) + '</strong> 选取...</div>') +
+      ? '<div class="turn-badge your-turn">轮到你选角了！</div>'
+      : '<div class="turn-badge waiting-turn">等待 <strong>' + Utils.escHTML(currentPlayer) + '</strong> 选取...</div>') +
       '<div class="turn-progress">进度：' + currentTurnIndex + '/' + totalPicks + ' 次选择</div>';
   }
 
@@ -635,7 +630,7 @@ function updatePoolDraftUI(data) {
   // 更新池数量标题
   var poolTitle = document.querySelector('.draft-section:first-of-type .draft-section-title');
   if (poolTitle) {
-    poolTitle.textContent = '📦 当前角色池（' + pool.length + '张）' + (pool.length === 0 ? ' — 等待发牌...' : '');
+    poolTitle.textContent = '当前角色池（' + pool.length + '张）' + (pool.length === 0 ? ' — 等待发牌...' : '');
   }
 }
 
@@ -643,19 +638,19 @@ function updatePoolDraftUI(data) {
 var myRandomChars = [];
 
 socket.on('draftRandomResult', function (data) {
-  myRandomChars = data.myChars;
-  var html = '<div class="draft-phase-label">🎲 随机抽取模式 — 角色已分配</div>' +
+  myRandomChars = data.characters;
+  var html = '<div class="draft-phase-label">随机抽取模式 — 角色已分配</div>' +
     '<div class="draft-section">' +
-      '<div class="draft-section-title">⭐ 你的角色</div>' +
-      '<div class="draft-grid">' + data.myChars.map(function (c) { return renderDraftCharCard(c, false); }).join('') + '</div>' +
+      '<div class="draft-section-title">你的角色</div>' +
+      '<div class="draft-grid">' + data.characters.map(function (c) { return renderDraftCharCard(c, false); }).join('') + '</div>' +
     '</div>' +
     '<div class="draft-section">' +
-      '<div class="draft-section-title">🔒 其他玩家角色</div>' +
+      '<div class="draft-section-title">其他玩家角色</div>' +
       '<div class="draft-grid">' +
         data.allPlayerNames.filter(function (n) { return n !== username; }).map(function (n) {
           return '<div class="draft-char draft-char-hidden">' +
             '<div class="draft-char-row" style="justify-content:center;padding:12px 0">' +
-              '<span style="color:var(--ink-muted);font-size:13px">🔒 ' + Utils.escHTML(n) + ' 的角色不可见</span>' +
+              '<span style="color:var(--ink-muted);font-size:13px">' + Utils.escHTML(n) + ' 的角色不可见</span>' +
             '</div>' +
           '</div>';
         }).join('') +
@@ -670,7 +665,7 @@ socket.on('draftRandomResult', function (data) {
 // ─── 选角完成 ───
 socket.on('draftAllDone', function (data) {
   if (data.type === 'normal' && data.hands) {
-    var html = '<div class="draft-phase-label">✅ 选角完成！</div>';
+    var html = '<div class="draft-phase-label"> 选角完成！</div>';
     Object.entries(data.hands).forEach(function (entry) {
       var name = entry[0], chars = entry[1];
       html += '<div class="draft-player">' +
@@ -683,7 +678,7 @@ socket.on('draftAllDone', function (data) {
   document.getElementById('redirectHint').classList.remove('hidden');
   Utils.startCountdown(document.getElementById('redirectHint'), 3, function () {
     location.href = '/game.html';
-  }, '⏳', '秒后自动跳转到对局页面...');
+  }, '', '秒后自动跳转到对局页面...');
 });
 
 // ─── 重连时查询 draft 状态 ───

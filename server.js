@@ -64,7 +64,7 @@ async function loadFromDB() {
     const { data: userData } = await supabase.from('users').select('*');
     if (userData) {
       users = {};
-      userData.forEach(u => { users[u.username] = { password: u.password, nickname: u.nickname || u.username, avatar: u.avatar || '🀄', bio: u.bio || '' }; });
+      userData.forEach(u => { users[u.username] = { password: u.password, nickname: u.nickname || u.username, avatar: u.avatar || '', bio: u.bio || '' }; });
       console.log('✅ 从 Supabase 加载 ' + userData.length + ' 个用户');
     }
 
@@ -155,10 +155,10 @@ function loadFromLocalJSON() {
 // ── 从 Supabase 查询单个用户（登录时内存缓存缺失的兜底） ──
 async function findUserInDB(username) {
   try {
-    const { data, error } = await supabase.from('users').select('*').eq('username', username).single();
+    const { data, error } = await supabase.from('users').select('*').eq('username', username).maybeSingle();
     if (error) { console.log('⚠️ findUserInDB 查询失败: ' + error.message); return null; }
     if (data) {
-      users[data.username] = { password: data.password, nickname: data.nickname || data.username, avatar: data.avatar || '🀄', bio: data.bio || '' }; // 回填到内存缓存
+      users[data.username] = { password: data.password, nickname: data.nickname || data.username, avatar: data.avatar || '', bio: data.bio || '' }; // 回填到内存缓存
       return data;
     }
     return null;
@@ -168,7 +168,7 @@ async function findUserInDB(username) {
 // ── 保存到 Supabase ──
 async function saveUserToDB(username, password, nickname, avatar, bio) {
   try {
-    const { error } = await supabase.from('users').insert({ username, password, nickname: nickname || username, avatar: avatar || '🀄', bio: bio || '' });
+    const { error } = await supabase.from('users').insert({ username, password, nickname: nickname || username, avatar: avatar || '', bio: bio || '' });
     if (error) { console.log('⚠️ saveUserToDB 失败: ' + error.message); return false; }
     console.log('✅ 用户 ' + username + ' 已写入 Supabase');
     return true;
@@ -271,7 +271,7 @@ async function restoreBattleSelections(roomId) {
     const { data } = await supabase.from('battle_selections').select('*').eq('room_id', roomId).single();
     if (data && data.selections_data && Object.keys(data.selections_data).length > 0) {
       battleSelections[roomId] = data.selections_data;
-      console.log('🔍 从 Supabase 恢复出战选择 ' + roomId);
+      console.log(' 从 Supabase 恢复出战选择 ' + roomId);
       return data.selections_data;
     }
   } catch (e) { /* ignore */ }
@@ -341,10 +341,10 @@ function updateCharacterStatesAfterRound(roomId) {
     if (charData.retain) {
       // 保留角色也标记休息，但前端允许选择
       characterStates[roomId][playerName][charName].resting = true;
-      console.log(`🛡️ ${playerName} 的 ${charName} 拥有保留效果，标记休息但可继续出战`);
+      console.log(` ${playerName} 的 ${charName} 拥有保留效果，标记休息但可继续出战`);
     } else {
       characterStates[roomId][playerName][charName].resting = true;
-      console.log(`😴 ${playerName} 的 ${charName} 进入休息状态`);
+      console.log(` ${playerName} 的 ${charName} 进入休息状态`);
     }
   }
 
@@ -439,7 +439,7 @@ async function deleteRoomData(roomId) {
   delete draftPools[roomId];
   delete characterStates[roomId];
   delete battleSelections[roomId];
-  console.log('🧹 已清理房间数据: ' + roomId);
+  console.log('已清理房间数据: ' + roomId);
 }
 
 // ── 更新房间最近活动时间 ──
@@ -473,7 +473,7 @@ setInterval(async () => {
       if (lastActivity && (now - lastActivity) > GAME_TIMEOUT) {
         const playerNames = (room.players || []).map(p => p.name);
         const uniquePlayers = [...new Set([...playerNames, ...(rooms[roomId] ? rooms[roomId].players || [] : [])])];
-        console.log(`⏰ 房间 ${roomId} 对局超时（${Math.floor((now - lastActivity) / 60000)} 分钟无活动），自动结束`);
+        console.log(`房间 ${roomId} 对局超时（${Math.floor((now - lastActivity) / 60000)} 分钟无活动），自动结束`);
         await saveGameHistory(roomId, {
           players: uniquePlayers,
           totalRounds: room.round || 1,
@@ -488,7 +488,7 @@ setInterval(async () => {
     } else if (!hasPlayers) {
       // 无人房间且无活动 30 分钟 → 清理
       if (!lastActivity || (now - lastActivity) > ROOM_IDLE_TIMEOUT) {
-        console.log(`⏰ 房间 ${roomId} 无人且超时，清理中...`);
+        console.log(`房间 ${roomId} 无人且超时，清理中...`);
         toClean.push(roomId);
       }
     }
@@ -499,7 +499,7 @@ setInterval(async () => {
     if (!socketRooms[roomId]) {
       const created = room.createdAt ? new Date(room.createdAt).getTime() : 0;
       if (created && (now - created) > ROOM_IDLE_TIMEOUT) {
-        console.log(`⏰ 孤立 REST 房间 ${roomId} 超时，清理中...`);
+        console.log(`孤立 REST 房间 ${roomId} 超时，清理中...`);
         toClean.push(roomId);
       }
     }
@@ -510,7 +510,7 @@ setInterval(async () => {
   }
 
   if (toClean.length > 0) {
-    console.log('🧹 本轮清理 ' + toClean.length + ' 个超时房间');
+    console.log('本轮清理 ' + toClean.length + ' 个超时房间');
   }
 }, CLEANUP_INTERVAL);
 
@@ -544,7 +544,7 @@ app.post('/api/register', async (req, res) => {
   if (existing) return res.json({ success: false, msg: '用户名已存在' });
 
   const displayNickname = nickname || username;
-  const userAvatar = avatar || '🀄';
+  const userAvatar = avatar || '';
 
   // 直接写入数据库
   const ok = await saveUserToDB(username, password, displayNickname, userAvatar, '');
@@ -568,18 +568,18 @@ app.post('/api/login', async (req, res) => {
     let storedPwd = typeof userObj === 'string' ? userObj : userObj.password;
     // 如果是旧格式字符串，自动升级为新格式对象
     if (typeof userObj === 'string') {
-      users[username] = { password: userObj, nickname: username, avatar: '🀄', bio: '' };
+      users[username] = { password: userObj, nickname: username, avatar: '', bio: '' };
     }
     if (storedPwd !== password) return res.json({ success: false, msg: '密码错误' });
   } else {
     // 内存未命中，从 Supabase 查询
-    console.log('🔍 内存缓存缺失 ' + username + '，尝试从 Supabase 查询...');
+    console.log(' 内存缓存缺失 ' + username + '，尝试从 Supabase 查询...');
     const dbUser = await findUserInDB(username);
     if (!dbUser) return res.json({ success: false, msg: '用户不存在' });
     if (dbUser.password !== password) return res.json({ success: false, msg: '密码错误' });
   }
 
-  const profile = users[username] || { nickname: username, avatar: '🀄' };
+  const profile = users[username] || { nickname: username, avatar: '' };
   res.json({ success: true, msg: '登录成功', nickname: profile.nickname, avatar: profile.avatar });
 });
 
@@ -594,12 +594,12 @@ app.get('/api/profile', (req, res) => {
       success: true,
       username,
       nickname: userObj.nickname || username,
-      avatar: userObj.avatar || '🀄',
+      avatar: userObj.avatar || '',
       bio: userObj.bio || ''
     });
   }
   // 兼容旧格式或不存在
-  return res.json({ success: true, username, nickname: username, avatar: '🀄', bio: '' });
+  return res.json({ success: true, username, nickname: username, avatar: '', bio: '' });
 });
 
 // ── 更新用户资料（昵称、头像、简介） ──
@@ -739,7 +739,7 @@ app.post('/api/join-room', async (req, res) => {
       if (!error && data) {
         room = { id: data.room_id, host: data.host, players: data.players, maxPlayers: data.max_players, started: data.started, createdAt: data.created_at };
         rooms[roomId] = room; // 回填内存
-        console.log('🔍 从 Supabase 恢复房间 ' + roomId);
+        console.log('从 Supabase 恢复房间 ' + roomId);
       }
     } catch (e) { /* ignore */ }
   }
@@ -906,7 +906,7 @@ app.get('/api/my-draft', async (req, res) => {
       if (!error && data && data.results) {
         room = data.results;
         draftResults[roomId] = room;
-        console.log('🔍 从 Supabase 恢复选角结果 ' + roomId);
+        console.log(' 从 Supabase 恢复选角结果 ' + roomId);
       }
     } catch (e) { /* ignore */ }
   }
@@ -956,7 +956,7 @@ app.get('/api/all-draft', async (req, res) => {
     const { data } = await supabase.from('draft_results').select('*').eq('room_id', roomId).single();
     if (data && data.results) {
       draftResults[roomId] = data.results;
-      console.log('🔍 从 Supabase 恢复选角结果 ' + roomId);
+      console.log(' 从 Supabase 恢复选角结果 ' + roomId);
       return res.json(data.results);
     }
   } catch (e) { /* ignore */ }
@@ -1159,10 +1159,10 @@ io.on('connection', (socket) => {
       // 获取用户昵称和头像
       const userObj = users[name];
       let nickname = name;
-      let avatar = '🀄';
+      let avatar = '';
       if (userObj && typeof userObj === 'object') {
         nickname = userObj.nickname || name;
-        avatar = userObj.avatar || '🀄';
+        avatar = userObj.avatar || '';
       }
       room.players.push({
         id: socket.id,
@@ -1179,7 +1179,7 @@ io.on('connection', (socket) => {
         const userObj = users[existPlayer.name];
         if (userObj && typeof userObj === 'object') {
           existPlayer.nickname = userObj.nickname || existPlayer.name;
-          existPlayer.avatar = userObj.avatar || '🀄';
+          existPlayer.avatar = userObj.avatar || '';
         }
       }
     }
@@ -1493,7 +1493,7 @@ io.on('connection', (socket) => {
         socket.emit('error', '该角色正在休息中，无法出战');
         return;
       }
-      console.log(`🛡️ ${playerName} 的 ${characterName} 拥有保留效果，休息状态下出战`);
+      console.log(` ${playerName} 的 ${characterName} 拥有保留效果，休息状态下出战`);
     }
 
     // 记录选择
@@ -1686,7 +1686,7 @@ io.on('connection', (socket) => {
     const playerProfiles = room.players.map(p => ({
       name: p.name,
       nickname: p.nickname || p.name,
-      avatar: p.avatar || '🀄'
+      avatar: p.avatar || ''
     }));
 
     socket.emit('battleRoundData', {

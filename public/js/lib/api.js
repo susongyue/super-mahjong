@@ -14,7 +14,7 @@ window.API = {
   async register(username, password, nickname) {
     return fetch('/api/register', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password, nickname: nickname || username, avatar: '🀄' })
+      body: JSON.stringify({ username, password, nickname: nickname || username, avatar: '' })
     }).then(x => x.json());
   },
 
