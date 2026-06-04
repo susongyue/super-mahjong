@@ -3,121 +3,118 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>大厅 - 超能力立直麻将</title>
+  <title>大厅 - Super Reach Mahjong</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="themes.css">
+  <meta name="theme-color" content="#000000">
   <style>
     body { padding-top: 56px; }
 
+    /* ── 房间列表项 ── */
     .room-item {
-      background: var(--card-secondary);
-      border-radius: 10px;
-      padding: 14px 18px;
-      margin: 8px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      border: 1.5px solid var(--border);
-      transition: box-shadow .2s;
+      background: var(--surface-2);
+      border-radius: var(--r-md);
+      padding: 14px 18px; margin: 8px 0;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; border: 1px solid var(--hairline);
+      transition: box-shadow .2s, border-color .2s;
     }
-    .room-item:hover { box-shadow: var(--shadow); }
+    .room-item:hover { border-color: var(--hairline-soft); box-shadow: var(--shadow-sm); }
     .room-item .room-id {
-      color: var(--gold);
-      font-weight: 700;
-      font-size: 16px;
+      color: var(--gold); font-weight: 700; font-size: 16px;
     }
     .room-item .room-meta {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 4px;
+      font-size: 13px; color: var(--ink-muted); margin-top: 4px;
     }
-    .room-item .btn-join-room {
-      flex-shrink: 0;
-    }
+    .room-item .btn-join-room { flex-shrink: 0; }
+
+    /* ── 重连区域 ── */
     .btn-reconnect {
-      background: #ff9800;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .2s;
+      background: var(--gradient-orange);
+      color: #000; border: none;
+      border-radius: var(--r-pill);
+      padding: 10px 20px; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all .2s;
     }
-    .btn-reconnect:hover { background: #f57c00; transform: translateY(-1px); }
+    .btn-reconnect:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,164,43,0.25); }
     .reconnect-area {
-      background: #fff3e0;
-      border: 2px solid #ff9800;
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
+      background: var(--orange-bg);
+      border: 1px solid var(--orange-border);
+      border-radius: var(--r-lg);
+      padding: 16px 20px; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
     }
     .reconnect-area .reconnect-info {
-      font-size: 14px;
-      color: #e65100;
-      font-weight: 600;
+      font-size: 14px; color: var(--orange); font-weight: 600;
     }
     .reconnect-area .reconnect-info span {
-      display: block;
-      font-size: 12px;
-      color: #bf360c;
-      font-weight: 400;
-      margin-top: 2px;
+      display: block; font-size: 12px; color: var(--ink-muted); font-weight: 400; margin-top: 2px;
     }
 
+    /* ── 历史记录项 ── */
     .history-item {
-      background: var(--card-secondary);
-      border-radius: 10px;
-      padding: 12px 18px;
-      margin: 8px 0;
-      border: 1.5px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      transition: box-shadow .2s;
+      background: var(--surface-2);
+      border-radius: var(--r-md);
+      padding: 12px 18px; margin: 8px 0;
+      border: 1px solid var(--hairline);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; cursor: pointer; transition: box-shadow .2s, border-color .2s;
     }
-    .history-item:hover { box-shadow: var(--shadow); }
+    .history-item:hover { border-color: var(--hairline-soft); box-shadow: var(--shadow-sm); }
     .history-item .hist-room {
-      color: var(--accent);
-      font-weight: 700;
-      font-size: 14px;
+      color: var(--accent-blue); font-weight: 700; font-size: 14px;
     }
     .history-item .hist-meta {
-      font-size: 12px;
-      color: var(--text-secondary);
+      font-size: 12px; color: var(--ink-muted);
     }
     .history-item .hist-date {
-      font-size: 11px;
-      color: #999;
+      font-size: 11px; color: var(--ink-muted);
     }
 
+    /* ── 区域分隔 ── */
     .section-divider {
-      border-top: 1px solid var(--border);
-      margin: 20px 0 12px;
+      border-top: 1px solid var(--hairline); margin: 20px 0 12px;
     }
     .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
     }
     .section-header h2 { margin: 0; }
 
-    .status-badge { font-size: 12px; padding: 2px 8px; border-radius: 10px; }
-    .status-playing { background: #e3f2fd; color: #1565c0; }
-    .status-ready { background: #e8f5e9; color: #2e7d32; }
-    .status-waiting { background: #fff3e0; color: #e65100; }
-    .status-ended { background: #f3e5f5; color: #7b1fa2; }
+    /* ── 历史详情弹窗 ── */
+    .history-popup {
+      background: var(--surface-1);
+      border-radius: var(--r-xl);
+      padding: 24px; max-width: 500px; width: 90%;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--hairline);
+      max-height: 80vh; overflow-y: auto;
+    }
+    .history-popup h3 {
+      color: var(--accent-blue); margin-top: 0; font-size: 18px; font-weight: 700;
+    }
+    .history-popup .popup-row {
+      font-size: 14px; line-height: 1.9; color: var(--ink);
+    }
+    .history-popup .popup-row strong { font-weight: 700; }
+    .history-popup .draft-char-item {
+      font-size: 13px; color: var(--ink-muted); margin: 4px 0; padding-left: 12px;
+      line-height: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px;
+    }
+    .history-popup .draft-char-avatar {
+      width: 28px; height: 28px; border-radius: 8px;
+      object-fit: cover; vertical-align: middle; margin-right: 4px;
+      border: 1px solid var(--hairline);
+    }
+    .history-popup .draft-char-placeholder {
+      display: inline-flex; width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(135deg, #333, #555); color: var(--ink-muted);
+      align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+      vertical-align: middle; margin-right: 4px;
+    }
 
     @media (max-width: 768px) {
+      body { padding-top: 44px; }
       .room-item { padding: 10px 14px; margin: 5px 0; }
       .room-item .room-id { font-size: 14px; }
       .room-item .room-meta { font-size: 12px; }
@@ -142,7 +139,7 @@
 <body>
 
 <nav class="navbar">
-  <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
+  <a class="logo" href="/lobby.html">🀄 Super Reach Mahjong</a>
   <div class="nav-links">
     <a href="/lobby.html" class="active">大厅</a>
     <a href="/profile.html">个人中心</a>
@@ -158,18 +155,18 @@
         🔄 您有未完成的对局
         <span id="reconnectDetail"></span>
       </div>
-      <button class="btn-reconnect" id="btnReconnect" onclick="reconnectToGame()">⚡ 重连进入对局</button>
+      <button class="btn-reconnect" id="btnReconnect">⚡ 重连进入对局</button>
     </div>
   </div>
 
   <div class="section">
     <h2>开始游戏</h2>
     <div class="form-row">
-      <button class="btn btn-primary" onclick="createRoom()">🏠 创建对局房间</button>
+      <button class="btn btn-primary" id="btnCreate">🏠 创建对局房间</button>
     </div>
     <div class="form-row" style="margin-top:12px">
       <input class="input" id="roomId" placeholder="输入房间号加入或重连">
-      <button class="btn btn-cyan" onclick="handleJoinOrReconnect()">🚪 进入房间</button>
+      <button class="btn btn-cyan" id="btnJoin">🚪 进入房间</button>
     </div>
   </div>
 
@@ -185,7 +182,7 @@
   <div class="section">
     <div class="section-header">
       <h2>我的对局历史</h2>
-      <button class="btn btn-cyan" style="font-size:12px;padding:6px 14px;" onclick="refreshHistory()">🔄 刷新</button>
+      <button class="btn btn-cyan" style="font-size:12px;padding:6px 14px;" id="btnRefreshHistory">🔄 刷新</button>
     </div>
     <div id="historyList">
       <div class="no-data">加载中...</div>
@@ -193,62 +190,52 @@
   </div>
 </div>
 
+<script src="/js/lib/auth.js"></script>
+<script src="/js/lib/utils.js"></script>
+<script src="/js/lib/api.js"></script>
+<script src="/js/lib/theme-switcher.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
-const user = localStorage.user;
-if (!user) location.href = '/login.html';
-(function updateNav() {
-  const avatar = localStorage.avatar || '🀄';
-  const nickname = localStorage.nickname || user;
-  let avatarHTML = avatar.startsWith('/avatars/')
-    ? '<img src="' + avatar + '" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;">'
-    : avatar;
-  document.getElementById('navUser').innerHTML =
-    '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + avatarHTML + ' ' + nickname + '</span>';
-})();
+Auth.check();
+var user = Auth.user();
 
-let myReconnectInfo = null; // 重连信息： { roomId, phase }
-let charImageMap = {}; // 角色名→头像文件名映射
+// ── 导航栏渲染 ──
+Auth.renderNav(document.getElementById('navUser'));
 
-// ─── 加载角色头像映射 ───
+// ── 状态变量 ──
+var myReconnectInfo = null;
+var charImageMap = {};
+
+// ── 加载角色头像映射 ──
 (async function loadCharImages() {
   try {
-    const chars = await fetch('/api/characters').then(r => r.json());
-    chars.forEach(c => { charImageMap[c.name] = c.image || null; });
+    var chars = await API.getCharacters();
+    chars.forEach(function (c) { charImageMap[c.name] = c.image || null; });
   } catch (e) { /* ignore */ }
 })();
 
-// ─── 页面加载时检查是否有未完成的对局 ───
+// ── 页面加载时检查是否有未完成的对局 ──
 (async function checkReconnect() {
-  const savedRoomId = localStorage.roomId;
-  if (!savedRoomId) {
-    // 没有保存的房间号，检查是否需要清理
-    return;
-  }
+  var savedRoomId = Auth.roomId();
+  if (!savedRoomId) return;
 
   try {
-    const r = await fetch('/api/room-status?roomId=' + savedRoomId + '&username=' + encodeURIComponent(user))
-      .then(x => x.json());
-
+    var r = await API.getRoomStatus(savedRoomId, user);
     if (r.finished) {
-      // 对局已结束，清除保存的房间号
       localStorage.removeItem('roomId');
       return;
     }
-
     if (r.exists && r.isStarted && r.isPlayer) {
-      // 有正在进行中的对局，显示重连按钮
       myReconnectInfo = { roomId: savedRoomId, phase: r.phase };
       document.getElementById('reconnectSection').style.display = 'block';
-      const phaseText = r.phase === 'battle_round' ? '回合对战阶段' : '选将阶段';
+      var phaseText = r.phase === 'battle_round' ? '回合对战阶段' : '选将阶段';
       document.getElementById('reconnectDetail').innerText =
         '房间 ' + savedRoomId + ' | 第 ' + r.round + ' 回合 | ' + phaseText +
         ' | 玩家: ' + (r.players || []).join('、');
     } else if (!r.exists) {
-      // 房间不存在了，清除保存的房间号
       localStorage.removeItem('roomId');
     }
   } catch (e) {
-    // 网络错误，保留 roomId 以便后续重连
     if (savedRoomId) {
       myReconnectInfo = { roomId: savedRoomId, phase: 'unknown' };
       document.getElementById('reconnectSection').style.display = 'block';
@@ -258,15 +245,12 @@ let charImageMap = {}; // 角色名→头像文件名映射
   }
 })();
 
-// ─── 创建房间 ───
-async function createRoom() {
-  // 先清除旧的重连信息
-  const oldRoomId = localStorage.roomId;
+// ── 创建房间 ──
+document.getElementById('btnCreate').addEventListener('click', async function () {
+  var oldRoomId = Auth.roomId();
   if (oldRoomId) {
-    // 检查旧房间是否还在
     try {
-      const r = await fetch('/api/room-status?roomId=' + oldRoomId + '&username=' + encodeURIComponent(user))
-        .then(x => x.json());
+      var r = await API.getRoomStatus(oldRoomId, user);
       if (r.exists && r.isStarted && r.isPlayer) {
         if (!confirm('您有一个进行中的对局（房间 ' + oldRoomId + '），创建新房间将离开当前对局。确定要继续吗？')) {
           return;
@@ -275,100 +259,82 @@ async function createRoom() {
     } catch (e) { /* ignore */ }
   }
 
-  const r = await fetch('/api/create-room', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: user })
-  }).then(x => x.json());
-  if (!r.success) return alert(r.msg);
-  localStorage.roomId = r.roomId;
+  var res = await API.createRoom(user);
+  if (!res.success) { Utils.showToast(res.msg); return; }
+  localStorage.roomId = res.roomId;
   location.href = '/index.html';
-}
+});
 
-// ─── 统一的加入/重连处理 ───
-async function handleJoinOrReconnect() {
-  const roomId = document.getElementById('roomId').value.trim();
-  if (!roomId) return alert('请输入房间号');
+// ── 统一的加入/重连处理 ──
+document.getElementById('btnJoin').addEventListener('click', async function () {
+  var roomId = document.getElementById('roomId').value.trim();
+  if (!roomId) { Utils.showToast('请输入房间号'); return; }
+  handleJoinOrReconnect(roomId);
+});
 
-  // 先查询房间状态
+async function handleJoinOrReconnect(roomId) {
   try {
-    const status = await fetch('/api/room-status?roomId=' + roomId + '&username=' + encodeURIComponent(user))
-      .then(x => x.json());
-
+    var status = await API.getRoomStatus(roomId, user);
     if (status.finished) {
-      return alert('该对局已结束，可在大厅下方查看历史记录');
+      Utils.showToast('该对局已结束，可在大厅下方查看历史记录');
+      return;
     }
-
     if (!status.exists) {
-      return alert('房间不存在或已过期');
+      Utils.showToast('房间不存在或已过期');
+      return;
     }
-
     if (status.isStarted && status.isPlayer) {
-      // 对局进行中，且用户是该房间玩家 → 重连
       doReconnect(roomId, status);
     } else if (status.isStarted && !status.isPlayer) {
-      return alert('该对局已开始，您不是参与玩家，无法加入');
+      Utils.showToast('该对局已开始，您不是参与玩家，无法加入');
     } else {
-      // 对局未开始 → 正常加入
       doJoinRoom(roomId);
     }
   } catch (e) {
-    alert('网络错误，请重试');
+    Utils.showToast('网络错误，请重试');
   }
 }
 
-// ─── 重连进入对局 ───
-async function reconnectToGame() {
+// ── 重连进入对局 ──
+document.getElementById('btnReconnect').addEventListener('click', async function () {
   if (!myReconnectInfo) return;
   try {
-    const status = await fetch(
-      '/api/room-status?roomId=' + myReconnectInfo.roomId + '&username=' + encodeURIComponent(user)
-    ).then(x => x.json());
-
+    var status = await API.getRoomStatus(myReconnectInfo.roomId, user);
     if (status.finished) {
       localStorage.removeItem('roomId');
       document.getElementById('reconnectSection').style.display = 'none';
       myReconnectInfo = null;
-      alert('该对局已结束');
+      Utils.showToast('该对局已结束');
       return;
     }
-
     if (!status.exists) {
       localStorage.removeItem('roomId');
       document.getElementById('reconnectSection').style.display = 'none';
       myReconnectInfo = null;
-      alert('房间不存在或已过期');
+      Utils.showToast('房间不存在或已过期');
       return;
     }
-
     doReconnect(myReconnectInfo.roomId, status);
   } catch (e) {
-    alert('重连失败，请检查网络后重试');
+    Utils.showToast('重连失败，请检查网络后重试');
   }
-}
+});
 
 function doReconnect(roomId, status) {
   localStorage.roomId = roomId;
-  // 根据对局阶段跳转到对应页面
   switch (status.phase) {
-    case 'game':
-      location.href = '/game.html';
-      break;
-    case 'battle_round':
-      location.href = '/battle_round.html';
-      break;
-    default:
-      location.href = '/index.html';
+    case 'game':         location.href = '/game.html'; break;
+    case 'battle_round': location.href = '/battle_round.html'; break;
+    default:             location.href = '/index.html';
   }
 }
 
-// ─── 正常加入房间 ───
+// ── 正常加入房间 ──
 async function doJoinRoom(roomId) {
-  // 先检查是否有进行中的对局
-  const oldRoomId = localStorage.roomId;
+  var oldRoomId = Auth.roomId();
   if (oldRoomId && oldRoomId !== roomId) {
     try {
-      const r = await fetch('/api/room-status?roomId=' + oldRoomId + '&username=' + encodeURIComponent(user))
-        .then(x => x.json());
+      var r = await API.getRoomStatus(oldRoomId, user);
       if (r.exists && r.isStarted && r.isPlayer) {
         if (!confirm('您有一个进行中的对局（房间 ' + oldRoomId + '），加入新房间将离开当前对局。确定要继续吗？')) {
           return;
@@ -377,76 +343,90 @@ async function doJoinRoom(roomId) {
     } catch (e) { /* ignore */ }
   }
 
-  const r = await fetch('/api/join-room', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: user, roomId: roomId })
-  }).then(x => x.json());
-  if (r.success) {
+  var res = await API.joinRoom(user, roomId);
+  if (res.success) {
     localStorage.roomId = roomId;
     location.href = '/index.html';
   } else {
-    alert(r.msg);
+    Utils.showToast(res.msg);
   }
 }
 
-// ─── 加载活跃对局列表 ───
+// ── 加载活跃对局列表 ──
 async function loadRooms() {
   try {
-    const list = await fetch('/api/rooms').then(r => r.json());
-    const box = document.getElementById('roomList');
+    var list = await API.getRooms();
+    var box = document.getElementById('roomList');
     if (list.length === 0) {
       box.innerHTML = '<div class="no-data">暂无活跃对局，快来创建一个吧！</div>';
       return;
     }
-    box.innerHTML = list.map(room => {
-      let statusHtml, btnHtml;
+    box.innerHTML = list.map(function (room) {
+      var statusHtml, btnHtml;
       if (room.started) {
         statusHtml = '<span class="status-badge status-playing">对局中</span>';
-        btnHtml = '<span style="font-size:12px;color:#999;">对局中</span>';
+        btnHtml = '<span style="font-size:12px;color:var(--ink-muted)">对局中</span>';
       } else if (room.allReady) {
         statusHtml = '<span class="status-badge status-ready">已全员准备</span>';
-        btnHtml = '<button class="btn btn-cyan btn-join-room" onclick="handleJoinRoomList(\'' + room.roomId + '\')">加入</button>';
+        btnHtml = '<button class="btn btn-cyan btn-join-room" data-room="' + room.roomId + '">加入</button>';
       } else {
         statusHtml = '<span class="status-badge status-waiting">等待中</span>';
-        btnHtml = '<button class="btn btn-cyan btn-join-room" onclick="handleJoinRoomList(\'' + room.roomId + '\')">加入</button>';
+        btnHtml = '<button class="btn btn-cyan btn-join-room" data-room="' + room.roomId + '">加入</button>';
       }
       return '<div class="room-item">' +
         '<div class="room-info">' +
         '<span class="room-id">房间 ' + room.roomId + '</span>' + statusHtml +
-        '<div class="room-meta">' + (room.players || []).join('、') + ' | 第 ' + room.round + ' 回合</div>' +
+        '<div class="room-meta">' + Utils.escHTML((room.players || []).join('、')) + ' | 第 ' + room.round + ' 回合</div>' +
         '</div>' + btnHtml +
         '</div>';
     }).join('');
+
+    // 事件委托：加入按钮
+    box.querySelectorAll('.btn-join-room').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.getElementById('roomId').value = btn.dataset.room;
+        handleJoinOrReconnect(btn.dataset.room);
+      });
+    });
+
+    // GSAP 列表入场
+    gsap.from(box.querySelectorAll('.room-item'), {
+      opacity: 0, x: -20, stagger: 0.06, duration: 0.35, ease: 'power2.out'
+    });
   } catch (e) {
     document.getElementById('roomList').innerHTML = '<div class="no-data">加载失败，请检查网络</div>';
   }
 }
 
-function handleJoinRoomList(roomId) {
-  document.getElementById('roomId').value = roomId;
-  handleJoinOrReconnect();
-}
-
-// ─── 加载对局历史 ───
+// ── 加载对局历史 ──
 async function loadHistory() {
   try {
-    const list = await fetch('/api/game-history?username=' + encodeURIComponent(user)).then(r => r.json());
-    const box = document.getElementById('historyList');
+    var list = await API.getGameHistory(user);
+    var box = document.getElementById('historyList');
     if (list.length === 0) {
       box.innerHTML = '<div class="no-data">暂无历史对局记录</div>';
       return;
     }
-    box.innerHTML = list.map(h => {
-      const date = h.endedAt ? new Date(h.endedAt).toLocaleString('zh-CN') : '未知';
-      return '<div class="history-item" onclick="viewHistoryDetail(\'' + h.roomId + '\')">' +
+    box.innerHTML = list.map(function (h) {
+      var date = h.endedAt ? new Date(h.endedAt).toLocaleString('zh-CN') : '未知';
+      return '<div class="history-item" data-room="' + h.roomId + '">' +
         '<div>' +
         '<div class="hist-room">🏆 房间 ' + h.roomId + '</div>' +
-        '<div class="hist-meta">' + h.playerCount + '人对局 | ' + h.totalRounds + ' 回合 | 房主: ' + (h.host || '未知') + '</div>' +
-        '<div class="hist-meta">玩家: ' + (h.players || []).join('、') + '</div>' +
+        '<div class="hist-meta">' + h.playerCount + '人对局 | ' + h.totalRounds + ' 回合 | 房主: ' + Utils.escHTML(h.host || '未知') + '</div>' +
+        '<div class="hist-meta">玩家: ' + Utils.escHTML((h.players || []).join('、')) + '</div>' +
         '</div>' +
         '<div class="hist-date">' + date + '</div>' +
         '</div>';
     }).join('');
+
+    // 事件委托
+    box.querySelectorAll('.history-item').forEach(function (item) {
+      item.addEventListener('click', function () { viewHistoryDetail(item.dataset.room); });
+    });
+
+    gsap.from(box.querySelectorAll('.history-item'), {
+      opacity: 0, x: -20, stagger: 0.06, duration: 0.35, ease: 'power2.out', delay: 0.1
+    });
   } catch (e) {
     document.getElementById('historyList').innerHTML = '<div class="no-data">加载失败，请检查网络</div>';
   }
@@ -457,62 +437,67 @@ function refreshHistory() {
   loadHistory();
 }
 
-// ─── 查看对局详情 ───
+document.getElementById('btnRefreshHistory').addEventListener('click', refreshHistory);
+
+// ── 查看对局详情 ──
 async function viewHistoryDetail(roomId) {
   try {
-    const detail = await fetch('/api/game-history-detail?roomId=' + roomId).then(r => r.json());
-    if (!detail) { alert('无法加载对局详情'); return; }
+    var detail = await API.getGameHistoryDetail(roomId);
+    if (!detail) { Utils.showToast('无法加载对局详情'); return; }
 
-    const date = detail.endedAt ? new Date(detail.endedAt).toLocaleString('zh-CN') : '未知';
-    const draft = detail.draftResults || {};
+    var date = detail.endedAt ? new Date(detail.endedAt).toLocaleString('zh-CN') : '未知';
+    var draft = detail.draftResults || {};
 
-    let draftHtml = '';
+    var draftHtml = '';
     if (Object.keys(draft).length > 0) {
       draftHtml = '<div style="margin-top:12px;"><strong>选角情况：</strong></div>';
-      for (const [player, chars] of Object.entries(draft)) {
-        const charItems = (chars || []).map(c => {
-          const cname = c.name || c;
-          const img = charImageMap[cname];
-          let avatarHTML = '';
-          if (img) {
-            avatarHTML = `<img src="/png/${img}" style="width:28px;height:28px;border-radius:8px;object-fit:cover;vertical-align:middle;margin-right:4px;border:1px solid #ccc;" onerror="this.style.display='none';">`;
-          } else {
-            avatarHTML = `<span style="display:inline-flex;width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#bdc3c7,#95a5a6);color:#fff;align-items:center;justify-content:center;font-size:13px;font-weight:700;vertical-align:middle;margin-right:4px;">${cname.charAt(0)}</span>`;
-          }
-          return avatarHTML + cname;
+      for (var player in draft) {
+        var chars = draft[player] || [];
+        var charItems = chars.map(function (c) {
+          var cname = c.name || c;
+          var img = charImageMap[cname];
+          var avatarHTML = img
+            ? '<img class="draft-char-avatar" src="/png/' + img + '" onerror="this.style.display=\'none\'">'
+            : '<span class="draft-char-placeholder">' + cname.charAt(0) + '</span>';
+          return avatarHTML + Utils.escHTML(cname);
         }).join(' ');
-        draftHtml += '<div style="font-size:13px;color:var(--text-secondary);margin:4px 0;padding-left:12px;line-height:28px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;">' +
-          '• ' + player + '：' + charItems + '</div>';
+        draftHtml += '<div class="draft-char-item">• ' + Utils.escHTML(player) + '：' + charItems + '</div>';
       }
     }
 
-    const popup = document.createElement('div');
-    popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);' +
-      'display:flex;align-items:center;justify-content:center;z-index:9999;';
-    popup.innerHTML = '<div style="background:var(--card);border-radius:16px;padding:24px;max-width:500px;width:90%;' +
-      'box-shadow:0 8px 32px rgba(0,0,0,0.3);border:2px solid var(--border);max-height:80vh;overflow-y:auto;">' +
-      '<h3 style="color:var(--accent);margin-top:0;">🏆 对局详情</h3>' +
-      '<div style="font-size:14px;line-height:1.8;">' +
-      '<div>房间号：<strong>' + detail.roomId + '</strong></div>' +
-      '<div>房主：' + (detail.host || '未知') + '</div>' +
-      '<div>总回合数：' + detail.totalRounds + '</div>' +
-      '<div>参与玩家：' + (detail.players || []).join('、') + '</div>' +
-      '<div>结束时间：' + date + '</div>' +
-      draftHtml +
-      '</div>' +
-      '<button class="btn btn-primary" style="margin-top:16px;width:100%;" onclick="this.closest(\'div\').parentElement.remove()">关闭</button>' +
-      '</div>';
-    document.body.appendChild(popup);
-    popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove(); });
+    var popup = Utils.createOverlay(
+      '<div class="history-popup">' +
+        '<h3>🏆 对局详情</h3>' +
+        '<div class="popup-row">' +
+        '<div>房间号：<strong>' + detail.roomId + '</strong></div>' +
+        '<div>房主：' + Utils.escHTML(detail.host || '未知') + '</div>' +
+        '<div>总回合数：' + detail.totalRounds + '</div>' +
+        '<div>参与玩家：' + Utils.escHTML((detail.players || []).join('、')) + '</div>' +
+        '<div>结束时间：' + date + '</div>' +
+        draftHtml +
+        '</div>' +
+        '<button class="btn btn-primary" style="margin-top:16px;width:100%;" id="popupClose">关闭</button>' +
+      '</div>',
+      'modal-overlay'
+    );
+    // 关闭逻辑
+    document.getElementById('popupClose').addEventListener('click', function () { popup.remove(); });
+    popup.addEventListener('click', function (e) { if (e.target === popup) popup.remove(); });
   } catch (e) {
-    alert('加载详情失败');
+    Utils.showToast('加载详情失败');
   }
 }
 
-// ─── 初始化 ───
+// ── 初始化 ──
 loadRooms();
 setInterval(loadRooms, 5000);
 loadHistory();
+
+// ── GSAP 入场动画 ──
+gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
+gsap.from('.container > .section', {
+  opacity: 0, y: 24, stagger: 0.12, duration: 0.5, delay: 0.2, ease: 'power3.out'
+});
 </script>
 </body>
 </html>

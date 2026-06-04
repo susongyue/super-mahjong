@@ -387,7 +387,7 @@ function updateCharacterStatesAfterRound(roomId) {
   Object.keys(characterStates[roomId]).forEach(playerName => {
     const playerSocket = findSocketByPlayerName(roomId, playerName);
     if (playerSocket) {
-      playerSocket.emit('characterStatesUpdate', characterStates[roomId][playerName]);
+      playerSocket.emit('characterStatesUpdate', { states: characterStates[roomId][playerName] });
     }
   });
 }
@@ -845,8 +845,11 @@ app.get('/api/rooms', (req, res) => {
     if (r.players && r.players.length > 0) {
       const restRoom = rooms[id] || {};
       const isStarted = restRoom.started || false;
+      const hostName = r.players[0] ? (r.players[0].nickname || r.players[0].name) : '';
       list.push({
+        id: id,
         roomId: id,
+        host: hostName,
         players: r.players.map(p => p.name),
         playerCount: r.players.length,
         maxPlayers: r.maxPlayers,
@@ -861,7 +864,9 @@ app.get('/api/rooms', (req, res) => {
   Object.keys(rooms).forEach(id => {
     if (!socketRooms[id] && rooms[id].started) {
       list.push({
+        id: id,
         roomId: id,
+        host: (rooms[id].players || [])[0] || '',
         players: rooms[id].players || [],
         playerCount: (rooms[id].players || []).length,
         maxPlayers: rooms[id].maxPlayers || 4,
@@ -1118,8 +1123,9 @@ io.on('connection', (socket) => {
   console.log(`[Socket] 玩家 ${socket.id} 连接成功`);
 
   socket.on('joinRoom', (data) => {
-    const { roomId = "0000", playerName } = data;
-    socket.playerName = playerName; // 记录玩家名，用于后续查找
+    const { roomId = "0000", playerName, username } = data;
+    const name = playerName || username;
+    socket.playerName = name; // 记录玩家名，用于后续查找
 
     // 检查房间是否已结束
     if (finishedRooms[roomId]) {
@@ -1151,16 +1157,16 @@ io.on('connection', (socket) => {
     const isExist = room.players.some(p => p.id === socket.id);
     if (!isExist) {
       // 获取用户昵称和头像
-      const userObj = users[playerName];
-      let nickname = playerName;
+      const userObj = users[name];
+      let nickname = name;
       let avatar = '🀄';
       if (userObj && typeof userObj === 'object') {
-        nickname = userObj.nickname || playerName;
+        nickname = userObj.nickname || name;
         avatar = userObj.avatar || '🀄';
       }
       room.players.push({
         id: socket.id,
-        name: playerName || `玩家${Math.floor(Math.random() * 1000)}`,
+        name: name || `玩家${Math.floor(Math.random() * 1000)}`,
         nickname: nickname,
         avatar: avatar,
         ready: false,
@@ -1182,14 +1188,16 @@ io.on('connection', (socket) => {
     saveSocketRooms();
 
     // 广播玩家列表（不包含出战选择，确保选将阶段保密）
-    io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId });
+    const hostName = room.players[0] ? (room.players[0].nickname || room.players[0].name) : '';
+    io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId, host: hostName });
     // 单独发送角色休息状态给该玩家
-    const cs = (characterStates[roomId] || {})[playerName] || {};
-    socket.emit('characterStatesUpdate', cs);
-    socket.emit('joinSuccess', `成功加入房间【${roomId}】`);
+    const cs = (characterStates[roomId] || {})[name] || {};
+    socket.emit('characterStatesUpdate', { states: cs });
+    socket.emit('joinSuccess', { players: room.players, host: hostName, roomId });
   });
 
-  socket.on('toggleReady', (roomId) => {
+  socket.on('toggleReady', (data) => {
+    const roomId = typeof data === 'object' ? data.roomId : data;
     const room = socketRooms[roomId];
     if (!room) return socket.emit('error', '房间不存在');
     touchRoom(roomId);
@@ -1197,10 +1205,11 @@ io.on('connection', (socket) => {
     if (player) {
       player.ready = !player.ready;
       saveSocketRooms();
-      io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId });
+      const hostName = room.players[0] ? (room.players[0].nickname || room.players[0].name) : '';
+      io.to(roomId).emit('roomPlayersUpdate', { players: room.players, roomId, host: hostName });
       if (isAllReady(roomId)) {
         resetRoomVote(roomId);
-        io.to(roomId).emit('allReady', '所有人已准备，开始投票选择角色抽取方式！');
+        io.to(roomId).emit('allReady', {});
       }
     }
   });
@@ -1347,7 +1356,7 @@ io.on('connection', (socket) => {
       if (socket) {
         socket.emit('draftRandomResult', {
           type: 'random',
-          myChars: result[name],
+          characters: result[name],
           allPlayerNames: playerNames
         });
       }
@@ -1441,7 +1450,7 @@ io.on('connection', (socket) => {
     if (dp.draftType === 'random' && draftResults[roomId]) {
       socket.emit('draftRandomResult', {
         type: 'random',
-        myChars: draftResults[roomId][playerName] || [],
+        characters: draftResults[roomId][playerName] || [],
         allPlayerNames: Object.keys(draftResults[roomId])
       });
       socket.emit('draftAllDone', {
