@@ -1,0 +1,18 @@
+- generic [ref=e1]:
+  - heading "主题测试页面" [level=1] [ref=e2]
+  - generic [ref=e3]:
+    - heading "当前颜色变量值" [level=2] [ref=e4]
+    - generic [ref=e5]: "--canvas = #121212 --surface-1 = #181818 --surface-2 = #252525 --navbar-bg = rgba(18, 18, 18, 0.92) --hairline = #4d4d4d --hairline-soft = #282828 --ink = #ffffff --ink-muted = #b3b3b3 --on-primary = #000000 --accent-blue = #1ed760 --accent-blue-glow = rgba(30, 215, 96, 0.12) --gradient-magenta = #f3727f --gradient-violet = #539df5 --gradient-orange = #ffa42b --gradient-coral = #f3727f --green = #1ed760 --red = #f3727f --gold = #ffa42b --orange = #ffa42b --purple = #a78bfa --toast-bg = #282828 --toast-color = #fff --shadow-sm = 0 2px 8px rgba(0,0,0,0.5) --shadow-md = 0 4px 20px rgba(0,0,0,0.6) --shadow-lg = 0 8px 32px rgba(0,0,0,0.7)"
+  - generic [ref=e6]:
+    - heading "调试信息" [level=2] [ref=e7]
+    - generic [ref=e8]: "data-theme 属性: spotify html 元素匹配的 CSS 规则: (检查中) style.css 已加载: http://localhost:3000/style.css 规则数: 170 themes.css 已加载: http://localhost:3000/themes.css 规则数: 9 第一条规则: :root { --canvas: #090909; --surface-1: #141414; --surface-2: #1c1c1c; --navbar-..."
+  - generic [ref=e9]:
+    - button "framer" [ref=e10] [cursor=pointer]
+    - button "playstation" [ref=e11] [cursor=pointer]
+    - button "spotify" [active] [ref=e12] [cursor=pointer]
+    - button "linear" [ref=e13] [cursor=pointer]
+    - button "lamborghini" [ref=e14] [cursor=pointer]
+    - button "vercel" [ref=e15] [cursor=pointer]
+    - button "notion" [ref=e16] [cursor=pointer]
+    - button "apple" [ref=e17] [cursor=pointer]
+    - button "清除主题" [ref=e18] [cursor=pointer]

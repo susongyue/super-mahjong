@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>登录 - 超能力立直麻将</title>
+  <title>登录 - Super Reach Mahjong</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="themes.css">
+  <meta name="theme-color" content="#000000">
   <style>
     body {
       display: grid;
@@ -13,104 +15,139 @@
     }
 
     .login-box {
-      background: var(--card);
+      background: var(--surface-1);
       padding: 40px 36px;
-      border-radius: 16px;
+      border-radius: var(--r-xxl);
       width: 100%;
       max-width: 400px;
       text-align: center;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
+      border: 1px solid var(--hairline);
+      box-shadow: var(--shadow-lg);
     }
     .login-box h1 {
       margin-bottom: 6px;
-      color: var(--accent);
-      font-size: 24px;
-      font-weight: 800;
+      color: var(--ink);
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
     }
     .login-box .subtitle {
-      color: var(--text-secondary);
-      font-size: 13px;
-      margin-bottom: 24px;
+      color: var(--ink-muted);
+      font-size: 14px;
+      margin-bottom: 28px;
+      font-weight: 400;
     }
 
-    .login-panel { display: none; animation: fadeIn .3s; }
+    .login-panel { display: none; }
     .login-panel.active { display: block; }
 
+    .login-panel .input {
+      margin-bottom: 10px;
+    }
+    .login-panel .btn {
+      width: 100%;
+      margin-top: 4px;
+    }
+
     @media (max-width: 768px) {
-      .login-box { padding: 28px 22px; border-radius: 14px; }
-      .login-box h1 { font-size: 20px; }
-      .login-box .subtitle { font-size: 12px; margin-bottom: 18px; }
+      .login-box { padding: 28px 22px; border-radius: var(--r-xl); }
+      .login-box h1 { font-size: 22px; }
+      .login-box .subtitle { font-size: 13px; margin-bottom: 22px; }
     }
     @media (max-width: 480px) {
       body { padding: 64px 16px 16px; }
       .login-box { padding: 24px 16px; max-width: 100%; }
-      .login-box h1 { font-size: 18px; }
+      .login-box h1 { font-size: 20px; }
     }
   </style>
 </head>
 <body>
 <nav class="navbar">
-  <span class="logo">🀄 超能力立直麻将</span>
+  <span class="logo">🀄 Super Reach Mahjong</span>
 </nav>
 
-<div class="login-box">
-  <h1>超能力立直麻将</h1>
+<div class="login-box" id="loginBox">
+  <h1>Super Reach Mahjong</h1>
   <p class="subtitle">登录或注册，开始你的对局</p>
 
   <div class="tab-bar">
-    <button class="active" onclick="tab(0)">登录</button>
-    <button onclick="tab(1)">注册</button>
+    <button class="active" data-tab="0">登录</button>
+    <button data-tab="1">注册</button>
   </div>
 
   <div class="login-panel active" id="login">
-    <input class="input" id="login-user" placeholder="请输入用户名" autocomplete="username" style="margin-bottom:10px">
-    <input class="input" id="login-pwd" type="password" placeholder="请输入密码" autocomplete="current-password" style="margin-bottom:14px" onkeydown="if(event.key==='Enter')login()">
-    <button class="btn btn-primary" onclick="login()" style="width:100%">登 录</button>
+    <input class="input" id="login-user" placeholder="请输入用户名" autocomplete="username">
+    <input class="input" id="login-pwd" type="password" placeholder="请输入密码" autocomplete="current-password">
+    <button class="btn btn-primary" id="loginBtn">登 录</button>
   </div>
 
   <div class="login-panel" id="reg">
-    <input class="input" id="reg-user" placeholder="请输入用户名（登录用）" autocomplete="username" style="margin-bottom:10px">
-    <input class="input" id="reg-nick" placeholder="设置昵称（选填，默认同用户名）" style="margin-bottom:10px">
-    <input class="input" id="reg-pwd" type="password" placeholder="请设置密码" autocomplete="new-password" style="margin-bottom:14px" onkeydown="if(event.key==='Enter')register()">
-    <button class="btn btn-primary" onclick="register()" style="width:100%">注 册</button>
+    <input class="input" id="reg-user" placeholder="请输入用户名（登录用）" autocomplete="username">
+    <input class="input" id="reg-nick" placeholder="设置昵称（选填，默认同用户名）">
+    <input class="input" id="reg-pwd" type="password" placeholder="请设置密码" autocomplete="new-password">
+    <button class="btn btn-primary" id="regBtn">注 册</button>
   </div>
 </div>
 
+<script src="/js/lib/utils.js"></script>
+<script src="/js/lib/api.js"></script>
+<script src="/js/lib/theme-switcher.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
-function tab(i) {
+// ── Tab 切换 ──
+function switchTab(i) {
   document.querySelectorAll('.tab-bar button').forEach((b, j) => b.classList.toggle('active', j === i));
   document.querySelectorAll('.login-panel').forEach((p, j) => p.classList.toggle('active', j === i));
 }
 
-async function login() {
-  const u = document.getElementById('login-user').value.trim();
-  const p = document.getElementById('login-pwd').value;
-  if (!u || !p) return alert('请填写用户名和密码');
-  const r = await fetch('/api/login', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: u, password: p })
-  }).then(x => x.json());
+document.querySelectorAll('.tab-bar button').forEach(function (btn) {
+  btn.addEventListener('click', function () { switchTab(parseInt(btn.dataset.tab)); });
+});
+
+// ── 登录 ──
+document.getElementById('loginBtn').addEventListener('click', async function () {
+  var u = document.getElementById('login-user').value.trim();
+  var p = document.getElementById('login-pwd').value;
+  if (!u || !p) { Utils.showToast('请填写用户名和密码'); return; }
+  var r = await API.login(u, p);
   if (r.success) {
     localStorage.user = u;
     localStorage.nickname = r.nickname || u;
     localStorage.avatar = r.avatar || '🀄';
     location.href = '/lobby.html';
+  } else {
+    Utils.showToast(r.msg || '登录失败');
   }
-  else alert(r.msg);
-}
+});
 
-async function register() {
-  const u = document.getElementById('reg-user').value.trim();
-  const n = document.getElementById('reg-nick').value.trim();
-  const p = document.getElementById('reg-pwd').value;
-  if (!u || !p) return alert('请填写用户名和密码');
-  const r = await fetch('/api/register', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: u, password: p, nickname: n || u, avatar: '🀄' })
-  }).then(x => x.json());
-  alert(r.success ? '注册成功！请切换到登录页登录' : r.msg);
-}
+// ── 注册 ──
+document.getElementById('regBtn').addEventListener('click', async function () {
+  var u = document.getElementById('reg-user').value.trim();
+  var n = document.getElementById('reg-nick').value.trim();
+  var p = document.getElementById('reg-pwd').value;
+  if (!u || !p) { Utils.showToast('请填写用户名和密码'); return; }
+  var r = await API.register(u, p, n || u);
+  if (r.success) {
+    Utils.showToast('注册成功！请切换到登录页登录', 3000);
+    switchTab(0);
+    document.getElementById('login-user').value = u;
+    document.getElementById('login-pwd').value = '';
+  } else {
+    Utils.showToast(r.msg || '注册失败');
+  }
+});
+
+// ── 回车键快捷提交 ──
+document.getElementById('login-pwd').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+document.getElementById('reg-pwd').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') document.getElementById('regBtn').click();
+});
+
+// ── GSAP 入场动画 ──
+gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.6, ease: 'power3.out' });
+gsap.from('#loginBox', { opacity: 0, y: 30, scale: 0.97, duration: 0.7, delay: 0.2, ease: 'power3.out' });
 </script>
 </body>
 </html>

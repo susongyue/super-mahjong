@@ -119,7 +119,7 @@
       margin: 12px 0 24px;
       background: var(--surface-1);
       border: 1px solid rgba(255,90,90,0.2);
-      border-radius: var(--radius-lg);
+      border-radius: var(--r-lg);
     }
     .logout-btn {
       background: rgba(255,90,90,0.12) !important;
@@ -247,10 +247,7 @@
 if (!Auth.check()) location.href = '/login.html';
 
 const username = Auth.user();
-Auth.renderNav('topNav', [
-  { href: '/lobby.html', label: '大厅' },
-  { href: '/profile.html', label: '个人中心', active: true }
-]);
+Auth.renderNav(document.getElementById('navUser'));
 
 const AVATARS = [
   '🀄','🀅','🎭','🎪','👑','⭐','🔥','💎',
@@ -398,7 +395,7 @@ async function saveProfile() {
       updateProfileAvatarDisplay();
       renderAvatarGrid();
       document.getElementById('profileNickname').innerText = r.nickname;
-      Auth.renderNav('navUser');
+      Auth.renderNav(document.getElementById('navUser'));
 
       // 通知其他玩家资料变更
       if (typeof io !== 'undefined') {

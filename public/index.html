@@ -3,328 +3,272 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>超能力立直麻将 - 对局房间</title>
+<title>Super Reach Mahjong - 对局房间</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="themes.css">
+<meta name="theme-color" content="#000000">
 <style>
   body { padding-top: 56px; }
 
+  /* ── 房间头部 ── */
   .room-header {
-    background: var(--card);
+    background: var(--surface-1);
     padding: 18px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--border);
+    border-bottom: 1px solid var(--hairline);
   }
-  .room-header h2 { color: var(--gold); font-size: 18px; }
-  .room-id { color: var(--text-secondary); font-size: 13px; }
-  .room-id strong { color: var(--text); }
+  .room-header h2 { color: var(--gold); font-size: 18px; font-weight: 700; }
+  .room-id { color: var(--ink-muted); font-size: 13px; }
+  .room-id strong { color: var(--ink); }
 
+  /* ── 区域标题 ── */
   .section-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 10px;
+    font-size: 15px; font-weight: 700; color: var(--ink);
+    margin-bottom: 10px; letter-spacing: -0.3px;
   }
 
+  /* ── 玩家卡片 ── */
   .player-card {
-    background: var(--card);
-    border-radius: 12px;
+    background: var(--surface-1);
+    border-radius: var(--r-lg);
     padding: 14px 20px;
     margin: 8px 0;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    box-shadow: var(--shadow);
-    border: 2px solid var(--border);
+    gap: 12px;
+    border: 1px solid var(--hairline);
   }
   .player-card.self {
-    border-color: var(--accent);
-    background: #fff5f5;
+    border-color: var(--accent-blue);
+    background: var(--accent-blue-glow);
   }
-  .player-name { font-size: 16px; font-weight: 700; }
-  .player-username-sub { font-size: 11px; color: var(--text-secondary); display: block; }
+  .player-name { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .player-username-sub { font-size: 11px; color: var(--ink-muted); display: block; }
   .player-avatar-mini {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), #ff6b6b);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-    overflow: hidden;
-    color: #fff;
-    margin-right: 10px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gradient-violet), var(--gradient-magenta));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; overflow: hidden;
+    color: var(--ink);
   }
   .player-info { flex: 1; min-width: 0; }
-  .player-status { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+  .player-status { font-size: 13px; color: var(--ink-muted); white-space: nowrap; }
   .player-status .ready { color: var(--green); font-weight: 600; }
-  .player-status .unready { color: var(--accent); font-weight: 600; }
+  .player-status .unready { color: var(--ink-muted); font-weight: 600; }
 
-  /* 投票区 */
+  /* ── 投票（复用全局 vote 类） ── */
   #voteArea {
-    margin-top: 20px;
-    background: var(--card);
-    border-radius: 14px;
-    padding: 20px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
+    margin-top: var(--sp-lg);
+    background: var(--surface-1);
+    border-radius: var(--r-xl);
+    padding: var(--sp-lg);
+    border: 1px solid var(--hairline);
   }
-  #voteArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; }
-  .vote-btns { display: flex; gap: 10px; }
-  .vote-btns button {
-    flex: 1;
-    padding: 14px;
-    border-radius: 10px;
-    background: var(--card-secondary);
-    color: var(--text);
-    border: 2px solid var(--border);
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 600;
-    transition: all .2s;
-  }
-  .vote-btns button:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .vote-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
-  #voteTip { margin-top: 10px; font-size: 13px; color: var(--text-secondary); }
+  #voteArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; font-weight: 700; }
+  #voteTip { margin-top: 10px; font-size: 13px; color: var(--ink-muted); }
   #voteResult { margin-top: 8px; font-size: 14px; color: var(--gold); font-weight: 600; }
 
-  /* 选角结果 */
+  /* ── Draft 区域 ── */
   #draftArea {
-    margin-top: 20px;
-    background: var(--card);
-    border-radius: 14px;
-    padding: 20px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
+    margin-top: var(--sp-lg);
+    background: var(--surface-1);
+    border-radius: var(--r-xl);
+    padding: var(--sp-lg);
+    border: 1px solid var(--hairline);
   }
-  #draftArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; }
-  .draft-player { margin-bottom: 20px; }
-  .draft-player .dp-name { color: var(--accent); font-size: 17px; margin-bottom: 10px; font-weight: 700; }
-  .draft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .draft-char {
-    background: var(--card-secondary);
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: 1.5px solid var(--border);
-  }
-  .draft-char-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-  .draft-char .faction-badge { color: var(--gold); font-size: 12px; font-weight: 600; margin-bottom: 2px; }
-  .draft-char .char-tier { font-size: 11px; color: var(--text-secondary); }
-  .draft-char .char-skill { font-size: 11px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
-  .draft-char .char-skill strong { color: var(--text); }
+  #draftArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; font-weight: 700; }
 
-  .redirect-hint {
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 13px;
-    margin-top: 20px;
-    padding: 12px;
-    background: var(--card-secondary);
-    border-radius: 8px;
-    border: 1px solid var(--border);
-  }
-
-  /* 池选 Draft 新 UI */
+  /* ── Draft 阶段标签 ── */
   .draft-phase-label {
     text-align: center;
-    font-size: 15px;
-    color: var(--gold);
-    font-weight: 700;
-    margin-bottom: 12px;
-    padding: 8px 16px;
+    font-size: 15px; font-weight: 700; color: var(--gold);
+    margin-bottom: 12px; padding: 8px 16px;
     background: var(--gold-bg);
-    border-radius: 10px;
-    border: 1px solid #f0d78c;
+    border-radius: var(--r-md);
+    border: 1px solid var(--gold-border);
   }
 
+  /* ── Draft 回合信息 ── */
   .draft-turn-info {
-    background: var(--card-secondary);
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin-bottom: 14px;
-    border: 2px solid var(--border);
+    background: var(--surface-2);
+    border-radius: var(--r-lg);
+    padding: 14px 18px; margin-bottom: 14px;
+    border: 1px solid var(--hairline);
     text-align: center;
     transition: all .3s;
   }
   .draft-turn-info.my-turn {
-    border-color: var(--accent);
-    background: #fff5f5;
-    box-shadow: 0 0 16px rgba(231,76,60,0.12);
+    border-color: var(--accent-blue);
+    background: var(--accent-blue-glow);
+    box-shadow: var(--shadow-blue);
   }
-
   .turn-badge {
     display: inline-block;
-    padding: 6px 20px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 6px;
+    padding: 6px 20px; border-radius: var(--r-pill);
+    font-size: 14px; font-weight: 700; margin-bottom: 6px;
   }
   .turn-badge.your-turn {
-    background: var(--accent);
-    color: #fff;
+    background: var(--accent-blue);
+    color: var(--ink);
     animation: pulse-turn 1.2s infinite;
   }
   .turn-badge.waiting-turn {
-    background: var(--card);
-    color: var(--text-secondary);
-    border: 1.5px solid var(--border-strong);
+    background: var(--surface-1);
+    color: var(--ink-muted);
+    border: 1px solid var(--hairline);
   }
   @keyframes pulse-turn {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.04); }
   }
+  .turn-progress { font-size: 12px; color: var(--ink-muted); margin-top: 4px; }
+  .turn-order-hint { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
 
-  .turn-progress {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 4px;
-  }
-  .turn-order-hint {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 2px;
-  }
-
-  .draft-section {
-    margin-bottom: 16px;
-  }
+  /* ── Draft 区域分隔 ── */
+  .draft-section { margin-bottom: 16px; }
   .draft-section-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
+    font-size: 14px; font-weight: 700; color: var(--ink);
     margin-bottom: 8px;
   }
 
+  /* ── Draft 池卡片网格 ── */
   .draft-pool-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 8px;
   }
-  .draft-pool-grid .draft-char {
-    padding: 8px 10px;
-  }
-  .draft-pool-grid .draft-char .draft-avatar,
-  .draft-pool-grid .draft-char .draft-avatar-placeholder {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-  }
-  .draft-pool-grid .draft-char .draft-avatar-placeholder { font-size: 15px; }
-  .draft-pool-grid .draft-char-row { gap: 6px; }
-
-  .draft-char-pickable {
-    cursor: pointer;
-    transition: all .2s;
-    border-color: var(--accent) !important;
-    background: #fff !important;
-  }
-  .draft-char-pickable:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(231,76,60,0.2);
-    border-color: #c0392b !important;
-    background: #fff5f5 !important;
-  }
-
-  .draft-player-hand .dp-name {
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .draft-player-hand.my-hand .dp-name {
-    color: var(--accent);
-  }
-  .dp-count {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 400;
-  }
-
   .draft-hand-grid {
     grid-template-columns: repeat(6, 1fr);
     gap: 6px;
   }
 
+  /* ── Draft 角色卡片（紧凑版） ── */
+  .draft-char {
+    background: var(--surface-2);
+    padding: 10px 12px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--hairline);
+  }
+  .draft-char-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .draft-char .faction-badge { color: var(--gold); font-size: 11px; font-weight: 700; margin-bottom: 2px; }
+  .draft-char .char-tier { font-size: 11px; color: var(--ink-muted); }
+  .draft-char .char-skill { font-size: 11px; color: var(--ink-muted); margin-top: 3px; line-height: 1.4; }
+  .draft-char .char-skill strong { color: var(--ink); }
+
+  .draft-avatar {
+    width: 40px; height: 40px; border-radius: var(--r-sm);
+    object-fit: cover; border: 1px solid var(--hairline);
+    background: var(--surface-2); flex-shrink: 0;
+  }
+  .draft-avatar-placeholder {
+    width: 40px; height: 40px; border-radius: var(--r-sm);
+    background: linear-gradient(135deg, #333, #555);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 800; color: var(--ink-muted);
+    border: 1px solid var(--hairline); flex-shrink: 0;
+  }
+
+  /* 池网格中更小的头像 */
+  .draft-pool-grid .draft-avatar,
+  .draft-pool-grid .draft-avatar-placeholder {
+    width: 34px; height: 34px; border-radius: 8px;
+  }
+  .draft-pool-grid .draft-avatar-placeholder { font-size: 14px; }
+  .draft-pool-grid .draft-char-row { gap: 6px; }
+
+  /* 手牌网格中 */
+  .draft-hand-grid .draft-avatar,
+  .draft-hand-grid .draft-avatar-placeholder {
+    width: 32px; height: 32px; border-radius: 6px;
+  }
+  .draft-hand-grid .draft-avatar-placeholder { font-size: 13px; }
+  .draft-hand-grid .draft-char-row { gap: 4px; }
+  .draft-hand-grid .draft-char { padding: 6px 8px; }
+  .draft-hand-grid .draft-char .faction-badge { font-size: 10px; padding: 1px 6px; }
+
+  /* ── 玩家手牌区域 ── */
   .draft-player-hand {
-    margin-bottom: 12px;
-    padding: 10px 14px;
-    background: var(--card-secondary);
-    border-radius: 10px;
-    border: 1px solid var(--border);
+    margin-bottom: 12px; padding: 10px 14px;
+    background: var(--surface-2);
+    border-radius: var(--r-md);
+    border: 1px solid var(--hairline);
   }
   .draft-player-hand.my-hand {
-    background: #fff5f5;
-    border-color: var(--accent);
+    background: var(--accent-blue-glow);
+    border-color: var(--accent-blue);
   }
+  .draft-player-hand .dp-name {
+    color: var(--ink); font-size: 14px; font-weight: 700; margin-bottom: 6px;
+  }
+  .draft-player-hand.my-hand .dp-name { color: var(--accent-blue); }
+  .dp-count { font-size: 12px; color: var(--ink-muted); font-weight: 400; }
 
+  /* ── 选角预览 ── */
   .draft-preview {
-    background: var(--card-secondary);
-    border-radius: 10px;
+    background: var(--surface-2);
+    border-radius: var(--r-md);
     padding: 10px 14px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--hairline);
   }
-  .draft-pick-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
+  .draft-pick-preview { display: flex; flex-wrap: wrap; gap: 6px; }
   .pick-order-item {
     display: inline-block;
-    padding: 4px 12px;
-    border-radius: 14px;
-    font-size: 12px;
-    background: var(--card);
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
-    font-weight: 500;
+    padding: 4px 12px; border-radius: var(--r-pill);
+    font-size: 12px; font-weight: 500;
+    background: var(--surface-1); color: var(--ink-muted);
+    border: 1px solid var(--hairline);
   }
 
+  /* 隐藏卡片 */
   .draft-char-hidden {
-    background: var(--card-secondary);
+    background: var(--surface-2);
     border-style: dashed;
     min-height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
   }
 
   .no-pick-hint {
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-style: italic;
-    padding: 8px;
+    color: var(--ink-muted); font-size: 12px;
+    font-style: italic; padding: 8px;
   }
 
-  /* CSV */
+  /* ── 跳转提示 ── */
+  .redirect-hint {
+    text-align: center; color: var(--ink-muted);
+    font-size: 13px; margin-top: 20px; padding: 12px;
+    background: var(--surface-2);
+    border-radius: var(--r-md);
+    border: 1px solid var(--hairline);
+  }
+
+  /* ── 管理区域 ── */
   .admin-section {
     margin-top: 24px;
-    background: var(--card);
-    border-radius: 14px;
+    background: var(--surface-1);
+    border-radius: var(--r-xl);
     padding: 20px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
+    border: 1px solid var(--hairline);
   }
-  .admin-section h3 { color: var(--text-secondary); margin-bottom: 10px; font-size: 14px; }
+  .admin-section h3 { color: var(--ink-muted); margin-bottom: 10px; font-size: 14px; }
   #csvDrop {
-    border: 2px dashed var(--border-strong);
-    border-radius: 12px;
-    padding: 24px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .2s;
+    border: 2px dashed var(--hairline);
+    border-radius: var(--r-lg);
+    padding: 24px 20px; text-align: center;
+    cursor: pointer; transition: all .2s;
   }
-  #csvDrop:hover { border-color: var(--accent); background: #fff5f5; }
-  #csvDrop p { margin: 0; color: var(--text-secondary); font-size: 14px; }
-  .char-count { font-size: 13px; color: var(--text-secondary); margin-top: 10px; }
+  #csvDrop:hover { border-color: var(--accent-blue); background: var(--accent-blue-glow); }
+  #csvDrop p { margin: 0; color: var(--ink-muted); font-size: 14px; }
+  .char-count { font-size: 13px; color: var(--ink-muted); margin-top: 10px; }
   .char-count span { color: var(--gold); font-weight: 700; }
 
-  /* 移动端 */
+  /* 旧版 draft-grid（非池选模式用） */
+  .draft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .draft-player { margin-bottom: 20px; }
+  .draft-player .dp-name { color: var(--accent-blue); font-size: 17px; margin-bottom: 10px; font-weight: 700; }
+
+  /* ── 响应式 ── */
   @media (max-width: 768px) {
     body { padding-top: 44px; }
     .room-header { padding: 10px 14px; flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -333,10 +277,8 @@
     .player-card { padding: 10px 12px; margin: 5px 0; }
     .player-name { font-size: 14px; }
     .player-avatar-mini { width: 32px; height: 32px; font-size: 16px; }
-    .vote-btns { flex-direction: column; gap: 8px; }
-    .vote-btns button { padding: 12px; font-size: 14px; }
     #voteArea, #draftArea { padding: 14px; margin-top: 14px; }
-    .draft-char { padding: 10px 12px; }
+    .draft-char { padding: 8px 10px; }
     .draft-player .dp-name { font-size: 15px; margin-bottom: 8px; }
     .admin-section { padding: 14px; }
     #csvDrop { padding: 14px; }
@@ -353,7 +295,7 @@
     .pick-order-item { font-size: 11px; padding: 3px 10px; }
     .turn-order-hint { font-size: 11px; }
   }
-  @media (max-width: 480px) {
+  @media (max-width: 540px) {
     body { padding-top: 42px; }
     .draft-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
     .player-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 10px; }
@@ -361,12 +303,11 @@
     .room-header { padding: 8px 10px; }
     .room-header h2 { font-size: 15px; }
     .room-id { font-size: 11px; }
-    .vote-btns button { padding: 10px; font-size: 13px; }
     #voteArea, #draftArea { padding: 10px; margin-top: 10px; }
     #voteArea h3, #draftArea h3 { font-size: 14px; }
     .draft-player .dp-name { font-size: 14px; }
-    .draft-char { padding: 8px 10px; }
-    .draft-char-row { gap: 6px; }
+    .draft-char { padding: 6px 8px; }
+    .draft-char-row { gap: 4px; }
     .redirect-hint { font-size: 11px; padding: 8px; margin-top: 12px; }
     .admin-section h3 { font-size: 12px; }
 
@@ -382,9 +323,6 @@
     .draft-section { margin-bottom: 10px; }
     .draft-section-title { font-size: 12px; margin-bottom: 5px; }
     .pick-order-item { font-size: 10px; padding: 2px 8px; }
-    .draft-char-pickable { padding: 6px 8px; }
-    .draft-char-pickable .draft-char-row { gap: 4px; }
-    .draft-char-pickable .faction-badge { font-size: 10px; padding: 2px 6px; }
     .draft-phase-label { font-size: 11px; }
   }
 </style>
@@ -392,7 +330,7 @@
 <body>
 
 <nav class="navbar">
-  <a class="logo" href="/lobby.html">🀄 超能力立直麻将</a>
+  <a class="logo" href="/lobby.html">🀄 Super Reach Mahjong</a>
   <div class="nav-links">
     <a href="/lobby.html">大厅</a>
     <a href="#" class="active">当前对局</a>
@@ -412,13 +350,13 @@
   <div class="section-title">房间玩家（最多4人）</div>
   <div id="playerList"></div>
 
-  <button class="btn btn-primary" id="readyBtn" disabled onclick="toggleReady()" style="width:100%;margin-top:12px">准备游戏</button>
+  <button class="btn btn-primary" id="readyBtn" disabled style="width:100%;margin-top:12px">准备游戏</button>
 
   <div id="voteArea" class="hidden">
     <h3>选择角色抽取方式</h3>
-    <div class="vote-btns">
-      <button onclick="vote('random')">🎲 随机抽取</button>
-      <button onclick="vote('normal')">📋 正常抽取</button>
+    <div class="vote-section">
+      <button class="vote-btn vote-btn-round" id="voteRandom">🎲 随机抽取</button>
+      <button class="vote-btn vote-btn-game" id="voteNormal">📋 正常抽取</button>
     </div>
     <div id="voteTip"></div>
     <div id="voteResult"></div>
@@ -438,75 +376,61 @@
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="/js/lib/auth.js"></script>
+<script src="/js/lib/utils.js"></script>
+<script src="/js/lib/api.js"></script>
+<script src="/js/lib/components.js"></script>
+<script src="/js/lib/theme-switcher.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
-const username = localStorage.user;
-const roomId = localStorage.roomId;
-if (!username) location.href = '/login.html';
-if (!roomId) location.href = '/lobby.html';
+// ── 登录 & 房间检查 ──
+Auth.check();
+var username = Auth.user();
+var roomId = Auth.checkRoomId();
 
-// ─── 页面加载前检查房间状态（防止回到已结束对局） ───
+document.getElementById('roomIdDisplay').innerText = roomId;
+Auth.renderNav(document.getElementById('navUser'));
+
+// 页面加载前检查房间状态（防止回到已结束对局）
 (async function checkRoomBeforeLoad() {
   try {
-    const status = await fetch('/api/room-status?roomId=' + roomId + '&username=' + encodeURIComponent(username))
-      .then(x => x.json());
+    var status = await API.getRoomStatus(roomId, username);
     if (status.finished || !status.exists) {
-      alert(status.msg || '该对局已结束，即将返回大厅');
+      Utils.showToast(status.msg || '该对局已结束，即将返回大厅');
       localStorage.removeItem('roomId');
-      location.href = '/lobby.html';
+      setTimeout(function () { location.href = '/lobby.html'; }, 2000);
       return;
     }
   } catch (e) { /* 网络错误允许继续 */ }
 })();
 
-document.getElementById('roomIdDisplay').innerText = roomId;
-(function updateNav() {
-  const avatar = localStorage.avatar || '🀄';
-  const nickname = localStorage.nickname || username;
-  let avatarHTML = avatar.startsWith('/avatars/')
-    ? '<img src="' + avatar + '" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;">'
-    : avatar;
-  document.getElementById('navUser').innerHTML =
-    '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + avatarHTML + ' ' + nickname + '</span>';
-})();
+// ── Socket ──
+var socket = io();
+var myVote = '';
 
-const socket = io();
-let myVote = '';
+socket.emit('joinRoom', { roomId: roomId, playerName: username });
 
-function showToast(msg) {
-  const t = document.createElement('div');
-  t.className = 'toast'; t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2500);
-}
+socket.on('joinSuccess', function () { document.getElementById('readyBtn').disabled = false; });
+socket.on('joinFailed', function (msg) {
+  Utils.showToast('加入房间失败：' + msg);
+  setTimeout(function () { location.href = '/lobby.html'; }, 2000);
+});
 
-function escHTML(s) {
-  if (!s) return '';
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-socket.emit('joinRoom', { roomId, playerName: username });
-
-socket.on('joinSuccess', () => { document.getElementById('readyBtn').disabled = false; });
-socket.on('joinFailed', msg => { alert('加入房间失败：' + msg); location.href = '/lobby.html'; });
-socket.on('roomPlayersUpdate', data => renderPlayers(data.players));
+socket.on('roomPlayersUpdate', function (data) { renderPlayers(data.players); });
 
 function renderPlayers(players) {
-  let html = '';
-  players.forEach(p => {
-    const isSelf = p.name === username;
-    const displayName = p.nickname || p.name;
-    const avatar = p.avatar || '🀄';
-    const avatarHTML = avatar.startsWith('/avatars/')
-      ? '<img src="' + avatar + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">'
-      : '<span>' + avatar + '</span>';
+  var html = '';
+  players.forEach(function (p) {
+    var isSelf = p.name === username;
+    var displayName = p.nickname || p.name;
     html += '<div class="player-card' + (isSelf ? ' self' : '') + '">' +
-      '<div class="player-avatar-mini">' + avatarHTML + '</div>' +
+      '<div class="player-avatar-mini">' + Utils.playerAvatarHTML(p.avatar) + '</div>' +
       '<div class="player-info">' +
-        '<span class="player-name">' + (isSelf ? '⭐ ' : '') + escHTML(displayName) + '</span>' +
-        (displayName !== p.name ? '<span class="player-username-sub">@' + escHTML(p.name) + '</span>' : '') +
+        '<span class="player-name">' + (isSelf ? '⭐ ' : '') + Utils.escHTML(displayName) + '</span>' +
+        (displayName !== p.name ? '<span class="player-username-sub">@' + Utils.escHTML(p.name) + '</span>' : '') +
       '</div>' +
       '<span class="player-status">' +
-        (p.ready ? '<span class="ready">✅ 已准备</span>' : '<span class="unready">❌ 未准备</span>') +
+        (p.ready ? '<span class="ready">✓ 已准备</span>' : '<span class="unready">— 未准备</span>') +
         (p.vote ? ' · 已投票' : '') +
       '</span>' +
     '</div>';
@@ -514,270 +438,289 @@ function renderPlayers(players) {
   document.getElementById('playerList').innerHTML = html || '<p class="no-data">暂无玩家</p>';
 }
 
-function toggleReady() { socket.emit('toggleReady', roomId); }
+// ── 准备 ──
+document.getElementById('readyBtn').addEventListener('click', function () {
+  socket.emit('toggleReady', roomId);
+});
 
-socket.on('allReady', msg => {
+socket.on('allReady', function (msg) {
   document.getElementById('voteArea').classList.remove('hidden');
   document.getElementById('readyBtn').disabled = true;
   document.getElementById('voteTip').innerText = msg;
+  gsap.from('#voteArea', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' });
 });
+
+// ── 投票 ──
+document.getElementById('voteRandom').addEventListener('click', function () { vote('random'); });
+document.getElementById('voteNormal').addEventListener('click', function () { vote('normal'); });
 
 function vote(type) {
   myVote = type;
-  socket.emit('voteSelect', { roomId, type });
-  document.querySelectorAll('.vote-btns button').forEach(b => b.disabled = true);
-  document.getElementById('voteTip').innerText = `你已投票：${type === 'random' ? '随机抽取' : '正常抽取'}`;
+  socket.emit('voteSelect', { roomId: roomId, type: type });
+  document.querySelectorAll('.vote-section button').forEach(function (b) { b.disabled = true; });
+  document.getElementById('voteTip').innerText = '你已投票：' + (type === 'random' ? '随机抽取' : '正常抽取');
 }
 
-socket.on('voteUpdate', data => {
-  document.getElementById('voteResult').innerText = `当前投票：随机${data.vote.random}票 | 正常${data.vote.normal}票`;
+socket.on('voteUpdate', function (data) {
+  document.getElementById('voteResult').innerText =
+    '当前投票：随机 ' + data.vote.random + ' 票 | 正常 ' + data.vote.normal + ' 票';
 });
 
-socket.on('voteResult', data => {
-  document.getElementById('voteResult').innerText = `投票结束！最终选择：${data.desc}`;
+socket.on('voteResult', function (data) {
+  document.getElementById('voteResult').innerText = '投票结束！最终选择：' + data.desc;
   document.getElementById('draftArea').classList.remove('hidden');
-  document.getElementById('draftContent').innerHTML = '<p style="text-align:center;padding:20px">⏳ 正在准备角色池...</p>';
+  document.getElementById('draftContent').innerHTML =
+    '<p style="text-align:center;padding:20px;color:var(--ink-muted)">⏳ 正在准备角色池...</p>';
   document.getElementById('redirectHint').classList.add('hidden');
+  gsap.from('#draftArea', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' });
 });
 
-// ─── 角色卡片渲染辅助 ───
+// ─── Draft 角色卡片渲染 ───
 function draftCharImageHTML(c) {
-  if (c.image) return `<img class="draft-avatar" src="/png/${c.image}" alt="${c.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`;
-  return `<div class="draft-avatar-placeholder">${(c.name||'').charAt(0)}</div>`;
+  if (c.image) {
+    return '<img class="draft-avatar" src="/png/' + c.image + '" alt="' + Utils.escHTML(c.name) +
+      '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
+  }
+  return '<div class="draft-avatar-placeholder">' + (c.name || '').charAt(0) + '</div>';
 }
 
 function renderDraftCharCard(c, clickable) {
-  const cls = clickable ? 'draft-char draft-char-pickable' : 'draft-char';
-  const dataAttr = clickable ? ` data-char-name="${c.name.replace(/"/g, '&quot;')}"` : '';
-  return `<div class="${cls}"${dataAttr}>
-    <div class="draft-char-row">
-      ${draftCharImageHTML(c)}
-      <div style="flex:1;min-width:0;">
-        <div class="faction-badge">${c.faction || '无阵营'}</div>
-        <div style="font-weight:bold;font-size:14px">${c.name}</div>
-        <div class="char-tier">Tier: ${c.tier}${c.limit ? ' | 限' + c.limit : ''}</div>
-      </div>
-    </div>
-    ${c.passive ? '<div class="char-skill"><strong>被动</strong> ' + c.passive + '</div>' : ''}
-    ${c.innate ? '<div class="char-skill"><strong>天赋</strong> ' + c.innate + '</div>' : ''}
-    ${c.extra ? '<div class="char-skill"><strong>额外</strong> ' + c.extra + '</div>' : ''}
-  </div>`;
+  var cls = clickable ? 'draft-char draft-char-pickable' : 'draft-char';
+  var dataAttr = clickable ? ' data-char-name="' + c.name.replace(/"/g, '&quot;') + '"' : '';
+  return '<div class="' + cls + '"' + dataAttr + '>' +
+    '<div class="draft-char-row">' +
+      draftCharImageHTML(c) +
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="faction-badge">' + Utils.escHTML(c.faction || '无阵营') + '</div>' +
+        '<div style="font-weight:bold;font-size:14px;color:var(--ink)">' + Utils.escHTML(c.name) + '</div>' +
+        '<div class="char-tier">Tier: ' + c.tier + (c.limit ? ' | 限' + c.limit : '') + '</div>' +
+      '</div>' +
+    '</div>' +
+    (c.passive ? '<div class="char-skill"><strong>被动</strong> ' + Utils.escHTML(c.passive) + '</div>' : '') +
+    (c.innate  ? '<div class="char-skill"><strong>天赋</strong> ' + Utils.escHTML(c.innate) + '</div>' : '') +
+    (c.extra   ? '<div class="char-skill"><strong>额外</strong> ' + Utils.escHTML(c.extra) + '</div>' : '') +
+  '</div>';
 }
 
 // ─── 池选模式：正常抽取 ───
-// 事件委托：点击可选取的角色卡片
-document.getElementById('draftContent').addEventListener('click', (e) => {
-  const card = e.target.closest('.draft-char-pickable');
+document.getElementById('draftContent').addEventListener('click', function (e) {
+  var card = e.target.closest('.draft-char-pickable');
   if (card && card.dataset.charName) {
-    socket.emit('draftPick', { roomId, characterName: card.dataset.charName, playerName: username });
+    socket.emit('draftPick', { roomId: roomId, characterName: card.dataset.charName, playerName: username });
   }
 });
 
-socket.on('draftPoolStart', data => {
+socket.on('draftPoolStart', function (data) {
   document.getElementById('draftContent').innerHTML = renderPoolDraftUI(data);
   document.getElementById('redirectHint').classList.add('hidden');
+  gsap.from('.draft-pool-grid .draft-char', {
+    opacity: 0, y: 15, stagger: 0.04, duration: 0.4, ease: 'power2.out'
+  });
 });
 
-socket.on('draftUpdate', data => {
+socket.on('draftUpdate', function (data) {
   updatePoolDraftUI(data);
 });
 
 function renderPoolDraftUI(data) {
-  const { pool, currentPlayer, hands, currentTurnIndex, totalPicks, pickOrder, pickOrderPreview } = data;
-  const isMyTurn = currentPlayer === username;
+  var pool = data.pool, currentPlayer = data.currentPlayer, hands = data.hands;
+  var currentTurnIndex = data.currentTurnIndex, totalPicks = data.totalPicks;
+  var pickOrder = data.pickOrder, pickOrderPreview = data.pickOrderPreview;
+  var isMyTurn = currentPlayer === username;
 
-  // 找自己是第几个选（在 pickOrder 中首次出现的位置）
-  const myFirstPos = pickOrder.indexOf(username);
-  const myTurnHint = myFirstPos >= 0
-    ? `你是第 <strong>${myFirstPos + 1}</strong> 顺位（循环选取）`
+  var myFirstPos = pickOrder.indexOf(username);
+  var myTurnHint = myFirstPos >= 0
+    ? '你是第 <strong>' + (myFirstPos + 1) + '</strong> 顺位（循环选取）'
     : '';
 
-  let html = `<div class="draft-phase-label">📋 池选模式 — 每轮发10张角色，轮流选取</div>
-    <div class="draft-turn-info ${isMyTurn ? 'my-turn' : ''}">
-      ${isMyTurn
+  var html = '<div class="draft-phase-label">📋 池选模式 — 每轮发10张角色，轮流选取</div>' +
+    '<div class="draft-turn-info' + (isMyTurn ? ' my-turn' : '') + '">' +
+      (isMyTurn
         ? '<div class="turn-badge your-turn">🎯 轮到你选角了！</div>'
-        : '<div class="turn-badge waiting-turn">⏳ 等待 <strong>' + escHTML(currentPlayer) + '</strong> 选取...</div>'}
-      <div class="turn-progress">进度：${currentTurnIndex}/${totalPicks} 次选择</div>
-      <div class="turn-order-hint">${myTurnHint}</div>
-    </div>
+        : '<div class="turn-badge waiting-turn">⏳ 等待 <strong>' + Utils.escHTML(currentPlayer) + '</strong> 选取...</div>') +
+      '<div class="turn-progress">进度：' + currentTurnIndex + '/' + totalPicks + ' 次选择</div>' +
+      '<div class="turn-order-hint">' + myTurnHint + '</div>' +
+    '</div>' +
 
-    <div class="draft-section">
-      <div class="draft-section-title">📦 当前角色池（${pool.length}张）${pool.length === 0 ? '— 等待发牌...' : ''}</div>
-      <div class="draft-pool-grid">
-        ${pool.map(c => renderDraftCharCard(c, isMyTurn)).join('')}
-      </div>
-    </div>`;
+    '<div class="draft-section">' +
+      '<div class="draft-section-title">📦 当前角色池（' + pool.length + '张）' + (pool.length === 0 ? ' — 等待发牌...' : '') + '</div>' +
+      '<div class="draft-pool-grid">' +
+        pool.map(function (c) { return renderDraftCharCard(c, isMyTurn); }).join('') +
+      '</div>' +
+    '</div>';
 
   // 各玩家手牌
   html += '<div class="draft-section"><div class="draft-section-title">👥 各玩家已选角色</div>';
-  Object.entries(hands).forEach(([name, chars]) => {
-    const isMe = name === username;
-    html += `<div class="draft-player-hand ${isMe ? 'my-hand' : ''}" data-player="${escHTML(name)}">
-      <div class="dp-name">
-        ${isMe ? '⭐ ' : ''}${escHTML(name)}
-        <span class="dp-count">（${chars.length}/6）</span>
-      </div>
-      <div class="draft-grid draft-hand-grid">`
-        + chars.map(c => renderDraftCharCard(c, false)).join('')
-        + (chars.length === 0 ? '<div class="no-pick-hint">尚未选取</div>' : '')
-      + `</div>
-    </div>`;
+  Object.entries(hands).forEach(function (entry) {
+    var name = entry[0], chars = entry[1];
+    var isMe = name === username;
+    html += '<div class="draft-player-hand' + (isMe ? ' my-hand' : '') + '" data-player="' + Utils.escHTML(name) + '">' +
+      '<div class="dp-name">' +
+        (isMe ? '⭐ ' : '') + Utils.escHTML(name) +
+        ' <span class="dp-count">（' + chars.length + '/6）</span>' +
+      '</div>' +
+      '<div class="draft-grid draft-hand-grid">' +
+        chars.map(function (c) { return renderDraftCharCard(c, false); }).join('') +
+        (chars.length === 0 ? '<div class="no-pick-hint">尚未选取</div>' : '') +
+      '</div>' +
+    '</div>';
   });
   html += '</div>';
 
   // 预览下几个选角顺序
   if (pickOrderPreview && pickOrderPreview.length > 0) {
-    html += `<div class="draft-section draft-preview">
-      <div class="draft-section-title">🔜 即将选取的玩家</div>
-      <div class="draft-pick-preview">${pickOrderPreview.slice(0, 6).map((n, i) =>
-        `<span class="pick-order-item">${i + currentTurnIndex + 1}. ${escHTML(n)}</span>`
-      ).join('')}</div>
-    </div>`;
+    html += '<div class="draft-section draft-preview">' +
+      '<div class="draft-section-title">🔜 即将选取的玩家</div>' +
+      '<div class="draft-pick-preview">' +
+        pickOrderPreview.slice(0, 6).map(function (n, i) {
+          return '<span class="pick-order-item">' + (i + currentTurnIndex + 1) + '. ' + Utils.escHTML(n) + '</span>';
+        }).join('') +
+      '</div>' +
+    '</div>';
   }
 
   return html;
 }
 
 function updatePoolDraftUI(data) {
-  const { pool, currentPlayer, hands, currentTurnIndex, totalPicks, pickOrderPreview } = data;
-  const isMyTurn = currentPlayer === username;
+  var pool = data.pool, currentPlayer = data.currentPlayer, hands = data.hands;
+  var currentTurnIndex = data.currentTurnIndex, totalPicks = data.totalPicks;
+  var pickOrderPreview = data.pickOrderPreview;
+  var isMyTurn = currentPlayer === username;
 
   // 更新池卡片
-  const poolGrid = document.querySelector('.draft-pool-grid');
+  var poolGrid = document.querySelector('.draft-pool-grid');
   if (poolGrid) {
     poolGrid.innerHTML = pool.length > 0
-      ? pool.map(c => renderDraftCharCard(c, isMyTurn)).join('')
+      ? pool.map(function (c) { return renderDraftCharCard(c, isMyTurn); }).join('')
       : '<div class="no-pick-hint" style="grid-column:1/-1">角色池已空，等待发牌...</div>';
   }
 
   // 更新回合信息
-  const turnInfo = document.querySelector('.draft-turn-info');
+  var turnInfo = document.querySelector('.draft-turn-info');
   if (turnInfo) {
-    turnInfo.className = 'draft-turn-info ' + (isMyTurn ? 'my-turn' : '');
+    turnInfo.className = 'draft-turn-info' + (isMyTurn ? ' my-turn' : '');
     turnInfo.innerHTML = (isMyTurn
       ? '<div class="turn-badge your-turn">🎯 轮到你选角了！</div>'
-      : '<div class="turn-badge waiting-turn">⏳ 等待 <strong>' + escHTML(currentPlayer) + '</strong> 选取...</div>')
-      + '<div class="turn-progress">进度：' + currentTurnIndex + '/' + totalPicks + ' 次选择</div>';
+      : '<div class="turn-badge waiting-turn">⏳ 等待 <strong>' + Utils.escHTML(currentPlayer) + '</strong> 选取...</div>') +
+      '<div class="turn-progress">进度：' + currentTurnIndex + '/' + totalPicks + ' 次选择</div>';
   }
 
   // 更新各玩家手牌
-  Object.entries(hands).forEach(([name, chars]) => {
-    const handGrid = document.querySelector(`.draft-player-hand[data-player="${name.replace(/"/g, '&quot;')}"] .draft-hand-grid`);
+  Object.entries(hands).forEach(function (entry) {
+    var name = entry[0], chars = entry[1];
+    var handGrid = document.querySelector('.draft-player-hand[data-player="' + name.replace(/"/g, '&quot;') + '"] .draft-hand-grid');
     if (!handGrid) {
-      // 可能还没这个玩家的区域，重新渲染全部
-      document.getElementById('draftContent').innerHTML = renderPoolDraftUI({ pool, currentPlayer, hands, currentTurnIndex, totalPicks, pickOrderPreview, pickOrder: [] });
+      document.getElementById('draftContent').innerHTML = renderPoolDraftUI({
+        pool: pool, currentPlayer: currentPlayer, hands: hands,
+        currentTurnIndex: currentTurnIndex, totalPicks: totalPicks,
+        pickOrderPreview: pickOrderPreview, pickOrder: []
+      });
       return;
     }
-    handGrid.innerHTML = chars.map(c => renderDraftCharCard(c, false)).join('')
-      + (chars.length === 0 ? '<div class="no-pick-hint">尚未选取</div>' : '');
-    const dpName = handGrid.parentElement.querySelector('.dp-count');
-    if (dpName) dpName.textContent = `（${chars.length}/6）`;
+    handGrid.innerHTML = chars.map(function (c) { return renderDraftCharCard(c, false); }).join('') +
+      (chars.length === 0 ? '<div class="no-pick-hint">尚未选取</div>' : '');
+    var dpCount = handGrid.parentElement.querySelector('.dp-count');
+    if (dpCount) dpCount.textContent = '（' + chars.length + '/6）';
   });
 
   // 更新预览
-  const preview = document.querySelector('.draft-pick-preview');
+  var preview = document.querySelector('.draft-pick-preview');
   if (preview && pickOrderPreview) {
-    preview.innerHTML = pickOrderPreview.slice(0, 6).map((n, i) =>
-      `<span class="pick-order-item">${i + currentTurnIndex + 1}. ${escHTML(n)}</span>`
-    ).join('');
+    preview.innerHTML = pickOrderPreview.slice(0, 6).map(function (n, i) {
+      return '<span class="pick-order-item">' + (i + currentTurnIndex + 1) + '. ' + Utils.escHTML(n) + '</span>';
+    }).join('');
   }
 
   // 更新池数量标题
-  const poolTitle = document.querySelector('.draft-section:first-of-type .draft-section-title');
+  var poolTitle = document.querySelector('.draft-section:first-of-type .draft-section-title');
   if (poolTitle) {
     poolTitle.textContent = '📦 当前角色池（' + pool.length + '张）' + (pool.length === 0 ? ' — 等待发牌...' : '');
   }
 }
 
-// ─── 随机模式：仅自己可见 ───
-let myRandomChars = [];
+// ─── 随机模式 ───
+var myRandomChars = [];
 
-socket.on('draftRandomResult', data => {
+socket.on('draftRandomResult', function (data) {
   myRandomChars = data.myChars;
-  const html = `<div class="draft-phase-label">🎲 随机抽取模式 — 角色已分配</div>
-    <div class="draft-section">
-      <div class="draft-section-title">⭐ 你的角色</div>
-      <div class="draft-grid">${data.myChars.map(c => renderDraftCharCard(c, false)).join('')}</div>
-    </div>
-    <div class="draft-section">
-      <div class="draft-section-title">🔒 其他玩家角色</div>
-      <div class="draft-grid">
-        ${data.allPlayerNames.filter(n => n !== username).map(n =>
-          `<div class="draft-char draft-char-hidden">
-            <div class="draft-char-row" style="justify-content:center;padding:12px 0">
-              <span style="color:var(--text-secondary);font-size:13px">🔒 ${escHTML(n)} 的角色不可见</span>
-            </div>
-          </div>`
-        ).join('')}
-      </div>
-    </div>`;
+  var html = '<div class="draft-phase-label">🎲 随机抽取模式 — 角色已分配</div>' +
+    '<div class="draft-section">' +
+      '<div class="draft-section-title">⭐ 你的角色</div>' +
+      '<div class="draft-grid">' + data.myChars.map(function (c) { return renderDraftCharCard(c, false); }).join('') + '</div>' +
+    '</div>' +
+    '<div class="draft-section">' +
+      '<div class="draft-section-title">🔒 其他玩家角色</div>' +
+      '<div class="draft-grid">' +
+        data.allPlayerNames.filter(function (n) { return n !== username; }).map(function (n) {
+          return '<div class="draft-char draft-char-hidden">' +
+            '<div class="draft-char-row" style="justify-content:center;padding:12px 0">' +
+              '<span style="color:var(--ink-muted);font-size:13px">🔒 ' + Utils.escHTML(n) + ' 的角色不可见</span>' +
+            '</div>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+    '</div>';
   document.getElementById('draftContent').innerHTML = html;
+  gsap.from('.draft-grid .draft-char', {
+    opacity: 0, y: 15, stagger: 0.05, duration: 0.4, ease: 'power2.out'
+  });
 });
 
-// ─── 选角完成统一处理 ───
-socket.on('draftAllDone', data => {
+// ─── 选角完成 ───
+socket.on('draftAllDone', function (data) {
   if (data.type === 'normal' && data.hands) {
-    // 正常模式：展示最终结果
-    let html = `<div class="draft-phase-label">✅ 选角完成！</div>`;
-    Object.entries(data.hands).forEach(([name, chars]) => {
-      html += `<div class="draft-player">
-        <div class="dp-name">${escHTML(name)}（${chars.length}个角色）</div>
-        <div class="draft-grid">${chars.map(c => renderDraftCharCard(c, false)).join('')}</div>
-      </div>`;
+    var html = '<div class="draft-phase-label">✅ 选角完成！</div>';
+    Object.entries(data.hands).forEach(function (entry) {
+      var name = entry[0], chars = entry[1];
+      html += '<div class="draft-player">' +
+        '<div class="dp-name">' + Utils.escHTML(name) + '（' + chars.length + '个角色）</div>' +
+        '<div class="draft-grid">' + chars.map(function (c) { return renderDraftCharCard(c, false); }).join('') + '</div>' +
+      '</div>';
     });
     document.getElementById('draftContent').innerHTML = html;
   }
   document.getElementById('redirectHint').classList.remove('hidden');
-  startRedirectCountdown(3);
+  Utils.startCountdown(document.getElementById('redirectHint'), 3, function () {
+    location.href = '/game.html';
+  }, '⏳', '秒后自动跳转到对局页面...');
 });
 
 // ─── 重连时查询 draft 状态 ───
 socket.emit('getDraftState', roomId);
 
-function startRedirectCountdown(seconds) {
-  const hint = document.getElementById('redirectHint');
-  let remaining = seconds;
-  const timer = setInterval(() => {
-    if (remaining <= 0) {
-      clearInterval(timer);
-      hint.innerText = '🚀 正在跳转...';
-      location.href = '/game.html';
-    } else {
-      hint.innerText = `⏳ ${remaining} 秒后自动跳转到对局页面...`;
-    }
-    remaining--;
-  }, 1000);
-}
-
-socket.on('error', msg => alert('错误：' + msg));
+socket.on('error', function (msg) { Utils.showToast('错误：' + msg); });
 
 // ── CSV 上传 ──
 loadCharCount();
 function loadCharCount() {
-  fetch('/api/characters').then(r => r.json()).then(c => { document.getElementById('charCount').textContent = c.length; });
+  API.getCharacters().then(function (c) { document.getElementById('charCount').textContent = c.length; });
 }
 
-const drop = document.getElementById('csvDrop');
-const fileInput = document.createElement('input');
+var drop = document.getElementById('csvDrop');
+var fileInput = document.createElement('input');
 fileInput.type = 'file'; fileInput.accept = '.csv'; fileInput.style.display = 'none';
 drop.appendChild(fileInput);
-drop.onclick = () => fileInput.click();
-drop.ondragover = e => { e.preventDefault(); drop.style.borderColor = '#e74c3c'; };
-drop.ondragleave = () => { drop.style.borderColor = ''; };
-drop.ondrop = e => {
+drop.onclick = function () { fileInput.click(); };
+drop.ondragover = function (e) { e.preventDefault(); drop.style.borderColor = 'var(--accent-blue)'; };
+drop.ondragleave = function () { drop.style.borderColor = ''; };
+drop.ondrop = function (e) {
   e.preventDefault(); drop.style.borderColor = '';
   if (e.dataTransfer.files[0]) uploadCSV(e.dataTransfer.files[0]);
 };
-fileInput.onchange = () => { if (fileInput.files[0]) uploadCSV(fileInput.files[0]); };
+fileInput.onchange = function () { if (fileInput.files[0]) uploadCSV(fileInput.files[0]); };
 
 async function uploadCSV(file) {
-  const text = await file.text();
-  const res = await fetch('/api/upload-csv', {
-    method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: text
-  }).then(r => r.json());
-  alert(res.success ? `上传成功！共${res.count}个角色` : `上传失败：${res.msg}`);
+  var text = await file.text();
+  var res = await API.uploadCSV(text);
+  Utils.showToast(res.success ? '上传成功！共 ' + res.count + ' 个角色' : '上传失败：' + res.msg);
   loadCharCount();
 }
+
+// ── GSAP 入场动画 ──
+gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
+gsap.from('.room-header', { opacity: 0, y: -10, duration: 0.4, delay: 0.15, ease: 'power2.out' });
+gsap.from('.container', { opacity: 0, y: 20, duration: 0.6, delay: 0.3, ease: 'power3.out' });
 </script>
 </body>
 </html>

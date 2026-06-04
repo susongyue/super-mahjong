@@ -1,0 +1,18 @@
+- generic [ref=e1]:
+  - heading "主题测试页面" [level=1] [ref=e2]
+  - generic [ref=e3]:
+    - heading "当前颜色变量值" [level=2] [ref=e4]
+    - generic [ref=e5]: "--canvas = #ffffff --surface-1 = #fafafa --surface-2 = #f5f5f5 --navbar-bg = rgba(255, 255, 255, 0.85) --hairline = #ebebeb --hairline-soft = #f0f0f0 --ink = #171717 --ink-muted = #888888 --on-primary = #ffffff --accent-blue = #0070f3 --accent-blue-glow = rgba(0, 112, 243, 0.1) --gradient-magenta = #ff0080 --gradient-violet = #7928ca --gradient-orange = #f9cb28 --gradient-coral = #ff4d4d --green = #16a34a --red = #dc2626 --gold = #d97706 --orange = #ea580c --purple = #7c3aed --toast-bg = #171717 --toast-color = #fff --shadow-sm = 0 1px 4px rgba(0,0,0,0.06) --shadow-md = 0 2px 10px rgba(0,0,0,0.08) --shadow-lg = 0 4px 20px rgba(0,0,0,0.1)"
+  - generic [ref=e6]:
+    - heading "调试信息" [level=2] [ref=e7]
+    - generic [ref=e8]: "data-theme 属性: vercel html 元素匹配的 CSS 规则: (检查中) style.css 已加载: http://localhost:3000/style.css 规则数: 170 themes.css 已加载: http://localhost:3000/themes.css 规则数: 9 第一条规则: :root { --canvas: #090909; --surface-1: #141414; --surface-2: #1c1c1c; --navbar-..."
+  - generic [ref=e9]:
+    - button "framer" [ref=e10] [cursor=pointer]
+    - button "playstation" [ref=e11] [cursor=pointer]
+    - button "spotify" [ref=e12] [cursor=pointer]
+    - button "linear" [ref=e13] [cursor=pointer]
+    - button "lamborghini" [ref=e14] [cursor=pointer]
+    - button "vercel" [active] [ref=e15] [cursor=pointer]
+    - button "notion" [ref=e16] [cursor=pointer]
+    - button "apple" [ref=e17] [cursor=pointer]
+    - button "清除主题" [ref=e18] [cursor=pointer]
