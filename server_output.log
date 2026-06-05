@@ -1,0 +1,14 @@
+◇ injected env (3) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+✅ 从 Supabase 加载 10 个用户
+✅ 从 Supabase 加载 14 个 REST 房间
+✅ 从 Supabase 加载 13 个 Socket 房间
+✅ 从 Supabase 加载 13 条选角结果
+✅ 从 Supabase 加载 3 条角色状态
+✅ 从 Supabase 加载 6 条出战选择
+✅ 从 Supabase 加载 36 条对局历史
+✅ 服务器运行在 http://localhost:3000
+   - 登录页:  http://localhost:3000/login.html
+   - 大厅页:  http://localhost:3000/lobby.html
+   - 房间页:  http://localhost:3000/index.html
+   - 对局页:  http://localhost:3000/game.html
+   - 回合页:  http://localhost:3000/battle_round.html

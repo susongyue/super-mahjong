@@ -96,25 +96,24 @@ body {
   background: var(--navbar-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  padding: 0 24px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
-  justify-content: center;
   border-bottom: 1px solid var(--hairline-strong);
   z-index: 100;
   height: 56px;
 }
 .navbar .logo {
-  flex: 1;
-  min-width: 0;
+  flex-shrink: 0;
   color: var(--text-primary);
   font-size: 15px;
   font-weight: 700;
   text-decoration: none;
-  letter-spacing: -0.5px;
 }
 .navbar .nav-links {
-  flex: 0 0 auto;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   gap: 4px;
 }
@@ -137,11 +136,15 @@ body {
   background: var(--surface-2);
   font-weight: 600;
 }
+.navbar .nav-links a svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
 .navbar .nav-user {
-  flex: 1;
-  min-width: 0;
+  margin-left: auto;
+  flex-shrink: 0;
   display: flex;
-  justify-content: flex-end;
   align-items: center;
   color: var(--ink-muted);
   font-size: 13px;
@@ -661,25 +664,27 @@ body {
 
 /* ── 角色头像 ── */
 .char-avatar {
-  width: 56px; height: 56px;
+  width: 80px; height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid var(--hairline);
+  border: 2px solid var(--hairline-strong);
   background: var(--surface-2);
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 .char-avatar-placeholder {
-  width: 56px; height: 56px;
-  border-radius: var(--r-lg);
+  width: 80px; height: 80px;
+  border-radius: 50%;
   background: linear-gradient(135deg, var(--avatar-bg-1), var(--avatar-bg-2));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--ink-muted);
-  border: 1px solid var(--hairline);
+  border: 2px solid var(--hairline-strong);
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 .fs-avatar {
   width: 80px; height: 80px;
@@ -708,14 +713,9 @@ body {
 .char-card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 16px 12px;
-  background: var(--card-header-bg);
-  border-bottom: 1px solid var(--card-divider);
-}
-.char-card-header .char-info {
-  flex: 1;
-  min-width: 0;
+  justify-content: center;
+  padding: 22px 14px 10px;
+  background: linear-gradient(160deg, var(--card-header-bg), var(--surface-1));
 }
 
 /* 卡片主体区域 */
@@ -738,8 +738,8 @@ body {
   gap: 12px;
 }
 .char-card {
-  background: var(--surface-1);
-  border-radius: var(--r-xl);
+  background: linear-gradient(180deg, var(--card-header-bg) 0%, var(--surface-1) 60%);
+  border-radius: 15%;
   padding: 0;
   border: 1px solid var(--hairline);
   cursor: default;
@@ -764,11 +764,19 @@ body {
   border: 1px solid var(--gold-border);
 }
 .char-card .char-name {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
-  margin-bottom: 4px;
   color: var(--text-primary);
   letter-spacing: -0.5px;
+  text-align: center;
+  padding: 10px 8px 2px;
+}
+.char-card .char-tier {
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-weight: 600;
+  text-align: center;
+  padding: 0 8px 12px;
 }
 .char-card .char-meta {
   font-size: 12px;
@@ -794,8 +802,8 @@ body {
   box-shadow: var(--shadow-selected);
 }
 .char-card.resting {
-  opacity: 0.35;
-  cursor: not-allowed;
+  opacity: 0.45;
+  cursor: pointer;
   filter: grayscale(0.5);
 }
 .char-card.resting-retain {
@@ -804,22 +812,6 @@ body {
   border-color: var(--gold);
   border-style: dashed;
   background: var(--gold-bg);
-}
-.char-card .resting-badge {
-  position: absolute;
-  top: 8px; right: 8px;
-  background: var(--resting-badge-bg);
-  color: var(--resting-badge-color);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: var(--r-pill);
-  z-index: 2;
-}
-.char-card .resting-badge.retain-active {
-  background: var(--gold-bg);
-  color: var(--gold);
-  border: 1px solid var(--gold-border);
 }
 .char-card .retain-badge {
   position: absolute;
@@ -836,28 +828,10 @@ body {
   display: flex;
   gap: 0;
 }
-.char-card .btn-detail {
-  flex: 1;
-  padding: 12px 10px;
-  border-radius: 0 0 0 var(--r-xl);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  border-right: 1px solid var(--card-divider);
-  background: transparent;
-  color: var(--ink-muted);
-  transition: all .2s;
-  text-align: center;
-}
-.char-card .btn-detail:hover {
-  color: var(--accent-blue-text);
-  background: var(--accent-blue-bg);
-}
 .char-card .btn-deploy {
   flex: 1;
   padding: 12px 10px;
-  border-radius: 0 0 var(--r-xl) 0;
+  border-radius: 0 0 15% 15%;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -870,6 +844,11 @@ body {
 .char-card .btn-deploy:hover:not(:disabled) { background: var(--btn-accent-hover); filter: brightness(1.1); }
 .char-card .btn-deploy:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
 .char-card .btn-deploy.deployed { background: var(--green); color: var(--on-primary); }
+.char-card .btn-deploy.resting-btn {
+  background: var(--surface-3);
+  color: var(--ink-muted);
+  font-weight: 600;
+}
 
 /* 可选取的 draft 角色卡片 */
 .draft-char-pickable {
@@ -936,7 +915,7 @@ body {
   font-size: 13px;
 }
 .vote-count.round  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
-.vote-count.game   { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+.vote-count.game   { background: rgba(243,114,127,0.25); color: var(--red); border: 1px solid var(--red-border); }
 .vote-count.done   { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
 
 .vote-btn {
@@ -953,8 +932,8 @@ body {
 .vote-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .vote-btn-round { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
 .vote-btn-round:hover:not(:disabled) { background: rgba(255,122,61,0.2); }
-.vote-btn-game { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
-.vote-btn-game:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
+.vote-btn-game { background: rgba(243,114,127,0.25); color: var(--red); border: 1px solid var(--red-border); }
+.vote-btn-game:hover:not(:disabled) { background: rgba(243,114,127,0.35); }
 
 /* ── 无数据占位 ── */
 .no-data {
@@ -1060,12 +1039,12 @@ body {
 
 @media (max-width: 768px) {
   .navbar {
-    padding: 0 12px;
-    height: 44px;
+    padding: 0 10px;
+    height: 56px;
   }
-  .navbar .logo { font-size: 13px; letter-spacing: 0; }
+  .navbar .logo { font-size: 12px; letter-spacing: 0; }
   .navbar .nav-links { gap: 2px; }
-  .navbar .nav-links a { font-size: 11px; padding: 4px 8px; }
+  .navbar .nav-links a { padding: 4px 6px; }
   .navbar .nav-user { font-size: 11px; }
   .toast { top: 60px; font-size: 13px; padding: 10px 20px; }
 
@@ -1076,10 +1055,11 @@ body {
   .btn { padding: 9px 14px; font-size: 12px; }
   .char-card { padding: 12px; border-radius: var(--r-lg); }
   .char-card .char-name { font-size: 15px; }
+  .char-card .char-tier { font-size: 11px; }
   .char-card .faction-badge { font-size: 10px; padding: 2px 8px; }
-  .char-card-header { gap: 8px; }
-  .char-avatar, .char-avatar-placeholder { width: 44px; height: 44px; border-radius: var(--r-md); }
-  .char-avatar-placeholder { font-size: 18px; }
+  .char-card-header { padding: 16px 10px 8px; }
+  .char-avatar, .char-avatar-placeholder { width: 58px; height: 58px; }
+  .char-avatar-placeholder { font-size: 22px; }
   .skill-tag { padding: 4px 10px; font-size: 10px; }
   .modal-dialog .dialog-desc { font-size: 15px; }
   .modal-dialog .dialog-title { font-size: 17px; }
@@ -1102,51 +1082,6 @@ body {
   .fs-retain-info { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
   .form-row { gap: 8px; }
   .tab-bar button { padding: 8px; font-size: 13px; }
-}
-
-@media (max-width: 540px) {
-  .char-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-  .char-card { padding: 10px; cursor: pointer; }
-  .char-card .char-name { font-size: 14px; }
-  .char-card .char-meta { font-size: 11px; margin-bottom: 6px; }
-  .form-row { flex-direction: column; }
-  .form-row .input { min-width: auto; }
-  .form-row .btn { width: 100%; }
-  .section { padding: 12px 10px; margin-bottom: 10px; }
-  .section h2 { font-size: 14px; margin-bottom: 8px; }
-  .btn { padding: 8px 12px; font-size: 12px; }
-  .modal-overlay { padding: 8px; }
-  .modal-dialog { border-radius: var(--r-lg); }
-  .char-fullscreen-overlay { padding: 8px; }
-  .char-fullscreen-overlay .fs-char-name { font-size: 20px; }
-  .char-fullscreen-overlay .fs-skill-text { font-size: 14px; line-height: 1.5; }
-  .char-fullscreen-overlay .fs-skill-block { padding: 10px; border-radius: var(--r-sm); }
-  .char-fullscreen-overlay .fs-skill-label { font-size: 11px; padding: 3px 10px; }
-  .char-fullscreen-overlay .fs-body { padding: 12px 0; gap: 10px; }
-  .fs-avatar, .fs-avatar-placeholder { width: 48px; height: 48px; border-radius: var(--r-md); }
-  .fs-avatar-placeholder { font-size: 20px; margin-right: 8px; }
-  .skill-tag { padding: 3px 8px; font-size: 10px; }
-  .skill-tag .tag-icon { font-size: 12px; }
-  .vote-section { flex-direction: column; align-items: stretch; gap: 8px; }
-  .vote-btn { width: 100%; font-size: 12px; padding: 8px 16px; }
-  .navbar { height: 42px; padding: 0 8px; }
-  .navbar .logo { font-size: 12px; }
-  .navbar .nav-links a { font-size: 10px; padding: 3px 6px; }
-  .navbar .nav-user { font-size: 10px; }
-  .container { padding: 8px 8px 20px; }
-  .char-avatar, .char-avatar-placeholder { width: 38px; height: 38px; border-radius: 8px; }
-  .char-avatar-placeholder { font-size: 16px; }
-  .char-card-header { gap: 6px; }
-  .strategy-tag { padding: 1px 8px; font-size: 10px; }
-  .round-badge { font-size: 12px; padding: 4px 12px; }
-  .vote-info { font-size: 11px; }
-  .vote-count { font-size: 11px; padding: 3px 10px; }
-  .tab-bar { margin-bottom: 12px; }
-  .tab-bar button { padding: 7px; font-size: 12px; }
-  .toast { top: 52px; font-size: 12px; padding: 8px 16px; }
 }
 
 

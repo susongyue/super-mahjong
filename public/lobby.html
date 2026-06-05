@@ -52,82 +52,17 @@
       display: block; font-size: 12px; color: var(--ink-muted); font-weight: 400; margin-top: 2px;
     }
 
-    /* ── 历史记录项 ── */
-    .history-item {
-      background: var(--surface-2);
-      border-radius: var(--r-md);
-      padding: 12px 18px; margin: 8px 0;
-      border: 2px solid var(--hairline);
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 10px; cursor: pointer; transition: box-shadow .2s, border-color .2s;
-    }
-    .history-item:hover { border-color: var(--hairline-soft); box-shadow: var(--shadow-sm); }
-    .history-item .hist-room {
-      color: var(--accent-blue); font-weight: 700; font-size: 14px;
-    }
-    .history-item .hist-meta {
-      font-size: 12px; color: var(--ink-muted);
-    }
-    .history-item .hist-date {
-      font-size: 11px; color: var(--ink-muted);
-    }
-
-    /* ── 区域分隔 ── */
-    .section-divider {
-      border-top: 2px solid var(--hairline); margin: 20px 0 12px;
-    }
-    .section-header {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
-    }
-    .section-header h2 { margin: 0; }
-
-    /* ── 历史详情弹窗 ── */
-    .history-popup {
-      background: var(--surface-1);
-      border-radius: var(--r-xl);
-      padding: 24px; max-width: 500px; width: 90%;
-      box-shadow: var(--shadow-lg);
-      border: 2px solid var(--hairline);
-      max-height: 80vh; overflow-y: auto;
-    }
-    .history-popup h3 {
-      color: var(--accent-blue); margin-top: 0; font-size: 18px; font-weight: 700;
-    }
-    .history-popup .popup-row {
-      font-size: 14px; line-height: 1.9; color: var(--text-primary);
-    }
-    .history-popup .popup-row strong { font-weight: 700; }
-    .history-popup .draft-char-item {
-      font-size: 13px; color: var(--ink-muted); margin: 4px 0; padding-left: 12px;
-      line-height: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px;
-    }
-    .history-popup .draft-char-avatar {
-      width: 28px; height: 28px; border-radius: 8px;
-      object-fit: cover; vertical-align: middle; margin-right: 4px;
-      border: 2px solid var(--hairline);
-    .history-popup .draft-char-placeholder {
-      display: inline-flex; width: 28px; height: 28px; border-radius: 8px;
-      background: linear-gradient(135deg, var(--avatar-bg-1), var(--avatar-bg-2)); color: var(--ink-muted);
-      align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
-      vertical-align: middle; margin-right: 4px;
-    }
-
     @media (max-width: 768px) {
       .room-item { padding: 10px 14px; margin: 5px 0; }
       .room-item .room-id { font-size: 14px; }
       .room-item .room-meta { font-size: 12px; }
-      .history-item { padding: 10px 14px; margin: 5px 0; }
-      .history-item .hist-room { font-size: 13px; }
       .reconnect-area { padding: 12px 14px; margin-bottom: 10px; }
       .btn-reconnect { padding: 8px 16px; font-size: 13px; }
-      .section-divider { margin: 14px 0 8px; }
     }
     @media (max-width: 540px) {
       .room-item { padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 8px; }
       .room-item .room-id { font-size: 13px; }
       .room-item .btn-join-room { width: 100%; }
-      .history-item { padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 4px; }
-      .history-item .hist-room { font-size: 12px; }
       .reconnect-area { padding: 10px 12px; flex-direction: column; align-items: flex-start; }
       .reconnect-area .reconnect-info { font-size: 13px; }
       .btn-reconnect { padding: 8px 14px; font-size: 12px; width: 100%; text-align: center; }
@@ -137,10 +72,11 @@
 <body>
 
 <nav class="navbar">
-  <a class="logo" href="/lobby.html">Super Reach Mahjong</a>
+  <a class="logo" href="/lobby.html">Mahjong</a>
   <div class="nav-links">
-    <a href="/lobby.html" class="active">大厅</a>
-    <a href="/profile.html">个人中心</a>
+    <a href="/lobby.html" class="active" title="大厅"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></a>
+    <a href="/history.html" title="对局记录"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></a>
+    <a href="/profile.html" title="个人中心"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
   </div>
   <span class="nav-user" id="navUser"></span>
 </nav>
@@ -175,17 +111,7 @@
     </div>
   </div>
 
-  <div class="section-divider"></div>
 
-  <div class="section">
-    <div class="section-header">
-      <h2>我的对局历史</h2>
-      <button class="btn btn-cyan" style="font-size:12px;padding:6px 14px;" id="btnRefreshHistory">刷新</button>
-    </div>
-    <div id="historyList">
-      <div class="no-data">加载中...</div>
-    </div>
-  </div>
 </div>
 
 <script src="/js/lib/auth.js"></script>
@@ -202,15 +128,6 @@ Auth.renderNav(document.getElementById('navUser'));
 
 // ── 状态变量 ──
 var myReconnectInfo = null;
-var charImageMap = {};
-
-// ── 加载角色头像映射 ──
-(async function loadCharImages() {
-  try {
-    var chars = await API.getCharacters();
-    chars.forEach(function (c) { charImageMap[c.name] = c.image || null; });
-  } catch (e) { /* ignore */ }
-})();
 
 // ── 页面加载时检查是否有未完成的对局 ──
 (async function checkReconnect() {
@@ -274,7 +191,7 @@ async function handleJoinOrReconnect(roomId) {
   try {
     var status = await API.getRoomStatus(roomId, user);
     if (status.finished) {
-      Utils.showToast('该对局已结束，可在大厅下方查看历史记录');
+      Utils.showToast('该对局已结束，可在对局记录中查看');
       return;
     }
     if (!status.exists) {
@@ -396,100 +313,9 @@ async function loadRooms() {
   }
 }
 
-// ── 加载对局历史 ──
-async function loadHistory() {
-  try {
-    var list = await API.getGameHistory(user);
-    var box = document.getElementById('historyList');
-    if (list.length === 0) {
-      box.innerHTML = '<div class="no-data">暂无历史对局记录</div>';
-      return;
-    }
-    box.innerHTML = list.map(function (h) {
-      var date = h.endedAt ? new Date(h.endedAt).toLocaleString('zh-CN') : '未知';
-      return '<div class="history-item" data-room="' + h.roomId + '">' +
-        '<div>' +
-        '<div class="hist-room">房间 ' + h.roomId + '</div>' +
-        '<div class="hist-meta">' + h.playerCount + '人对局 | ' + h.totalRounds + ' 回合 | 房主: ' + Utils.escHTML(h.host || '未知') + '</div>' +
-        '<div class="hist-meta">玩家: ' + Utils.escHTML((h.players || []).join('、')) + '</div>' +
-        '</div>' +
-        '<div class="hist-date">' + date + '</div>' +
-        '</div>';
-    }).join('');
-
-    // 事件委托
-    box.querySelectorAll('.history-item').forEach(function (item) {
-      item.addEventListener('click', function () { viewHistoryDetail(item.dataset.room); });
-    });
-
-    gsap.from(box.querySelectorAll('.history-item'), {
-      opacity: 0, x: -20, stagger: 0.06, duration: 0.35, ease: 'power2.out', delay: 0.1
-    });
-  } catch (e) {
-    document.getElementById('historyList').innerHTML = '<div class="no-data">加载失败，请检查网络</div>';
-  }
-}
-
-function refreshHistory() {
-  document.getElementById('historyList').innerHTML = '<div class="no-data">加载中...</div>';
-  loadHistory();
-}
-
-document.getElementById('btnRefreshHistory').addEventListener('click', refreshHistory);
-
-// ── 查看对局详情 ──
-async function viewHistoryDetail(roomId) {
-  try {
-    var detail = await API.getGameHistoryDetail(roomId);
-    if (!detail) { Utils.showToast('无法加载对局详情'); return; }
-
-    var date = detail.endedAt ? new Date(detail.endedAt).toLocaleString('zh-CN') : '未知';
-    var draft = detail.draftResults || {};
-
-    var draftHtml = '';
-    if (Object.keys(draft).length > 0) {
-      draftHtml = '<div style="margin-top:12px;"><strong>选角情况：</strong></div>';
-      for (var player in draft) {
-        var chars = draft[player] || [];
-        var charItems = chars.map(function (c) {
-          var cname = c.name || c;
-          var img = charImageMap[cname];
-          var avatarHTML = img
-            ? '<img class="draft-char-avatar" src="/png/' + img + '" onerror="this.style.display=\'none\'">'
-            : '<span class="draft-char-placeholder">' + cname.charAt(0) + '</span>';
-          return avatarHTML + Utils.escHTML(cname);
-        }).join(' ');
-        draftHtml += '<div class="draft-char-item">• ' + Utils.escHTML(player) + '：' + charItems + '</div>';
-      }
-    }
-
-    var popup = Utils.createOverlay(
-      '<div class="history-popup">' +
-        '<h3>对局详情</h3>' +
-        '<div class="popup-row">' +
-        '<div>房间号：<strong>' + detail.roomId + '</strong></div>' +
-        '<div>房主：' + Utils.escHTML(detail.host || '未知') + '</div>' +
-        '<div>总回合数：' + detail.totalRounds + '</div>' +
-        '<div>参与玩家：' + Utils.escHTML((detail.players || []).join('、')) + '</div>' +
-        '<div>结束时间：' + date + '</div>' +
-        draftHtml +
-        '</div>' +
-        '<button class="btn btn-primary" style="margin-top:16px;width:100%;" id="popupClose">关闭</button>' +
-      '</div>',
-      'modal-overlay'
-    );
-    // 关闭逻辑
-    document.getElementById('popupClose').addEventListener('click', function () { popup.remove(); });
-    popup.addEventListener('click', function (e) { if (e.target === popup) popup.remove(); });
-  } catch (e) {
-    Utils.showToast('加载详情失败');
-  }
-}
-
 // ── 初始化 ──
 loadRooms();
 setInterval(loadRooms, 5000);
-loadHistory();
 
 // ── GSAP 入场动画 ──
 gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
