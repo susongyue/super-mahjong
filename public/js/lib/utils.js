@@ -75,3 +75,29 @@ window.Utils = {
     return avatar;
   }
 };
+
+/**
+ * Nav — 导航栏管理器
+ * 根据 localStorage.roomId 动态显示/隐藏游戏相关导航链接
+ */
+window.Nav = {
+  /** 获取当前是否在游戏中 */
+  isInGame() {
+    return !!localStorage.getItem('roomId');
+  },
+
+  /** 退出对局 */
+  exitGame() {
+    localStorage.removeItem('roomId');
+    this.updateLinks();
+  },
+
+  /** 更新导航栏中的游戏链接可见性 */
+  updateLinks() {
+    var inGame = this.isInGame();
+    var selectLink = document.getElementById('navGameSelect');
+    var battleLink = document.getElementById('navGameBattle');
+    if (selectLink) selectLink.style.display = inGame ? '' : 'none';
+    if (battleLink) battleLink.style.display = inGame ? '' : 'none';
+  }
+};

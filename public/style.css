@@ -386,6 +386,7 @@ body {
 .strategy-tags {
   display: flex;
   flex-wrap: wrap;
+  gap: 5px;
   margin: 4px 0;
 }
 .strategy-tag {
@@ -426,37 +427,37 @@ body {
   background: var(--surface-1);
   border-radius: var(--r-xl);
   width: 100%;
-  max-width: 500px;
+  max-width: 625px;
   max-height: 85vh;
   overflow-y: auto;
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-lg);
 }
 .modal-dialog .dialog-header {
-  padding: var(--sp-xl) 24px 0;
+  padding: var(--sp-xl) 30px 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
 }
 .modal-dialog .dialog-title {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.5px;
 }
 .modal-dialog .dialog-char {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--ink-muted);
   margin-top: 2px;
 }
 .modal-dialog .dialog-close {
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--r-full);
   border: 1px solid var(--hairline);
   background: var(--surface-2);
   color: var(--ink-muted);
-  font-size: 20px;
+  font-size: 25px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -471,15 +472,15 @@ body {
   border-color: var(--red-border);
 }
 .modal-dialog .dialog-body {
-  padding: var(--sp-xl) 24px 24px;
+  padding: var(--sp-xl) 30px 30px;
 }
 .modal-dialog .dialog-skill-type {
   display: inline-block;
-  padding: 5px 16px;
+  padding: 6px 20px;
   border-radius: var(--r-pill);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
   border: 1px solid transparent;
 }
 .modal-dialog .dialog-skill-type.limit    { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
@@ -487,16 +488,16 @@ body {
 .modal-dialog .dialog-skill-type.innate   { background: var(--orange-bg); color: var(--orange); border-color: var(--orange-border); }
 .modal-dialog .dialog-skill-type.extra    { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
 .modal-dialog .dialog-desc {
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1.8;
   color: var(--text-primary);
   word-break: break-word;
 }
 .modal-dialog .dialog-faction {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--ink-muted);
-  margin-top: 16px;
-  padding-top: 12px;
+  margin-top: 20px;
+  padding-top: 15px;
   border-top: 1px solid var(--hairline);
 }
 
@@ -511,6 +512,8 @@ body {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
 }
 
 .char-fullscreen-overlay {
@@ -519,49 +522,52 @@ body {
   z-index: 300;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  padding: 16px;
+  padding: 15px;
   border: 2px solid var(--hairline);
   box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  opacity: 0;
+  visibility: hidden;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
 }
 .char-fullscreen-overlay .fs-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding-bottom: 16px;
+  padding-bottom: 12px;
   flex-shrink: 0;
 }
 .char-fullscreen-overlay .fs-char-name {
   font-size: 28px;
   font-weight: 900;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   letter-spacing: -1px;
 }
 .char-fullscreen-overlay .fs-char-tier {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--ink-muted);
   font-weight: 600;
 }
 .char-fullscreen-overlay .fs-faction-badge {
   display: inline-block;
   color: var(--gold);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   background: var(--gold-bg);
-  padding: 5px 14px;
+  padding: 4px 12px;
   border-radius: var(--r-pill);
   margin-top: 8px;
   border: 1px solid var(--gold-border);
 }
 .char-fullscreen-overlay .fs-close {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: var(--r-full);
   border: 1px solid var(--hairline);
   background: var(--surface-1);
   color: var(--ink-muted);
-  font-size: 24px;
+  font-size: 30px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -577,26 +583,26 @@ body {
 }
 .char-fullscreen-overlay .fs-body {
   flex: 1;
-  padding: 24px 0;
+  padding: 15px 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 .char-fullscreen-overlay .fs-skill-block {
   background: var(--surface-1);
   border-radius: var(--r-lg);
-  padding: 20px;
+  padding: 15px;
   border: 1px solid var(--hairline);
 }
 .char-fullscreen-overlay .fs-skill-label {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
+  gap: 5px;
+  padding: 5px 15px;
   border-radius: var(--r-pill);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   border: 1px solid transparent;
 }
 .char-fullscreen-overlay .fs-skill-label.limit    { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
@@ -604,30 +610,30 @@ body {
 .char-fullscreen-overlay .fs-skill-label.innate   { background: var(--orange-bg); color: var(--orange); border-color: var(--orange-border); }
 .char-fullscreen-overlay .fs-skill-label.extra    { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
 .char-fullscreen-overlay .fs-skill-text {
-  font-size: 18px;
-  line-height: 1.8;
+  font-size: 19px;
+  line-height: 1.5;
   color: var(--text-primary);
   word-break: break-word;
 }
 .char-fullscreen-overlay .fs-footer {
-  padding-top: 16px;
+  padding-top: 12px;
   text-align: center;
   flex-shrink: 0;
 }
 .char-fullscreen-overlay .fs-footer-hint {
-  font-size: 14px;
+  font-size: 18px;
   color: var(--ink-muted);
 }
 .char-fullscreen-overlay .fs-retain-info {
   background: var(--gold-bg);
   color: var(--gold);
-  padding: 10px 16px;
+  padding: 12px 20px;
   border-radius: var(--r-md);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   text-align: center;
   border: 1px solid var(--gold-border);
-  margin-top: 12px;
+  margin-top: 15px;
 }
 /* fullscreen header 的头像布局 */
 .fs-header-left {
@@ -638,22 +644,23 @@ body {
 .fs-header-text {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 .fs-deploy-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px 32px;
+  gap: 10px;
+  padding: 18px 40px;
   border-radius: var(--r-pill);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
   cursor: pointer;
   border: none;
   background: #fbb400;
   color: var(--on-primary);
   transition: all .2s;
-  margin-top: 16px;
+  margin-top: 20px;
   width: 100%;
   letter-spacing: -0.16px;
 }
@@ -695,17 +702,17 @@ body {
   flex-shrink: 0;
 }
 .fs-avatar-placeholder {
-  width: 80px; height: 80px;
-  border-radius: var(--r-xl);
+  width: 60px; height: 60px;
+  border-radius: 50%;
   background: linear-gradient(135deg, var(--avatar-bg-1), var(--avatar-bg-2));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 34px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--ink-muted);
   border: 2px solid var(--hairline);
-  margin-right: 16px;
+  margin-right: 12px;
   flex-shrink: 0;
 }
 
@@ -934,6 +941,8 @@ body {
 .vote-btn-round:hover:not(:disabled) { background: rgba(255,122,61,0.2); }
 .vote-btn-game { background: rgba(243,114,127,0.25); color: var(--red); border: 1px solid var(--red-border); }
 .vote-btn-game:hover:not(:disabled) { background: rgba(243,114,127,0.35); }
+.vote-btn-exit { background: var(--surface-2); color: var(--ink-muted); border: 1px solid var(--hairline); }
+.vote-btn-exit:hover:not(:disabled) { background: var(--surface-3); color: var(--red); border-color: var(--red-border); }
 
 /* ── 无数据占位 ── */
 .no-data {
@@ -1061,25 +1070,25 @@ body {
   .char-avatar, .char-avatar-placeholder { width: 58px; height: 58px; }
   .char-avatar-placeholder { font-size: 22px; }
   .skill-tag { padding: 4px 10px; font-size: 10px; }
-  .modal-dialog .dialog-desc { font-size: 15px; }
-  .modal-dialog .dialog-title { font-size: 17px; }
-  .modal-dialog .dialog-body { padding: 14px 18px 18px; }
-  .modal-dialog .dialog-header { padding: 14px 18px 0; }
-  .char-fullscreen-overlay { padding: 8px; }
+  .modal-dialog .dialog-desc { font-size: 19px; }
+  .modal-dialog .dialog-title { font-size: 21px; }
+  .modal-dialog .dialog-body { padding: 18px 22px 22px; }
+  .modal-dialog .dialog-header { padding: 18px 22px 0; }
+  .char-fullscreen-overlay { padding: 10px; }
   .char-fullscreen-overlay .fs-char-name { font-size: 22px; }
-  .char-fullscreen-overlay .fs-skill-text { font-size: 15px; line-height: 1.6; }
+  .char-fullscreen-overlay .fs-skill-text { font-size: 16px; line-height: 1.4; }
   .char-fullscreen-overlay .fs-skill-block { padding: 12px; border-radius: var(--r-md); }
-  .char-fullscreen-overlay .fs-skill-label { font-size: 12px; padding: 4px 12px; }
-  .char-fullscreen-overlay .fs-body { padding: 16px 0; gap: 12px; }
+  .char-fullscreen-overlay .fs-skill-label { font-size: 14px; padding: 4px 12px; }
+  .char-fullscreen-overlay .fs-body { padding: 12px 0; gap: 10px; }
   .char-fullscreen-overlay .fs-header { padding-bottom: 10px; }
   .char-fullscreen-overlay .fs-footer { padding-top: 10px; }
-  .char-fullscreen-overlay .fs-faction-badge { font-size: 12px; padding: 3px 10px; margin-top: 4px; }
-  .char-fullscreen-overlay .fs-char-tier { font-size: 12px; }
-  .fs-avatar, .fs-avatar-placeholder { width: 56px; height: 56px; border-radius: var(--r-lg); }
-  .fs-avatar-placeholder { font-size: 24px; margin-right: 10px; }
-  .fs-close { width: 34px; height: 34px; font-size: 20px; }
-  .fs-deploy-btn { padding: 12px 24px; font-size: 14px; }
-  .fs-retain-info { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
+  .char-fullscreen-overlay .fs-faction-badge { font-size: 14px; padding: 3px 10px; margin-top: 5px; }
+  .char-fullscreen-overlay .fs-char-tier { font-size: 14px; }
+  .fs-avatar, .fs-avatar-placeholder { width: 60px; height: 60px; border-radius: 50%; }
+  .fs-avatar-placeholder { font-size: 25px; margin-right: 10px; }
+  .fs-close { width: 42px; height: 42px; font-size: 25px; }
+  .fs-deploy-btn { padding: 15px 30px; font-size: 18px; }
+  .fs-retain-info { padding: 10px 15px; font-size: 15px; border-radius: 10px; }
   .form-row { gap: 8px; }
   .tab-bar button { padding: 8px; font-size: 13px; }
 }

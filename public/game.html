@@ -162,8 +162,32 @@
         position: relative;
         z-index: 1;
         transform: none;
-        margin-top: 20px;
+        max-width: 600px;
+        margin-top: 10px;
         box-sizing: border-box;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        gap: 6px;
+      }
+      .vote-panel-body { flex-direction: row; gap: 8px; }
+      .vote-panel-body .vote-btn {
+        flex: 1;
+        padding: 12px 16px;
+        font-size: 14px;
+        border-radius: var(--r-lg);
+      }
+      .vote-panel-body .vote-btn-exit {
+        flex: 1;
+        padding: 12px 8px;
+        font-size: 12px;
+      }
+      .vote-panel-footer { display: none; }
+      .vote-names {
+        text-align: center;
+        font-size: 11px;
+        max-height: 48px;
       }
     }
   </style>
@@ -174,8 +198,8 @@
   <a class="logo" href="/lobby.html">Mahjong</a>
   <div class="nav-links">
     <a href="/lobby.html" title="大厅"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></a>
-    <a href="/battle_round.html" title="回合对战"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></a>
-    <a href="#" class="active" title="选择出战"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></a>
+    <a href="/game.html" id="navGameSelect" class="active" title="选择出战"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></a>
+    <a href="/battle_round.html" id="navGameBattle" title="回合对战"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></a>
     <a href="/history.html" title="对局记录"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></a>
     <a href="/profile.html" title="个人中心"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
   </div>
@@ -216,9 +240,9 @@
 
 <!-- 投票面板（桌面端固定右侧） -->
 <div class="vote-panel" id="votePanel">
-  <div class="vote-panel-title">对局投票</div>
   <div class="vote-panel-body">
     <button class="vote-btn vote-btn-game" id="btnEndGame">投票结束对局</button>
+    <button class="vote-btn vote-btn-exit" id="btnExitGame" title="强制退出对局">退出对局</button>
   </div>
   <div class="vote-panel-footer">
     <span id="gameVoteInfo" class="vote-count game">对局 0/0</span>
@@ -275,6 +299,7 @@ var roomId = Auth.checkRoomId();
 })();
 
 Auth.renderNav(document.getElementById('navUser'));
+Nav.updateLinks();
 document.getElementById('roomDisplay').innerText = roomId;
 document.getElementById('nameDisplay').innerText = username;
 
@@ -351,8 +376,7 @@ socket.on('battleSelectionCancel', function () {
 });
 
 socket.on('allBattleSelected', function () {
-  Utils.createOverlay('<div class="redirect-spinner"></div><div>即将进入回合界面...</div>');
-  setTimeout(function () { location.href = '/battle_round.html'; }, 2000);
+  location.href = '/battle_round.html';
 });
 
 socket.on('roundAdvanced', function (data) {
@@ -360,6 +384,13 @@ socket.on('roundAdvanced', function (data) {
   mySelection = null;
   readyPlayerNames = [];
   document.getElementById('mySelectionBadge').innerText = '';
+  // 重置投票按钮
+  var btn = document.getElementById('btnEndGame');
+  btn.disabled = false;
+  btn.innerText = '投票结束对局';
+  btn.style.opacity = '';
+  document.getElementById('gameVoteInfo').innerText = '对局 0/' + (data.totalPlayers || 0);
+  document.getElementById('gameVoteInfo').className = 'vote-count game';
   loadChars();
   updateSelectionUI();
   Utils.showToast('第 ' + data.round + ' 回合开始！请选择出战角色');
@@ -368,14 +399,22 @@ socket.on('roundAdvanced', function (data) {
 socket.on('gameEndVoteUpdate', function (data) {
   document.getElementById('gameVoteInfo').innerText = '对局 ' + data.voted + '/' + data.total;
   document.getElementById('gameVoteInfo').className = data.voted >= data.total ? 'vote-count done' : 'vote-count game';
+  if (data.votedNames) {
+    document.getElementById('voteNames').innerText = '已投票：' + data.votedNames.join('、');
+  }
+  var btn = document.getElementById('btnEndGame');
+  if (btn) {
+    btn.innerText = '投票结束对局 (' + data.voted + '/' + data.total + ')';
+    if (data.voted >= data.total) {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    }
+  }
 });
 
 socket.on('gameEnded', function (data) {
-  Utils.createOverlay('<div class="redirect-spinner"></div><div>' + data.msg + '</div>');
-  setTimeout(function () {
-    localStorage.removeItem('roomId');
-    location.href = '/lobby.html';
-  }, 2500);
+  localStorage.removeItem('roomId');
+  location.href = '/lobby.html';
 });
 
 socket.on('error', function (msg) {
@@ -604,7 +643,7 @@ function openFullscreen(idx, cardEl) {
     width: targetW,
     height: 'calc(100vh - 40px)',
     borderRadius: 'var(--r-xl)',
-    padding: '16px',
+    padding: '12px',
     backgroundColor: 'var(--canvas)',
     duration: 0.35,
     ease: 'power3.out'
@@ -715,6 +754,13 @@ document.getElementById('btnEndGame').addEventListener('click', function () {
   btn.disabled = true;
   btn.innerText = '已投票结束对局';
   socket.emit('voteEndGame', roomId);
+});
+
+// ══════════ 退出对局 ══════════
+document.getElementById('btnExitGame').addEventListener('click', function () {
+  if (!confirm('确定要强制退出对局吗？退出后需要重新加入房间。')) return;
+  Nav.exitGame();
+  location.href = '/lobby.html';
 });
 
 // ── 初始化 ──
