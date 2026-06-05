@@ -54,13 +54,18 @@ window.Utils = {
     return timer;
   },
 
-  /** 角色头像 HTML（从角色池查 image 字段） */
+  /** 角色头像 HTML（从角色池查 image 字段，WebP 优先 + PNG 降级） */
   charImageHTML(chars, name, size = 'normal') {
     const c = (chars || []).find(x => x.name === name);
     const img = c && c.image;
     if (img) {
       const cls = size === 'big' ? 'fs-avatar' : 'char-avatar';
-      return '<img class="' + cls + '" src="/png/' + img + '" alt="' + this.escHTML(name) + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
+      const webpSrc = '/webp/' + img.replace(/\.png$/i, '.webp');
+      const pngSrc = '/png/' + img;
+      return '<picture>' +
+        '<source srcset="' + webpSrc + '" type="image/webp">' +
+        '<img class="' + cls + '" src="' + pngSrc + '" alt="' + this.escHTML(name) + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.nextElementSibling.style.display=\'flex\';">' +
+        '</picture>';
     }
     const cls = size === 'big' ? 'fs-avatar-placeholder' : 'char-avatar-placeholder';
     return '<div class="' + cls + '">' + (name || '').charAt(0) + '</div>';

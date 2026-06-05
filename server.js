@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const compression = require('compression');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
@@ -9,20 +10,49 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
+// Gzip/Brotli 压缩（文本资源体积缩小 70%+）
+app.use(compression());
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
+
+// 缓存头配置
+const ONE_YEAR = 31536000; // 1 年（秒）
+const ONE_DAY = 86400;     // 1 天
+const ONE_HOUR = 3600;     // 1 小时
+
 app.use(express.static('public', {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache'); // HTML 不缓存，确保获取最新版本
     } else if (filePath.endsWith('.json')) {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    } else if (filePath.endsWith('.webp') || filePath.endsWith('.png') || filePath.endsWith('.jpg') || filePath.endsWith('.svg')) {
+      res.setHeader('Cache-Control', `public, max-age=${ONE_YEAR}, immutable`);
+    } else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      res.setHeader('Cache-Control', `public, max-age=${ONE_DAY}`);
     }
   }
 }));
-app.use('/png', express.static('png')); // 角色头像图片
-app.use('/avatars', express.static('public/avatars')); // 用户自定义头像
+
+// 角色头像：WebP 优先（体积减少 96%），PNG 作为原始路径保留
+app.use('/webp', express.static('public/webp', {
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', `public, max-age=${ONE_YEAR}, immutable`);
+  }
+}));
+app.use('/png', express.static('png', {
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', `public, max-age=${ONE_YEAR}, immutable`);
+  }
+}));
+app.use('/avatars', express.static('public/avatars', {
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', `public, max-age=${ONE_DAY}`);
+  }
+}));
 
 // ── Supabase 客户端 ──
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rvdvdgriyleoiuglzgch.supabase.co';

@@ -189,8 +189,7 @@ window.Components = {
       '<button class="fs-close">X</button></div>' +
       '<div class="fs-body">' + bodyHTML + '</div>' +
       '<div id="fsRetainTemp">' + retainInfo + '</div>' +
-      deployBtnHTML +
-      '<div class="fs-footer"><span class="fs-footer-hint">按 ESC 关闭</span></div>';
+      deployBtnHTML;
 
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';

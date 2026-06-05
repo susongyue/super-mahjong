@@ -1,6 +1,6 @@
 {
   "name": "super-mahjong",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "超能力立直麻将 - 在线多人麻将角色选角游戏",
   "main": "server.js",
   "scripts": {
@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "sharp": "^0.34.5",
     "socket.io": "^4.8.3"
   }
 }

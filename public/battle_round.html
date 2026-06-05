@@ -3,10 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <link rel="icon" type="image/png" href="dong.png">
   <title>回合对战 - Super Reach Mahjong</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="themes.css">
   <meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
     .container { max-width: 800px; }
@@ -349,9 +351,6 @@
   </div>
   <div class="fs-body" id="fsBody"></div>
   <div id="fsRetainInfo"></div>
-  <div class="fs-footer">
-    <span class="fs-footer-hint">按 ESC 关闭</span>
-  </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -625,13 +624,13 @@ function renderBattleGrid() {
     '</div>';
   }).join('');
 
-  // 事件委托：角色卡片点击
-  grid.querySelectorAll('.battle-char-wrapper, .battle-char-card').forEach(function (el) {
-    el.addEventListener('click', function () {
-      var wrapper = el.closest('.battle-char-wrapper') || el;
+  // 事件委托：角色卡片点击（只绑 wrapper，避免冒泡重复触发）
+  grid.querySelectorAll('.battle-char-wrapper').forEach(function (wrapper) {
+    wrapper.addEventListener('click', function () {
       var pname = wrapper.getAttribute('data-pname');
       var cname = wrapper.getAttribute('data-cname');
-      if (pname && cname) openFullscreen(pname, cname, wrapper);
+      var card = wrapper.querySelector('.battle-char-card') || wrapper;
+      if (pname && cname) openFullscreen(pname, cname, card);
     });
   });
 
@@ -648,7 +647,8 @@ var fsCurrentCard = null;
 function openFullscreen(playerName, charName, cardEl) {
   var playerChars = allChars[playerName] || [];
   var c = playerChars.find(function (ch) { return ch.name === charName; });
-  if (!c || fsAnimating) { Utils.showToast('未找到角色数据'); return; }
+  if (fsAnimating) return;
+  if (!c) { Utils.showToast('未找到角色数据'); return; }
   fsCurrentCard = cardEl;
 
   // 头像 big
