@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "skills": {
+    "impeccable-uxui": {
+      "name": "Impeccable ans Complete UX/UI Skill",
+      "zip_url": "https://api.skillhub.cn/api/v1/download?slug=impeccable-uxui",
+      "source": "community",
+      "version": "1.0.0",
+      "installedAt": "2026-06-06T17:50:15Z"
+    }
+  }
+}

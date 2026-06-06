@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/png" href="dong.png">
 <title>Super Reach Mahjong - 对局房间</title>
 <link rel="stylesheet" href="style.css">
@@ -245,26 +245,6 @@
     border: 2px solid var(--hairline);
   }
 
-  /* ── 管理区域 ── */
-  .admin-section {
-    margin-top: 24px;
-    background: var(--surface-1);
-    border-radius: var(--r-xl);
-    padding: 20px;
-    border: 2px solid var(--hairline);
-  }
-  .admin-section h3 { color: var(--ink-muted); margin-bottom: 10px; font-size: 14px; }
-  #csvDrop {
-    border: 2px dashed var(--hairline);
-    border-radius: var(--r-lg);
-    padding: 24px 20px; text-align: center;
-    cursor: pointer; transition: all .2s;
-  }
-  #csvDrop:hover { border-color: var(--accent-blue); background: var(--accent-blue-glow); }
-  #csvDrop p { margin: 0; color: var(--ink-muted); font-size: 14px; }
-  .char-count { font-size: 13px; color: var(--ink-muted); margin-top: 10px; }
-  .char-count span { color: var(--gold); font-weight: 700; }
-
   /* 旧版 draft-grid（非池选模式用） */
   .draft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .draft-player { margin-bottom: 20px; }
@@ -335,6 +315,7 @@
     <a href="/lobby.html" title="大厅"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></a>
     <a href="#" class="active" title="当前对局"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></a>
     <a href="/history.html" title="对局记录"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></a>
+    <a href="/encyclopedia.html" title="角色图鉴"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg></a>
     <a href="/profile.html" title="个人中心"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
   </div>
   <span class="nav-user" id="navUser"></span>
@@ -369,11 +350,6 @@
     <div class="redirect-hint" id="redirectHint">即将自动跳转到对局页面...</div>
   </div>
 
-  <div class="admin-section">
-    <h3>角色数据管理（点击上传CSV覆盖服务器角色池）</h3>
-    <div id="csvDrop"><p>点击或拖放 CSV 文件</p></div>
-    <div class="char-count">服务器角色总数：<span id="charCount">0</span></div>
-  </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -688,32 +664,6 @@ socket.on('draftAllDone', function (data) {
 socket.emit('getDraftState', roomId);
 
 socket.on('error', function (msg) { Utils.showToast('错误：' + msg); });
-
-// ── CSV 上传 ──
-loadCharCount();
-function loadCharCount() {
-  API.getCharacters().then(function (c) { document.getElementById('charCount').textContent = c.length; });
-}
-
-var drop = document.getElementById('csvDrop');
-var fileInput = document.createElement('input');
-fileInput.type = 'file'; fileInput.accept = '.csv'; fileInput.style.display = 'none';
-drop.appendChild(fileInput);
-drop.onclick = function () { fileInput.click(); };
-drop.ondragover = function (e) { e.preventDefault(); drop.style.borderColor = 'var(--accent-blue)'; };
-drop.ondragleave = function () { drop.style.borderColor = ''; };
-drop.ondrop = function (e) {
-  e.preventDefault(); drop.style.borderColor = '';
-  if (e.dataTransfer.files[0]) uploadCSV(e.dataTransfer.files[0]);
-};
-fileInput.onchange = function () { if (fileInput.files[0]) uploadCSV(fileInput.files[0]); };
-
-async function uploadCSV(file) {
-  var text = await file.text();
-  var res = await API.uploadCSV(text);
-  Utils.showToast(res.success ? '上传成功！共 ' + res.count + ' 个角色' : '上传失败：' + res.msg);
-  loadCharCount();
-}
 
 // ── GSAP 入场动画 ──
 gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });

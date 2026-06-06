@@ -6,15 +6,15 @@
 
 /* ── 默认：Spotify 暗色 ── */
 :root {
-  --canvas: #0a0a0f;
-  --canvas-rgb: 10, 10, 15;
-  --surface-1: #16161d;
-  --surface-2: #1f1f28;
-  --surface-3: #292936;
-  --navbar-bg: rgba(10, 10, 15, 0.92);
-  --hairline: #2a2a38;
-  --hairline-soft: #1e1e28;
-  --hairline-strong: #3a3a4a;
+  --canvas: #0a0f0d;
+  --canvas-rgb: 10, 15, 13;
+  --surface-1: #14171a;
+  --surface-2: #1e2126;
+  --surface-3: #282b32;
+  --navbar-bg: rgba(10, 15, 13, 0.92);
+  --hairline: #2a2d35;
+  --hairline-soft: #1e2128;
+  --hairline-strong: #383d48;
 
   --ink: #000000;
   --ink-gui: #ffffff;
@@ -44,7 +44,7 @@
   --gold: #ffa42b; --gold-bg: rgba(255,164,43,0.12); --gold-border: rgba(255,164,43,0.3);
   --orange: #ff8c42; --orange-bg: rgba(255,140,66,0.12); --orange-border: rgba(255,140,66,0.3);
   --purple: #a78bfa; --purple-bg: rgba(167,139,250,0.12); --purple-border: rgba(167,139,250,0.3);
-  --toast-bg: #1f1f28; --toast-color: #fff;
+  --toast-bg: #1e2126; --toast-color: #fff;
 
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.5);
   --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
@@ -57,8 +57,8 @@
   --btn-accent-hover: #18c052;
   --btn-blocked-bg: #3a3a44; --btn-blocked-color: #888;
   --hover-overlay: rgba(255,255,255,0.06); --hover-overlay-strong: rgba(255,255,255,0.12);
-  --avatar-bg-1: #1f1f28; --avatar-bg-2: #3a3a4a;
-  --resting-badge-bg: #2a2a38; --resting-badge-color: #888;
+  --avatar-bg-1: #1e2126; --avatar-bg-2: #383d48;
+  --resting-badge-bg: #2a2d35; --resting-badge-color: #888;
   --charcoal-placeholder: rgba(255,255,255,0.1);
   --spinner-track: rgba(255,255,255,0.1);
 
@@ -109,7 +109,7 @@
   --gold: #ffa42b; --gold-bg: rgba(255,164,43,0.12); --gold-border: rgba(255,164,43,0.3);
   --orange: #ff8c42; --orange-bg: rgba(255,140,66,0.12); --orange-border: rgba(255,140,66,0.3);
   --purple: #a78bfa; --purple-bg: rgba(167,139,250,0.12); --purple-border: rgba(167,139,250,0.3);
-  --toast-bg: #1f1f28; --toast-color: #fff;
+  --toast-bg: #1e2126; --toast-color: #fff;
 
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.12);
   --shadow-md: 0 4px 20px rgba(0,0,0,0.15);

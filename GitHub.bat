@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d C:\Users\13601\Desktop\Super\super-mahjong
+cd /d E:\Desktop\Super\super-mahjong
 
 :menu
 cls

@@ -48,14 +48,6 @@ window.Components = {
     });
   },
 
-  // ══════ 策略标签 ══════
-  renderStrategyTags(tags) {
-    if (!tags || !tags.length) return '';
-    return '<div class="strategy-tags">' + tags.map(t =>
-      '<span class="strategy-tag ' + window.Utils.escHTML(t) + '">' + window.Utils.escHTML(t) + '</span>'
-    ).join('') + '</div>';
-  },
-
   // ══════ 角色卡片（紧凑版 ~ pool/draft） ══════
   renderCharCard(charData, opts = {}) {
     const u = window.Utils;
@@ -104,7 +96,6 @@ window.Components = {
 
     const img = u.charImageHTML([charData], charData.name, 'normal');
     const skillTagsHTML = this.renderSkillTags(charData);
-    const strategyHTML = this.renderStrategyTags(charData.tags);
 
     const deployBtn = isBlocked
       ? '<button class="btn-detail" onclick="event.stopPropagation();' + (onDetail || '') + '">详情</button>'
@@ -124,9 +115,7 @@ window.Components = {
       '</div>' +
       // ② 技能区域
       (skillTagsHTML ? '<div class="skill-area"><div class="skill-tags">' + skillTagsHTML + '</div></div>' : '') +
-      // ③ 策略标签区域
-      (strategyHTML ? '<div class="tag-area">' + strategyHTML + '</div>' : '') +
-      // ④ 操作按钮区域
+      // ③ 操作按钮区域
       '<div class="card-actions">' +
         '<button class="btn-detail" onclick="event.stopPropagation();' + (onDetail || '') + '">详情</button>' +
         deployBtn +
@@ -172,8 +161,7 @@ window.Components = {
         ? '<div class="fs-retain-info">该角色拥有<strong>保留</strong>效果，出战后仍可在下回合继续出战</div>'
         : '';
 
-    const tierHTML = 'Tier ' + (charData.tier || '?') + (playerName ? '（' + u.escHTML(playerName) + '）' : '') +
-      (charData.tags && charData.tags.length ? ' · ' + charData.tags.map(t => '<span class="strategy-tag ' + t + '">' + u.escHTML(t) + '</span>').join(' ') : '');
+    const tierHTML = 'Tier ' + (charData.tier || '?') + (playerName ? '（' + u.escHTML(playerName) + '）' : '');
 
     const img = u.charImageHTML([charData], charData.name, 'big');
 

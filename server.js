@@ -832,7 +832,6 @@ function parseCSV(csvText) {
       else if (nk === '附加技' || nk === '额外技' || nk === '额外' || nk === 'extra') normalized.extra = obj[k];
       else if (nk === '保留' || nk === 'retain') normalized.retain = (obj[k] && (obj[k].toLowerCase() === 'true' || obj[k] === '1' || obj[k] === '是' || obj[k] === 'yes'));
       else if (nk === '备注' || nk === 'note') normalized.note = obj[k];
-      else if (nk === '标签' || nk === '定位' || nk === 'tags') normalized.tags = obj[k];
     });
     result.push(normalized);
   }
@@ -851,6 +850,28 @@ app.post('/api/upload-csv', express.text({ type: ['text/csv', 'text/plain'], lim
     // 同时备份 CSV 到 data 目录
     fs.writeFileSync(CSV_FILE, req.body, 'utf8');
     console.log('✅ CSV 上传成功，共 ' + withImages.length + ' 个角色（含头像映射）');
+    res.json({ success: true, count: withImages.length });
+  } catch (e) {
+    res.json({ success: false, msg: e.message });
+  }
+});
+
+// JSON 上传（使用全局 express.json 中间件）
+app.post('/api/upload-json', (req, res) => {
+  try {
+    const chars = req.body;
+    if (!Array.isArray(chars)) {
+      return res.json({ success: false, msg: 'JSON 必须是一个角色数组' });
+    }
+    // 合并头像映射
+    let imgMap = {};
+    try { imgMap = JSON.parse(fs.readFileSync(IMG_MAP_FILE, 'utf8')); } catch (e) { /* ignore */ }
+    const withImages = chars.map(c => ({
+      ...c,
+      image: imgMap[c.name] || c.image || null
+    }));
+    fs.writeFileSync(CHARS_FILE, JSON.stringify(withImages, null, 2), 'utf8');
+    console.log('✅ JSON 上传成功，共 ' + withImages.length + ' 个角色（含头像映射）');
     res.json({ success: true, count: withImages.length });
   } catch (e) {
     res.json({ success: false, msg: e.message });

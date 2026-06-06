@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="dong.png">
+<title>角色图鉴 - Super Reach Mahjong</title>
+<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="themes.css">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<style>
+
+  /* ── 上传区域 ── */
+  .upload-section {
+    background: var(--surface-1);
+    border-radius: var(--r-xl);
+    padding: 20px;
+    border: 2px solid var(--hairline);
+    margin-bottom: 20px;
+  }
+  .upload-section h3 {
+    color: var(--ink-muted);
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  #jsonDrop {
+    border: 2px dashed var(--hairline);
+    border-radius: var(--r-lg);
+    padding: 24px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  #jsonDrop:hover {
+    border-color: var(--accent-blue);
+    background: var(--accent-blue-glow);
+  }
+  #jsonDrop p { margin: 0; color: var(--ink-muted); font-size: 14px; }
+  #jsonDrop.drop-active {
+    border-color: var(--accent-blue);
+    background: var(--accent-blue-glow);
+  }
+
+  .upload-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .upload-info .char-count {
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .upload-info .char-count span { color: var(--gold); font-weight: 700; }
+
+  .upload-info .upload-hint {
+    font-size: 11px;
+    color: var(--ink-muted);
+    background: var(--surface-2);
+    padding: 4px 10px;
+    border-radius: var(--r-pill);
+  }
+
+  /* ── 工具栏 ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .toolbar .filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .filter-chip {
+    padding: 6px 14px;
+    border-radius: var(--r-pill);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--hairline);
+    background: var(--surface-2);
+    color: var(--ink-muted);
+    transition: all .2s;
+    user-select: none;
+  }
+  .filter-chip:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+  .filter-chip.active { background: var(--accent-blue); color: var(--on-primary); border-color: var(--accent-blue); }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .search-input {
+    padding: 8px 14px;
+    background: var(--surface-2);
+    color: var(--text-primary);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-pill);
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+    width: 180px;
+  }
+  .search-input:focus { border-color: var(--accent-blue); }
+  .search-input::placeholder { color: var(--ink-muted); }
+
+  /* ── 角色网格 ── */
+  .encyclopedia-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+
+  /* ── 图鉴卡片 ── */
+  .ency-card {
+    background: var(--surface-1);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--hairline);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all .25s;
+    position: relative;
+  }
+  .ency-card:hover {
+    border-color: var(--hairline-strong);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  .ency-card.tier-T0 { border-top: 3px solid var(--accent-blue); }
+  .ency-card.tier-T1 { border-top: 3px solid var(--gold); }
+  .ency-card.tier-T2 { border-top: 3px solid var(--ink-muted); }
+  .ency-card.tier-T3 { border-top: 3px solid var(--hairline); }
+
+  .ency-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 5px 0px;
+  }
+  .ency-avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface-3);
+  }
+  .ency-avatar-placeholder {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--surface-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--ink-muted);
+    flex-shrink: 0;
+  }
+  .ency-card-info {
+    min-width: 0;
+    flex: 1;
+  }
+  .ency-faction {
+    font-size: 12px;
+    color: var(--gold);
+    display: inline-block;
+    border-radius: var(--r-pill);
+  }
+  .ency-name {
+    font-size: 16px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ency-tier {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+
+  .ency-skills {
+    padding: 6px 12px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .ency-skill-tag {
+    font-size: 12px;
+    padding: 0px 5px;
+    border-radius: var(--r-pill);
+  }
+  .ency-skill-tag.limit   { color: var(--red); }
+  .ency-skill-tag.innate  { color: var(--accent-blue); }
+  .ency-skill-tag.passive { color: var(--green); }
+  .ency-skill-tag.extra   { color: var(--purple); }
+
+
+  .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-muted);
+    font-size: 15px;
+  }
+
+  /* ── 统计栏 ── */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .stats-bar span { font-weight: 600; color: var(--text-primary); }
+
+  /* ── 响应式 ── */
+  @media (max-width: 1200px) {
+    .encyclopedia-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .encyclopedia-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .detail-card { max-width: 95vw; }
+  }
+  @media (max-width: 600px) {
+    .encyclopedia-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .ency-card-header { padding: 10px 8px 6px; }
+    .ency-avatar, .ency-avatar-placeholder { width: 40px; height: 40px; }
+    .ency-name { font-size: 13px; }
+    .ency-skills { padding: 4px 8px 10px; }
+    .upload-section { padding: 14px; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .search-input { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="logo" href="/lobby.html">Mahjong</a>
+  <div class="nav-links">
+    <a href="/lobby.html" title="大厅"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></a>
+    <a href="/history.html" title="对局记录"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></a>
+    <a href="/encyclopedia.html" class="active" title="角色图鉴"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg></a>
+    <a href="/profile.html" title="个人中心"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+  </div>
+  <span class="nav-user" id="navUser"></span>
+</nav>
+
+<div class="container">
+
+  <!-- 上传区域 -->
+  <div class="upload-section">
+    <h3>角色数据管理（上传 JSON 覆盖服务器角色池）</h3>
+    <div id="jsonDrop"><p>点击或拖放 JSON 文件</p></div>
+    <div class="upload-info">
+      <div class="char-count">服务器角色总数：<span id="charCount">0</span></div>
+      <div class="upload-hint">JSON 格式与 characters.json 一致：数组，每项含 name/tier/faction/limit/innate/passive/extra/note</div>
+    </div>
+  </div>
+
+  <!-- 工具栏 -->
+  <div class="toolbar">
+    <div class="filters">
+      <span class="filter-chip active" data-tier="">全部</span>
+      <span class="filter-chip" data-tier="T0">T0</span>
+      <span class="filter-chip" data-tier="T1">T1</span>
+      <span class="filter-chip" data-tier="T2">T2</span>
+      <span class="filter-chip" data-tier="T3">T3</span>
+    </div>
+    <div class="search-box">
+      <input class="search-input" id="searchInput" type="text" placeholder="搜索角色名…">
+      <span class="stats-bar" id="statsBar"></span>
+    </div>
+  </div>
+
+  <!-- 角色网格 -->
+  <div class="encyclopedia-grid" id="encyclopediaGrid">
+    <div class="no-results">加载中...</div>
+  </div>
+
+</div>
+
+<!-- 详情弹窗 -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-card" id="detailCard"></div>
+</div>
+
+<script src="/js/lib/auth.js"></script>
+<script src="/js/lib/utils.js"></script>
+<script src="/js/lib/api.js?v=2"></script>
+<script src="/js/lib/theme-switcher.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+// ── 初始化 ──
+Auth.check();
+Auth.renderNav(document.getElementById('navUser'));
+
+var allChars = [];
+var activeTier = '';
+var searchQuery = '';
+
+// ── 加载角色 ──
+async function loadCharacters() {
+  try {
+    allChars = await API.getCharacters();
+    document.getElementById('charCount').textContent = allChars.length;
+    renderGrid();
+  } catch (e) {
+    document.getElementById('encyclopediaGrid').innerHTML = '<div class="no-results">加载失败，请刷新页面</div>';
+  }
+}
+
+// ── 渲染角色头像 ──
+function renderCharImg(c, imgCls, phCls) {
+  if (c.image) {
+    var webpSrc = '/webp/' + c.image.replace(/\.png$/i, '.webp');
+    var pngSrc = '/png/' + c.image;
+    return '<picture>' +
+      '<source srcset="' + webpSrc + '" type="image/webp">' +
+      '<img class="' + imgCls + '" src="' + pngSrc + '" alt="' + Utils.escHTML(c.name) + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.nextElementSibling.style.display=\'flex\';">' +
+      '</picture>' +
+      '<div class="' + phCls + '" style="display:none">' + Utils.escHTML(c.name.charAt(0)) + '</div>';
+  }
+  return '<div class="' + phCls + '">' + Utils.escHTML(c.name.charAt(0)) + '</div>';
+}
+
+// ── 渲染网格 ──
+function renderGrid() {
+  var filtered = allChars;
+
+  if (activeTier) {
+    filtered = filtered.filter(function(c) { return c.tier === activeTier; });
+  }
+
+  if (searchQuery) {
+    var q = searchQuery.toLowerCase();
+    filtered = filtered.filter(function(c) {
+      return c.name.toLowerCase().includes(q) ||
+             (c.faction || '').toLowerCase().includes(q);
+    });
+  }
+
+  updateStats(filtered);
+
+  var grid = document.getElementById('encyclopediaGrid');
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="no-results">没有找到匹配的角色</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(function(c) {
+    var imgHTML = renderCharImg(c, 'ency-avatar', 'ency-avatar-placeholder');
+    var skills = [];
+    if (c.limit)   skills.push('<span class="ency-skill-tag limit">限</span>');
+    if (c.innate)  skills.push('<span class="ency-skill-tag innate">固</span>');
+    if (c.passive) skills.push('<span class="ency-skill-tag passive">被</span>');
+    if (c.extra)   skills.push('<span class="ency-skill-tag extra">附</span>');
+
+    return '<div class="ency-card tier-' + Utils.escHTML(c.tier) + '" onclick="showDetail(\'' + Utils.escHTML(c.id || c.name) + '\')" data-char-id="' + Utils.escHTML(c.id || c.name) + '">' +
+      '<div class="ency-card-header">' +
+        imgHTML +
+        '<div class="ency-card-info">' +
+          '<div class="ency-faction">' + Utils.escHTML(c.faction || '无阵营') + '</div>' +
+          '<div class="ency-name" title="' + Utils.escHTML(c.name) + '">' + Utils.escHTML(c.name) + '</div>' +
+          '<div class="ency-tier">' + Utils.escHTML(c.tier) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ency-skills">' + skills.join('') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function updateStats(filtered) {
+  var tiers = {};
+  filtered.forEach(function(c) { tiers[c.tier] = (tiers[c.tier] || 0) + 1; });
+  var parts = ['显示 <span>' + filtered.length + '</span> 名角色'];
+  ['T0','T1','T2','T3'].forEach(function(t) {
+    if (tiers[t]) parts.push('<span>' + t + '</span>×' + tiers[t]);
+  });
+  document.getElementById('statsBar').innerHTML = parts.join(' · ');
+}
+
+// ── 筛选 ──
+document.querySelectorAll('.filter-chip').forEach(function(el) {
+  el.addEventListener('click', function() {
+    activeTier = el.dataset.tier;
+    document.querySelectorAll('.filter-chip').forEach(function(f) { f.classList.remove('active'); });
+    el.classList.add('active');
+    renderGrid();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  searchQuery = this.value.trim();
+  renderGrid();
+});
+
+// ── 详情弹窗 ──
+function showDetail(charId) {
+  var c = allChars.find(function(x) { return (x.id || x.name) === charId; });
+  if (!c) return;
+
+  var skillsHTML = '';
+  var skillDefs = [
+    { key: 'limit',   label: '限定技', cls: 'limit' },
+    { key: 'innate',  label: '固有技', cls: 'innate' },
+    { key: 'passive', label: '被动技', cls: 'passive' },
+    { key: 'extra',   label: '附加技', cls: 'extra' }
+  ];
+
+  skillDefs.forEach(function(sd) {
+    if (c[sd.key]) {
+      skillsHTML += '<div class="detail-skill-block">' +
+        '<div class="detail-skill-label ' + sd.cls + '">' + sd.label + '</div>' +
+        '<div class="detail-skill-text">' + Utils.escHTML(c[sd.key]) + '</div>' +
+      '</div>';
+    }
+  });
+
+  var imgHTML = renderCharImg(c, 'detail-avatar', 'detail-avatar-placeholder');
+
+  var noteHTML = c.note
+    ? '<div class="detail-note"><div class="detail-note-label">说明</div><div class="detail-note-text">' + Utils.escHTML(c.note) + '</div></div>'
+    : '';
+
+  var card = document.getElementById('detailCard');
+  card.innerHTML =
+    '<div class="detail-header">' +
+      imgHTML +
+      '<div class="detail-title">' +
+        '<div class="detail-faction">' + Utils.escHTML(c.faction || '无阵营') + '</div>' +
+        '<div class="detail-name">' + Utils.escHTML(c.name) + '</div>' +
+        '<div class="detail-tier">' + Utils.escHTML(c.tier) + '</div>' +
+      '</div>' +
+      '<button class="detail-close" onclick="closeDetail()">✕</button>' +
+    '</div>' +
+    '<div class="detail-body">' +
+      skillsHTML +
+      noteHTML +
+    '</div>';
+
+  document.getElementById('detailOverlay').classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('show');
+}
+
+document.getElementById('detailOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeDetail();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeDetail();
+});
+
+// ── JSON 上传 ──
+var drop = document.getElementById('jsonDrop');
+var fileInput = document.createElement('input');
+fileInput.type = 'file'; fileInput.accept = '.json'; fileInput.style.display = 'none';
+drop.appendChild(fileInput);
+drop.onclick = function() { fileInput.click(); };
+drop.ondragover = function(e) { e.preventDefault(); drop.classList.add('drop-active'); };
+drop.ondragleave = function() { drop.classList.remove('drop-active'); };
+drop.ondrop = function(e) {
+  e.preventDefault(); drop.classList.remove('drop-active');
+  if (e.dataTransfer.files[0]) uploadJSON(e.dataTransfer.files[0]);
+};
+fileInput.onchange = function() { if (fileInput.files[0]) uploadJSON(fileInput.files[0]); };
+
+async function uploadJSON(file) {
+  try {
+    var text = await file.text();
+    // 前置校验：文件内容是否像 JSON
+    if (text.trim().charAt(0) !== '[' && text.trim().charAt(0) !== '{') {
+      return Utils.showToast('格式错误：请上传 .json 文件，不是 ' + (file.name || '').split('.').pop() + ' 文件');
+    }
+    var data = JSON.parse(text);
+    if (!Array.isArray(data)) {
+      return Utils.showToast('格式错误：JSON 内容必须是角色数组（[...]）');
+    }
+    var res = await API.uploadJSON(data);
+    if (res.success) {
+      Utils.showToast('上传成功！共 ' + res.count + ' 个角色');
+      loadCharacters();
+    } else {
+      Utils.showToast('上传失败：' + (res.msg || '未知错误'));
+    }
+  } catch (e) {
+    Utils.showToast('上传失败：' + e.message);
+  }
+}
+
+// ── 启动 ──
+loadCharacters();
+
+// ── GSAP 入场动画 ──
+gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
+gsap.from('.upload-section', { opacity: 0, y: -10, duration: 0.4, delay: 0.15, ease: 'power2.out' });
+gsap.from('.toolbar', { opacity: 0, y: -10, duration: 0.4, delay: 0.2, ease: 'power2.out' });
+gsap.from('.encyclopedia-grid', { opacity: 0, y: 20, duration: 0.6, delay: 0.3, ease: 'power3.out' });
+</script>
+</body>
+</html>

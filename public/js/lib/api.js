@@ -102,5 +102,12 @@ window.API = {
     return fetch('/api/upload-csv', {
       method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: text
     }).then(x => x.json());
+  },
+
+  // ── JSON ──
+  async uploadJSON(data) {
+    return fetch('/api/upload-json', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    }).then(x => x.json());
   }
 };
