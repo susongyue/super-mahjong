@@ -144,6 +144,11 @@ var user = Auth.user();
 // ── 导航栏渲染 ──
 Auth.renderNav(document.getElementById('navUser'));
 
+// ── 同步最新头像到 localStorage ──
+Auth.syncProfile().then(function(r) {
+  if (r) Auth.renderNav(document.getElementById('navUser'));
+});
+
 // ── 状态变量 ──
 var myReconnectInfo = null;
 
@@ -306,10 +311,23 @@ async function loadRooms() {
         statusHtml = '<span class="status-badge status-waiting">等待中</span>';
         btnHtml = '<button class="btn btn-cyan btn-join-room" data-room="' + room.roomId + '">加入</button>';
       }
+      // 渲染玩家带头像
+      var playersHtml = '';
+      var details = room.playerDetails || [];
+      (room.players || []).forEach(function(pName, i) {
+        var pDetail = details[i];
+        var avatar = pDetail ? pDetail.avatar : '';
+        var avatarEl = '';
+        if (avatar && (avatar.startsWith('http') || avatar.startsWith('/'))) {
+          avatarEl = '<img src="' + Utils.escHTML(avatar) + '" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:2px;">';
+        }
+        playersHtml += '<span style="margin-right:8px;white-space:nowrap;">' + avatarEl + Utils.escHTML(pName) + '</span>';
+      });
+
       return '<div class="room-item">' +
         '<div class="room-info">' +
         '<span class="room-id">房间 ' + room.roomId + '</span>' + statusHtml +
-        '<div class="room-meta">' + Utils.escHTML((room.players || []).join('、')) + ' | 第 ' + room.round + ' 回合</div>' +
+        '<div class="room-meta">' + playersHtml + ' | 第 ' + room.round + ' 回合</div>' +
         '</div>' + btnHtml +
         '</div>';
     }).join('');

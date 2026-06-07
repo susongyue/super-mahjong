@@ -334,6 +334,11 @@
 Auth.check();
 Auth.renderNav(document.getElementById('navUser'));
 
+// ── 同步最新头像 ──
+Auth.syncProfile().then(function(r) {
+  if (r) Auth.renderNav(document.getElementById('navUser'));
+});
+
 var allChars = [];
 var activeTier = '';
 var searchQuery = '';

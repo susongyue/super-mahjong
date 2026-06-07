@@ -4,6 +4,30 @@ All notable changes to super-mahjong will be documented in this file.
 
 ---
 
+## v1.2.0 (2026-06-07)
+
+### 头像系统增强
+- **跨页头像同步**：非登录页页面加载时自动从服务端拉取最新头像到 localStorage，解决重启后头像需进个人主页才刷新的问题
+- **大厅玩家头像**：`/api/rooms` 返回 `playerDetails` 含头像 CDN URL，大厅活跃房间列表展示玩家头像
+- **头像历史记录**：上传自定义头像后旧头像不再删除，改为保存到历史（最多 10 个）
+- **历史头像切换**：个人主页新增「历史头像」区域，点击缩略图可切换回之前上传的头像
+
+### Bug 修复
+- **对局详情加载失败**：`/api/game-history-detail` 的 `.single()` 改为 `.maybeSingle()`，避免空结果抛异常被静默吞掉
+- **回合切换动画**：`updateRoundView` 改为 `replaceChild` + 渐入渐出，消除双容器垂直堆叠问题
+
+### 管理员面板
+- 新增环境变量 `ADMIN_USERS`（逗号分隔的用户名列表），标记管理员
+- 个人主页底部新增「管理员面板」：查看服务器运行状态（运行时长/内存/在线人数等）+ 一键重启
+- 新增 API：`GET /api/admin/status`、`POST /api/admin/restart`
+
+### 后端
+- `loadFromDB` 支持从 Supabase 恢复 `avatar_history` 字段
+- `updateUserInDB` 支持写入 `avatar_history` 数组
+- 新增 API：`GET /api/avatar-history`、`POST /api/use-avatar`
+
+---
+
 ## v1.1.0 (2026-06-07)
 
 ### 对局历史改造

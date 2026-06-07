@@ -135,6 +135,49 @@
     }
     .logout-btn:hover { background: var(--hover-overlay-strong) !important; }
 
+    /* ── 历史头像 ── */
+    .avatar-history-grid {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;
+    }
+    .avatar-history-item {
+      width: 48px; height: 48px; border-radius: 50%;
+      cursor: pointer; border: 2px solid var(--hairline);
+      overflow: hidden; transition: all .2s; position: relative;
+    }
+    .avatar-history-item:hover { border-color: var(--accent-blue); transform: scale(1.08); }
+    .avatar-history-item img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-history-empty {
+      font-size: 12px; color: var(--ink-muted); padding: 8px 0;
+    }
+
+    /* ── 管理员面板 ── */
+    .admin-section {
+      background: var(--surface-1);
+      border-radius: var(--r-lg);
+      padding: 20px;
+      margin: 12px 0;
+      border: 2px solid var(--red-border);
+      box-shadow: var(--shadow-sm);
+    }
+    .admin-section h3 {
+      font-size: 15px; font-weight: 700;
+      margin-bottom: 14px; color: var(--red);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .admin-btn {
+      padding: 8px 18px; border-radius: var(--r-pill);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--red-border);
+      background: var(--red-bg); color: var(--red);
+      transition: all .2s; margin: 4px 6px 4px 0;
+    }
+    .admin-btn:hover { background: var(--hover-overlay-strong); }
+    .admin-status {
+      font-size: 12px; color: var(--ink-muted); line-height: 1.8;
+      background: var(--surface-2); padding: 10px 14px; border-radius: var(--r-md);
+      margin-bottom: 12px; min-height: 20px;
+    }
+
     @media (max-width: 768px) {
       .profile-page { padding-top: 68px; padding-left: 12px; padding-right: 12px; }
       .profile-header { padding: 20px 14px 14px; }
@@ -199,6 +242,10 @@
         <span class="custom-upload-name" id="uploadFileName"></span>
         <input type="file" id="fileInput" accept="image/*" onchange="previewCustomAvatar(event)">
       </div>
+      <div class="form-row" id="historyAvatarsRow" style="display:none">
+        <label>历史头像（点击切换）</label>
+        <div class="avatar-history-grid" id="avatarHistoryGrid"></div>
+      </div>
     </div>
 
     <div class="form-row">
@@ -238,6 +285,14 @@
   <div class="section-box">
     <h3>外观设置</h3>
     <div id="themeOptions"></div>
+  </div>
+
+  <!-- 管理员面板 -->
+  <div class="admin-section" id="adminSection" style="display:none">
+    <h3>⚙️ 管理员面板</h3>
+    <div class="admin-status" id="adminStatus">点击"获取状态"查看服务器信息…</div>
+    <button class="admin-btn" onclick="refreshAdminStatus()">获取状态</button>
+    <button class="admin-btn" onclick="confirmRestart()">重启服务器</button>
   </div>
 
   <!-- 退出登录 -->
@@ -484,6 +539,102 @@ function initThemePicker() {
   }).join('');
 }
 initThemePicker();
+
+// ── 加载历史头像 ──
+async function loadAvatarHistory() {
+  try {
+    var res = await API.getAvatarHistory(username);
+    if (!res.success || !res.history || res.history.length === 0) return;
+    document.getElementById('historyAvatarsRow').style.display = '';
+    var grid = document.getElementById('avatarHistoryGrid');
+    grid.innerHTML = res.history.map(function(url, i) {
+      var display = url;
+      if (!display || (!display.startsWith('http') && !display.startsWith('/'))) display = '';
+      return display
+        ? '<div class="avatar-history-item" onclick="useHistoryAvatar(' + i + ')" title="点击切换">' +
+          '<img src="' + Utils.escHTML(display) + '" alt="历史头像" onerror="this.parentElement.style.display=\'none\'">' +
+          '</div>'
+        : '';
+    }).join('');
+  } catch (e) { /* ignore */ }
+}
+loadAvatarHistory();
+
+// ── 使用历史头像 ──
+async function useHistoryAvatar(idx) {
+  if (!confirm('切换到这个历史头像？')) return;
+  try {
+    var res = await API.useHistoryAvatar(username, idx);
+    if (res.success) {
+      selectedAvatar = res.avatar;
+      selectedAvatarType = 'custom';
+      customAvatarUrl = res.avatar;
+      customAvatarFile = null;
+      document.getElementById('uploadFileName').innerText = '';
+      localStorage.avatar = res.avatar;
+      updateProfileAvatarDisplay();
+      renderAvatarGrid();
+      Auth.renderNav(document.getElementById('navUser'));
+      loadAvatarHistory(); // 刷新历史列表
+      Utils.showToast('头像已切换');
+    } else {
+      Utils.showToast('❌ ' + (res.msg || '切换失败'));
+    }
+  } catch (e) {
+    Utils.showToast('网络错误，请重试');
+  }
+}
+
+// ── 管理员面板 ──
+async function checkIsAdmin() {
+  try {
+    var r = await API.adminStatus(username);
+    // 管理员返回 success:true；非管理员返回 403 + success:false
+    if (r && r.success) {
+      document.getElementById('adminSection').style.display = '';
+    }
+  } catch (e) { /* 非管理员，不显示 */ }
+}
+checkIsAdmin();
+
+async function refreshAdminStatus() {
+  var el = document.getElementById('adminStatus');
+  el.innerText = '加载中…';
+  try {
+    var r = await API.adminStatus(username);
+    if (r.success) {
+      el.innerHTML =
+        '运行时长：<strong>' + r.uptime + '</strong><br>' +
+        '内存占用：<strong>' + r.memory + '</strong><br>' +
+        'Node 版本：<strong>' + r.nodeVersion + '</strong><br>' +
+        '活跃房间：<strong>' + r.activeRooms + '</strong> | 在线玩家：<strong>' + r.connectedPlayers + '</strong>';
+    } else {
+      el.innerText = '❌ ' + (r.msg || '获取失败');
+    }
+  } catch (e) {
+    el.innerText = '网络错误';
+  }
+}
+
+function confirmRestart() {
+  if (!confirm('⚠️ 确定要重启服务器吗？\n重启期间所有玩家将断开连接。')) return;
+  if (!confirm('请再次确认：这会导致所有正在进行的对局中断！')) return;
+  executeRestart();
+}
+
+async function executeRestart() {
+  var el = document.getElementById('adminStatus');
+  el.innerHTML = '🔄 <strong>正在重启服务器…</strong>';
+  try {
+    await API.adminRestart(username);
+    // 服务器会在 1 秒后退出的，这里不需要做什么
+    setTimeout(function() {
+      el.innerHTML = '服务器可能正在重启，请等待 10-30 秒后刷新页面…';
+    }, 2000);
+  } catch (e) {
+    el.innerText = '重启请求发送失败';
+  }
+}
 </script>
 
 </body>

@@ -54,5 +54,21 @@ window.Auth = {
     if (!confirm('确定要退出登录吗？')) return;
     localStorage.clear();
     location.href = '/login.html';
+  },
+
+  /** 从服务器同步最新资料到 localStorage（修复头像跨页不刷新） */
+  async syncProfile() {
+    const username = this.user();
+    if (!username) return;
+    try {
+      const r = await API.getProfile(username);
+      if (r.success) {
+        localStorage.nickname = r.nickname;
+        localStorage.avatar = r.avatar || '';
+        if (r.bio !== undefined) localStorage.bio = r.bio;
+        return r;
+      }
+    } catch (e) { /* 网络失败时保留本地缓存 */ }
+    return null;
   }
 };

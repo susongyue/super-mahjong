@@ -99,6 +99,13 @@ const supabaseUrl = process.env.SUPABASE_URL || 'https://rvdvdgriyleoiuglzgch.su
 const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2ZHZkZ3JpeWxlb2l1Z2x6Z2NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTk2NjQsImV4cCI6MjA5NTczNTY2NH0.ReGBK9H8xV0uReWiUWJe0Vo2hO4Jp66ou9pxjI2a3G4';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// ── 管理员配置 ──
+const ADMIN_USERS = (process.env.ADMIN_USERS || '').split(',').map(s => s.trim()).filter(Boolean);
+const SERVER_START_TIME = Date.now();
+function isAdmin(username) {
+  return ADMIN_USERS.length > 0 && ADMIN_USERS.includes(username);
+}
+
 // ── 内存缓存（从 Supabase 加载，减少数据库查询） ──
 let users = {};
 let rooms = {};
@@ -126,7 +133,15 @@ async function loadFromDB() {
     const { data: userData } = await supabase.from('users').select('*');
     if (userData) {
       users = {};
-      userData.forEach(u => { users[u.username] = { password: u.password, nickname: u.nickname || u.username, avatar: u.avatar || '', bio: u.bio || '' }; });
+      userData.forEach(u => {
+        let avatarHistory = [];
+        try {
+          if (u.avatar_history) {
+            avatarHistory = Array.isArray(u.avatar_history) ? u.avatar_history : JSON.parse(u.avatar_history);
+          }
+        } catch (_) { avatarHistory = []; }
+        users[u.username] = { password: u.password, nickname: u.nickname || u.username, avatar: u.avatar || '', bio: u.bio || '', avatar_history: avatarHistory };
+      });
       console.log('✅ 从 Supabase 加载 ' + userData.length + ' 个用户');
     }
 
@@ -284,7 +299,13 @@ async function findUserInDB(username) {
     const { data, error } = await supabase.from('users').select('*').eq('username', username).maybeSingle();
     if (error) { console.log('⚠️ findUserInDB 查询失败: ' + error.message); return null; }
     if (data) {
-      users[data.username] = { password: data.password, nickname: data.nickname || data.username, avatar: data.avatar || '', bio: data.bio || '' }; // 回填到内存缓存
+      let history = [];
+      try {
+        if (data.avatar_history) {
+          history = Array.isArray(data.avatar_history) ? data.avatar_history : JSON.parse(data.avatar_history);
+        }
+      } catch (_) { history = []; }
+      users[data.username] = { password: data.password, nickname: data.nickname || data.username, avatar: data.avatar || '', bio: data.bio || '', avatar_history: history }; // 回填到内存缓存
       return data;
     }
     return null;
@@ -817,9 +838,19 @@ app.post('/api/upload-avatar', async (req, res) => {
     });
     const fileID = uploadResult.fileID;
 
-    // 删除 CloudBase 上的旧头像
+    // 保存旧头像到历史记录（最多保留 10 个）
+    if (!users[username].avatar_history) users[username].avatar_history = [];
     if (oldAvatar && oldAvatar.startsWith('cloud://')) {
-      try { await tcbApp.deleteFile({ fileList: [oldAvatar] }); } catch (_) {}
+      // 不重复添加
+      if (!users[username].avatar_history.includes(oldAvatar)) {
+        users[username].avatar_history.unshift(oldAvatar);
+        if (users[username].avatar_history.length > 10) {
+          // 删除最旧的 CloudBase 文件
+          const removed = users[username].avatar_history.pop();
+          try { await tcbApp.deleteFile({ fileList: [removed] }); } catch (_) {}
+        }
+      }
+      // 注意：不再删除 CloudBase 上的旧头像文件（改为加入历史供切换）
     }
 
     // 解析为临时 CDN URL
@@ -831,7 +862,7 @@ app.post('/api/upload-avatar', async (req, res) => {
     users[username].avatar = fileID;
     users[username]._avatarUrl = displayUrl;
     AVATAR_CACHE.set(fileID, { url: displayUrl, expires: Date.now() + 85000 * 1000 });
-    await updateUserInDB(username, { avatar: fileID });
+    await updateUserInDB(username, { avatar: fileID, avatar_history: users[username].avatar_history });
 
     console.log('✅ 头像上传成功: ' + fileID + ' | CDN: ' + displayUrl);
     res.json({ success: true, msg: '头像上传成功', avatar: displayUrl });
@@ -839,6 +870,59 @@ app.post('/api/upload-avatar', async (req, res) => {
     console.log('❌ 头像上传失败: ' + err.message);
     res.json({ success: false, msg: '上传失败: ' + err.message });
   }
+});
+
+// ── 头像历史记录 ──
+app.get('/api/avatar-history', async (req, res) => {
+  const { username } = req.query;
+  if (!username) return res.json({ success: false, history: [] });
+
+  const userObj = users[username];
+  if (!userObj || typeof userObj !== 'object') return res.json({ success: false, history: [] });
+
+  const history = userObj.avatar_history || [];
+  // 解析所有 cloud:// fileID 为 CDN URL
+  const resolved = await Promise.all(history.map(async (fileID) => {
+    if (typeof fileID !== 'string' || !fileID.startsWith('cloud://')) return fileID;
+    return await resolveAvatarUrl(fileID) || fileID;
+  }));
+
+  res.json({ success: true, history: resolved, rawHistory: history });
+});
+
+// 切换使用历史头像
+app.post('/api/use-avatar', async (req, res) => {
+  const { username, avatarIndex } = req.body;
+  if (!username || avatarIndex === undefined) return res.json({ success: false, msg: '缺少参数' });
+
+  const userObj = users[username];
+  if (!userObj || !userObj.avatar_history) return res.json({ success: false, msg: '无历史头像' });
+
+  const idx = parseInt(avatarIndex);
+  const history = userObj.avatar_history;
+  if (idx < 0 || idx >= history.length) return res.json({ success: false, msg: '索引无效' });
+
+  // 把当前头像也加入历史
+  const current = userObj.avatar || '';
+  if (current && current.startsWith('cloud://')) {
+    history.unshift(current);
+    if (history.length > 10) {
+      const removed = history.pop();
+      if (tcbApp) try { await tcbApp.deleteFile({ fileList: [removed] }); } catch (_) {}
+    }
+  }
+
+  // 使用选中的历史头像
+  const selected = history.splice(idx, 1)[0];
+  userObj.avatar = selected;
+  userObj.avatar_history = history;
+
+  const displayUrl = await resolveAvatarUrl(selected);
+  userObj._avatarUrl = displayUrl;
+
+  await updateUserInDB(username, { avatar: selected, avatar_history: history });
+
+  res.json({ success: true, avatar: displayUrl });
 });
 
 // 创建房间（lobby 流程）
@@ -925,9 +1009,12 @@ app.post('/api/start-game', async (req, res) => {
   res.json({ success: true });
 });
 
-// 获取活跃房间列表
-app.get('/api/rooms', (req, res) => {
+// 获取活跃房间列表（含玩家头像）
+app.get('/api/rooms', async (req, res) => {
   const list = [];
+  // 收集需要解析头像的玩家
+  const playerLookups = []; // { roomIndex, playerIndex }
+
   Object.keys(socketRooms).forEach(id => {
     const r = socketRooms[id];
     if (r.players && r.players.length > 0) {
@@ -939,6 +1026,7 @@ app.get('/api/rooms', (req, res) => {
         roomId: id,
         host: hostName,
         players: r.players.map(p => p.name),
+        playerDetails: [],
         playerCount: r.players.length,
         maxPlayers: r.maxPlayers,
         allReady: r.players.every(p => p.ready),
@@ -946,17 +1034,39 @@ app.get('/api/rooms', (req, res) => {
         started: isStarted,
         round: r.round || 1
       });
+      const roomIndex = list.length - 1;
+      r.players.forEach((p, pi) => {
+        const userObj = users[p.name];
+        const rawAvatar = (p.avatar || (userObj && userObj.avatar) || '');
+        playerLookups.push({ roomIndex, playerIndex: pi, name: p.name, rawAvatar });
+      });
     }
   });
+
+  // 解析所有头像 CDN URL（并发）
+  const resolved = await Promise.all(
+    playerLookups.map(pl => resolveAvatarUrl(pl.rawAvatar).then(url => ({ ...pl, url })))
+  );
+
+  resolved.forEach(pl => {
+    if (!list[pl.roomIndex].playerDetails) list[pl.roomIndex].playerDetails = [];
+    list[pl.roomIndex].playerDetails[pl.playerIndex] = {
+      name: pl.name,
+      avatar: pl.url
+    };
+  });
+
   // 也对 REST rooms 中在 socketRooms 中不存在的房间进行检查
   Object.keys(rooms).forEach(id => {
     if (!socketRooms[id] && rooms[id].started) {
+      const pNames = rooms[id].players || [];
       list.push({
         id: id,
         roomId: id,
-        host: (rooms[id].players || [])[0] || '',
-        players: rooms[id].players || [],
-        playerCount: (rooms[id].players || []).length,
+        host: pNames[0] || '',
+        players: pNames,
+        playerDetails: pNames.map(n => ({ name: n, avatar: '' })),
+        playerCount: pNames.length,
         maxPlayers: rooms[id].maxPlayers || 4,
         allReady: false,
         playing: false,
@@ -1156,6 +1266,38 @@ app.get('/api/game-history-detail', async (req, res) => {
     console.error('[game-history-detail] exception:', e.message || e);
     res.status(500).json({ error: e.message || 'unknown', detail: null });
   }
+});
+
+// ── 管理员面板 ──
+app.post('/api/admin/restart', (req, res) => {
+  const { username } = req.body;
+  if (!isAdmin(username)) return res.status(403).json({ success: false, msg: '无管理员权限' });
+  console.log('🔁 管理员 ' + username + ' 触发了服务器重启');
+  res.json({ success: true, msg: '服务器将在 1 秒后重启' });
+  setTimeout(() => { process.exit(0); }, 1000);
+});
+
+app.get('/api/admin/status', (req, res) => {
+  const { username } = req.query;
+  if (!isAdmin(username)) return res.status(403).json({ success: false, msg: '无管理员权限' });
+  const uptime = Math.floor((Date.now() - SERVER_START_TIME) / 1000);
+  const formatUptime = () => {
+    const d = Math.floor(uptime / 86400);
+    const h = Math.floor((uptime % 86400) / 3600);
+    const m = Math.floor((uptime % 3600) / 60);
+    const s = uptime % 60;
+    return (d > 0 ? d + '天 ' : '') + h + '时 ' + m + '分 ' + s + '秒';
+  };
+  const mem = process.memoryUsage();
+  res.json({
+    success: true,
+    uptime: formatUptime(),
+    uptimeSeconds: uptime,
+    memory: Math.round(mem.heapUsed / 1024 / 1024) + ' MB',
+    nodeVersion: process.version,
+    activeRooms: Object.keys(socketRooms).length,
+    connectedPlayers: Object.values(socketRooms).reduce((a, r) => a + (r.players ? r.players.length : 0), 0)
+  });
 });
 
 // ── 房间状态查询（用于重连判断） ──

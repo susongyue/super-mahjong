@@ -43,6 +43,29 @@ window.API = {
     }).then(x => x.json());
   },
 
+  async getAvatarHistory(username) {
+    return fetch('/api/avatar-history?username=' + encodeURIComponent(username)).then(x => x.json());
+  },
+
+  async useHistoryAvatar(username, avatarIndex) {
+    return fetch('/api/use-avatar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, avatarIndex })
+    }).then(x => x.json());
+  },
+
+  // ── 管理员 ──
+  async adminStatus(username) {
+    return fetch('/api/admin/status?username=' + encodeURIComponent(username)).then(x => x.json());
+  },
+
+  async adminRestart(username) {
+    return fetch('/api/admin/restart', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    }).then(x => x.json());
+  },
+
   // ── 房间 ──
   async createRoom(username) {
     return fetch('/api/create-room', {
