@@ -116,6 +116,8 @@ let battleSelections = {};
 let gameHistory = {};
 // finishedRooms 用于标记已结束的房间（防止重连）；值 = 结束时间戳
 let finishedRooms = {};
+// roundBattleHistory[roomId] = [{ round: 1, selections: { "playerA": "宫永咲", ... }}, ...]
+let roundBattleHistory = {};
 
 // ── 从 Supabase 加载数据到内存缓存 ──
 async function loadFromDB() {
@@ -202,7 +204,7 @@ async function loadFromDB() {
       gameHistory = {};
       finishedRooms = {};
       ghData.forEach(h => {
-        gameHistory[h.room_id] = h;
+        gameHistory[h.room_id] = { room_id: h.room_id, game_id: h.game_id, players: h.players, totalRounds: h.total_rounds, draftResults: h.draft_results, battle_history: h.battle_history, host: h.host, createdAt: h.created_at, endedAt: h.ended_at };
         finishedRooms[h.room_id] = new Date(h.ended_at).getTime();
       });
       console.log('✅ 从 Supabase 加载 ' + ghData.length + ' 条对局历史');
@@ -531,17 +533,25 @@ function findSocketByPlayerName(roomId, playerName) {
 // ── 保存/删除游戏历史 ──
 async function saveGameHistory(roomId, data) {
   try {
+    // 生成唯一对局 ID（已存在的保留）
+    const existing = gameHistory[roomId];
+    const gameId = (existing && existing.game_id) || ('g' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 8));
+    const battleHistory = roundBattleHistory[roomId] || [];
     await supabase.from('game_history').upsert({
       room_id: roomId,
+      game_id: gameId,
       players: data.players || [],
       total_rounds: data.totalRounds || 0,
       draft_results: data.draftResults || {},
+      battle_history: battleHistory,
       host: data.host || '',
       created_at: data.createdAt || new Date().toISOString(),
       ended_at: data.endedAt || new Date().toISOString()
     }, { onConflict: 'room_id' });
-    gameHistory[roomId] = data;
-    console.log('📝 对局历史已保存: ' + roomId);
+    gameHistory[roomId] = { ...data, game_id: gameId, battle_history: battleHistory };
+    // 清理回合出战历史内存
+    delete roundBattleHistory[roomId];
+    console.log('📝 对局历史已保存: ' + roomId + ' (ID: ' + gameId + ')');
   } catch (e) { console.log('⚠️ saveGameHistory 失败: ' + e.message); }
 }
 
@@ -1040,7 +1050,7 @@ app.get('/api/all-draft', async (req, res) => {
 
 // ── 对局历史：获取某个玩家的历史对局 ──
 app.get('/api/game-history', async (req, res) => {
-  const { username } = req.query;
+  const { username, sort, search } = req.query;
   if (!username) return res.json([]);
 
   try {
@@ -1053,18 +1063,37 @@ app.get('/api/game-history', async (req, res) => {
         history = data;
       }
     }
-    const result = history.filter(h => {
+    let result = history.filter(h => {
       const players = h.players || [];
       return players.includes(username);
-    }).map(h => ({
+    });
+
+    // ID 搜索过滤
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter(h => {
+        if (h.game_id && h.game_id.toLowerCase().includes(q)) return true;
+        if (h.room_id && h.room_id.includes(q)) return true;
+        return false;
+      });
+    }
+
+    // 排序：默认倒序（新→旧），支持 asc 正序
+    result.sort((a, b) => {
+      const ta = new Date(a.ended_at || 0).getTime();
+      const tb = new Date(b.ended_at || 0).getTime();
+      return sort === 'asc' ? ta - tb : tb - ta;
+    });
+
+    res.json(result.map(h => ({
       roomId: h.room_id,
+      gameId: h.game_id || '',
       players: h.players,
       totalRounds: h.total_rounds,
       host: h.host,
       endedAt: h.ended_at,
       playerCount: h.players ? h.players.length : 0
-    }));
-    res.json(result);
+    })));
   } catch (e) {
     res.json([]);
   }
@@ -1072,24 +1101,36 @@ app.get('/api/game-history', async (req, res) => {
 
 // ── 对局历史详情 ──
 app.get('/api/game-history-detail', async (req, res) => {
-  const { roomId } = req.query;
-  if (!roomId) return res.json(null);
+  const { roomId, gameId } = req.query;
+  const lookup = roomId || gameId;
+  if (!lookup) return res.json(null);
 
   try {
-    let record = gameHistory[roomId];
+    let record = null;
+    // 优先用 gameId / roomId 从内存查找
+    for (const h of Object.values(gameHistory)) {
+      if ((roomId && h.room_id === roomId) || (gameId && h.game_id === gameId)) {
+        record = h;
+        break;
+      }
+    }
     if (!record) {
-      const { data } = await supabase.from('game_history').select('*').eq('room_id', roomId).single();
+      let query = supabase.from('game_history').select('*');
+      query = roomId ? query.eq('room_id', roomId) : query.eq('game_id', gameId);
+      const { data } = await query.single();
       if (data) {
         record = data;
-        gameHistory[roomId] = data;
+        gameHistory[data.room_id] = data;
       }
     }
     if (record) {
       res.json({
         roomId: record.room_id,
+        gameId: record.game_id || '',
         players: record.players,
         totalRounds: record.total_rounds,
         draftResults: record.draft_results,
+        battleHistory: record.battle_history || [],
         host: record.host,
         createdAt: record.created_at,
         endedAt: record.ended_at
@@ -1666,6 +1707,13 @@ io.on('connection', (socket) => {
     const votedNames = room.players.filter(p => room.roundEndVotes[p.id]).map(p => p.name);
     io.to(roomId).emit('roundEndVoteUpdate', { voted: votedCount, total: totalCount, votedNames });
     if (votedCount >= totalCount && totalCount > 0) {
+      // ── 保存本轮出战选择到历史（用于对局记录回放）──
+      if (!roundBattleHistory[roomId]) roundBattleHistory[roomId] = [];
+      const currentRound = room.round || 1;
+      const currentSelections = { ...(battleSelections[roomId] || {}) };
+      if (Object.keys(currentSelections).length > 0) {
+        roundBattleHistory[roomId].push({ round: currentRound, selections: currentSelections });
+      }
       // ── 更新角色休息/保留状态 ──
       updateCharacterStatesAfterRound(roomId);
       room.round += 1;

@@ -1,65 +1,29 @@
-#  超能力立直麻将 (Super Mahjong)
+# 超能力立直麻将
 
-> 一款多人联机麻将角色选角对战网页游戏 —— 选择拥有超能力的麻将角色，与好友轮流对战，策略博弈，决胜牌桌！
-
----
-
-## 📖 目录
-
-- [项目简介](#-项目简介)
-- [核心特色](#-核心特色)
-- [技术栈](#-技术栈)
-- [快速开始](#-快速开始)
-- [游玩流程](#-游玩流程)
-  - [1. 注册/登录](#1-注册登录)
-  - [2. 大厅 - 创建/加入房间](#2-大厅---创建加入房间)
-  - [3. 房间 - 准备 & 选角](#3-房间---准备--选角)
-  - [4. 选将 - 选择出战角色](#4-选将---选择出战角色)
-  - [5. 回合对战 - 揭晓 & 投票](#5-回合对战---揭晓--投票)
-  - [6. 循环 & 结束](#6-循环--结束)
-- [核心机制详解](#-核心机制详解)
-  - [角色休息/恢复机制](#角色休息恢复机制)
-  - [保留 (Retain) 机制](#保留-retain-机制)
-  - [出战选择保密](#出战选择保密)
-  - [玩家投票系统](#玩家投票系统)
-  - [断线重连](#断线重连)
-- [角色系统](#-角色系统)
-  - [角色数据格式](#角色数据格式)
-  - [技能类型说明](#技能类型说明)
-  - [强度等级](#强度等级)
-  - [角色头像](#角色头像)
-- [项目结构](#-项目结构)
-- [API 接口参考](#-api-接口参考)
-- [Socket 事件说明](#socket-事件说明)
-- [自定义角色数据](#-自定义角色数据)
-- [环境变量配置](#-环境变量配置)
-- [运行截图预览](#-运行截图预览)
-- [常见问题](#-常见问题)
+> 多人联机角色选角对战 — 76 名超能力角色、策略博弈、实时对抗
+> 目前只通过线上选角随后在线下对战，后续玩法待更新
 
 ---
 
-## 🎮 项目简介
+## 🚀 在线体验
 
-**超能力立直麻将** 是一款基于浏览器的多人联机对战游戏。每位玩家从麻将主题角色池中抽取 6 名角色，每回合秘密选择 1 名角色出战，回合结束后所有选择同时公开。角色拥有不同的超能力技能（限定技、固有技、被动技、附加技），玩家需要根据对手的选择和角色休息状态进行策略博弈。
-
-游戏灵感来源于《咲-Saki-》等麻将题材动漫作品，包含 **76 个角色**（含 72 个头像 PNG），覆盖多个阵营和强度等级。
-
----
-
-## ✨ 核心特色
-
-| 特色 | 说明 |
+| 平台 | 地址 |
 |------|------|
-| 🎭 **丰富角色池** | 76 个角色，4 种技能类型，5 个强度等级，10+ 阵营 |
-| 🔒 **出战保密** | 选将阶段他人无法看到你的选择，回合开始时统一揭晓 |
-| 🔄 **休息轮换** | 出战过的角色需要休息，强制玩家轮换阵容 |
-|  **保留机制** | 部分角色可在出战后继续连战，打破休息限制 |
-| 🗳️ **玩家投票** | 所有阶段推进需全员同意，保证公平性 |
-| 🔌 **断线重连** | 意外断线后可自动检测并重连回未完成的房间 |
-| ☁️ **云存储** | 基于 Supabase 持久化用户、房间和历史对局数据 |
-| 📊 **历史记录** | 可查看过往对局的选角情况和出战记录 |
-| 🖼️ **角色头像** | 72 个角色拥有专属头像，无头像角色自动显示占位符 |
-| 📥 **CSV 热加载** | 可在游戏中直接上传 CSV 文件覆盖角色数据 |
+| **Railway** | `https://super-mahjong.up.railway.app` |
+| **CloudBase** | `https://super-mahjong-267217-4-1324905494.sh.run.tcloudbase.com` |
+
+---
+
+## 🎮 玩法概览
+
+```
+注册/登录 → 创建或加入房间 → 全员准备 → 随机分配 6 名角色
+→ 每回合暗选 1 人出战 → 统一揭晓 → 投票推进或结束 → 循环
+```
+
+- **暗选出战**：选将阶段其他玩家仅可见选择状态，无法知晓所选角色
+- **休息轮换**：已出战的角色次回合进入休息，持有「保留」属性的角色可连续出战
+- **全员投票**：各阶段推进均需全体玩家同意方可继续
 
 ---
 
@@ -67,207 +31,195 @@
 
 | 组件 | 技术 |
 |------|------|
-| 后端框架 | **Express** 5.x |
-| 实时通信 | **Socket.IO** 4.x |
+| 后端 | Express 5 + Socket.IO 4 |
 | 数据库 | **Supabase** (PostgreSQL) |
-| 前端 | 原生 HTML / CSS / JavaScript（无框架） |
-| 运行环境 | Node.js 18+ |
-| 端口 | 3000（默认） |
-
-**依赖包：** `express`, `socket.io`, `@supabase/supabase-js`, `cors`, `dotenv`
+| 头像存储 | **CloudBase** 云存储 |
+| 前端 | 原生 HTML/CSS/JS |
+| 部署 | Railway / CloudBase CloudRun |
 
 ---
 
-## 🌐 在线体验
+## 📋 前置准备
 
-已部署到 **腾讯云 CloudBase CloudRun**：
+部署前需注册以下云服务：
 
+| 服务 | 用途 | 注册地址 |
+|------|------|----------|
+| **Supabase** | 用户、房间及对局数据持久化 | [supabase.com](https://supabase.com) |
+| **CloudBase** | 自定义头像上传存储 | [console.cloud.tencent.com](https://console.cloud.tencent.com) |
+
+---
+
+## ⚙️ 数据库配置
+
+### 1. Supabase 建表
+
+在 Supabase **SQL Editor** 中执行以下语句创建所有表：
+
+```sql
+-- 用户表
+CREATE TABLE IF NOT EXISTS users (
+  username TEXT PRIMARY KEY,
+  password TEXT NOT NULL,
+  nickname TEXT DEFAULT '',
+  avatar TEXT DEFAULT '',
+  bio TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 角色表
+CREATE TABLE IF NOT EXISTS characters (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  faction TEXT DEFAULT '',
+  tier TEXT DEFAULT '',
+  "limit" TEXT DEFAULT '',
+  passive TEXT DEFAULT '',
+  innate TEXT DEFAULT '',
+  extra TEXT DEFAULT '',
+  note TEXT DEFAULT '',
+  image TEXT DEFAULT '',
+  retain BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 房间表
+CREATE TABLE IF NOT EXISTS rooms (
+  room_id TEXT PRIMARY KEY,
+  host TEXT NOT NULL,
+  players TEXT[] DEFAULT '{}',
+  status TEXT DEFAULT 'waiting',
+  draft_method TEXT DEFAULT '',
+  round INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Socket 房间状态
+CREATE TABLE IF NOT EXISTS socket_rooms (
+  room_id TEXT PRIMARY KEY,
+  data JSONB DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 选角结果
+CREATE TABLE IF NOT EXISTS draft_results (
+  room_id TEXT PRIMARY KEY,
+  results JSONB DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 角色状态（休息/保留）
+CREATE TABLE IF NOT EXISTS character_states (
+  room_id TEXT PRIMARY KEY,
+  states JSONB DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 出战选择
+CREATE TABLE IF NOT EXISTS battle_selections (
+  room_id TEXT PRIMARY KEY,
+  selections JSONB DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 历史对局
+CREATE TABLE IF NOT EXISTS game_history (
+  room_id TEXT PRIMARY KEY,
+  game_id TEXT,
+  players TEXT[] DEFAULT '{}',
+  draft_results JSONB DEFAULT '{}',
+  battle_history JSONB DEFAULT '[]',
+  host TEXT DEFAULT '',
+  total_rounds INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  ended_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS 策略（允许公开读写）
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE characters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE socket_rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE draft_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE character_states ENABLE ROW LEVEL SECURITY;
+ALTER TABLE battle_selections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE game_history ENABLE ROW LEVEL SECURITY;
+
+-- 为每张表创建宽松策略
+DO $$
+DECLARE t TEXT;
+BEGIN
+  FOR t IN SELECT tablename FROM pg_tables WHERE schemaname='public'
+  LOOP
+    EXECUTE format('CREATE POLICY "允许公开读写" ON %I FOR ALL USING (true) WITH CHECK (true)', t);
+  END LOOP;
+END $$;
 ```
-https://super-mahjong-267217-4-1324905494.sh.run.tcloudbase.com
+
+### 2. 导入角色数据
+
+首次部署时，服务器启动会自动将 `data/characters.json` 导入 Supabase `characters` 表。
+
+### 3. CloudBase 头像存储
+
+1. 打开 [腾讯云控制台](https://console.cloud.tencent.com/cam/capi) → 获取 `SecretId` 和 `SecretKey`
+2. 确保 CloudBase 环境已开通云存储
+
+---
+
+## 🔐 环境变量
+
+创建 `.env` 文件并在部署平台配置以下环境变量：
+
+```env
+# ── Supabase（必须） ──
+SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
+
+# ── CloudBase 云存储（头像上传，必须） ──
+TENCENT_SECRET_ID=AKIDxxxxxxxxxxxxxxxxxxxxxxxxxx
+TENCENT_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# ── 可选 ──
+PORT=3000
 ```
 
 ---
 
-## 🚀 快速开始
-
-### 环境要求
-
-- **Node.js** ≥ 18.0
-- **npm** ≥ 8.0
-
-### 安装步骤
+## 🏠 本地运行
 
 ```bash
-# 1. 进入项目目录
-cd super-mahjong
-
-# 2. 安装依赖
 npm install
-
-# 3. （可选）配置 Supabase 环境变量
-# 编辑 .env 文件，填入你的 Supabase 项目 URL 和 Key
-
-# 4. 启动服务器
 node server.js
-
-# 5. 打开浏览器访问
-# http://localhost:3000
+# 访问 http://localhost:3000
 ```
-
-### 一键启动
-
-Windows 用户可直接双击 `运行.bat`，选择 `[1] 启动服务器`。
-
-> **注意：** 如果 `.env` 未配置 Supabase，游戏会自动回退到本地 JSON 文件存储（数据在 `data/` 目录下）。
 
 ---
 
-## 🎯 游玩流程
+## ☁️ 部署到 Railway
 
-### 1. 注册/登录
+1. Fork/推送本项目到 GitHub
+2. 在 [Railway](https://railway.app) 中 **New Project → Deploy from GitHub repo**
+3. 在 **Variables** 中添加上述 4 个环境变量
+4. Railway 自动检测 Dockerfile 并部署
 
-- 打开浏览器访问 `http://localhost:3000`
-- 首次使用需要注册账号（用户名 + 密码）
-- 已有账号可直接登录
-- 登录凭据保存在浏览器 `localStorage` 中
-
-### 2. 大厅 - 创建/加入房间
-
-- **创建房间**：点击「创建房间」，系统自动生成 6 位数字房间号
-- **加入房间**：输入房主分享的房间号，点击「加入」
-- 大厅会显示当前活跃房间列表
-- 支持查看历史对局记录
-
-> **重连机制**：如果刷新页面或断线，重新进入大厅时会自动检测是否有未完成的房间，并提示重连。
-
-### 3. 房间 - 准备 & 选角
-
-- 所有玩家加入后，各自点击「准备」按钮
-- **全员准备后**，自动触发选角方式投票：
-  - **随机抽取**：从角色池中随机分配 6 个角色给每位玩家
-  - **顺序抽取**：按角色池顺序分配
-- 投票结果确定后，系统自动为每位玩家分配 6 个角色
-- 3 秒倒计时后自动进入选将阶段
-
-> 房主可在房间页面上传自定义 CSV 文件来更换当前角色池。
-
-### 4. 选将 - 选择出战角色
-
-- 玩家看到自己分配到的 6 个角色卡片
-- 点击角色可查看完整技能详情（含角色头像）
-- **秘密选择** 1 个角色出战 —— 其他玩家只能看到你是否已选，看不到你选的是哪个角色
-- 处于「休息中」的角色不可选择（灰色显示）
-- 拥有「保留」属性的角色即使休息也可出战（金色虚线边框）
-- **全员选完后** → 自动进入回合对战页面
-
-### 5. 回合对战 - 揭晓 & 投票
-
-- 所有玩家的出战角色统一揭晓，以 2×2 网格展示
-- 可点击任意角色查看完整技能详情
-- 两种投票操作：
-  - **🗳️ 结束本回合**：全员同意后，出战角色进入休息状态，回合数 +1，返回选将页继续下一轮
-  - **🏁 结束本局**：全员同意后，对局结束，保存历史记录，返回大厅
-
-### 6. 循环 & 结束
-
-```
-选将 → 揭晓 → 投票（结束回合）→ 选将 → ... → 投票（结束本局）→ 大厅
-```
-
-- 当某位玩家所有非保留角色都休息后，自动全部恢复，开始新一轮循环
-- 对局总回合数不限，完全由玩家自主决定何时结束
+| 变量 | 值来源 |
+|------|--------|
+| `SUPABASE_URL` | Supabase Project Settings → API |
+| `SUPABASE_ANON_KEY` | Supabase Project Settings → API |
+| `TENCENT_SECRET_ID` | 腾讯云 CAM → API 密钥 |
+| `TENCENT_SECRET_KEY` | 腾讯云 CAM → API 密钥 |
 
 ---
 
-## ⚙️ 核心机制详解
+## ☁️ 部署到 CloudBase
 
-### 角色休息/恢复机制
-
-```
-出战 → 该角色标记为「休息中」→ 下回合不可选（除非有 retention） 
-→ 所有角色都休息后 → 全部自动恢复 → 新一轮循环
+```bash
+tcb run deploy --name super-mahjong
 ```
 
-- 保证玩家不能无限使用同一个强力角色
-- 每回合必须从可用角色中轮换选择
-- 策略要点：合理安排角色出场顺序，判断对手可能的选择
-
-### 保留 (Retain) 机制
-
-- 部分角色拥有 **retain** 属性（如宫永照、天江衣等）
-- 保留角色出战后虽然也标记休息，但 **仍可在下一回合继续出战**
-- 在选将界面中，保留角色有特殊的金色虚线边框提示
-- 这是游戏中重要的差异化策略元素
-
-### 出战选择保密
-
-- 选将阶段，其他玩家 **只能看到你是否已选择**，看不到你选了谁
-- 只有当所有玩家都完成选择后，才会统一跳转到回合页公开结果
-- 这增加了心理博弈和策略深度
-
-### 玩家投票系统
-
-| 投票场景 | 触发条件 | 通过条件 |
-|---------|---------|---------|
-| 选角方式 | 全员准备后 | 全员投票 |
-| 结束本回合 | 回合页点击投票 | 全员同意 |
-| 结束本局 | 任意阶段点击结束 | 全员同意 |
-
-所有投票结果实时通过 Socket 推送给房间内所有玩家。
-
-### 断线重连
-
-- 玩家断线后，重新进入大厅会自动检测
-- 通过 `localStorage` 中保存的 `roomId` 查询房间状态
-- 如果房间仍在进行中，自动跳转到对应页面恢复游戏
-- 断线超时（30-60分钟）后，房间和 Socket 连接会被自动清理
-
----
-
-## 🃏 角色系统
-
-### 角色数据格式
-
-每个角色包含以下字段：
-
-| 字段 | 说明 | 示例 |
-|------|------|------|
-| `name` | 角色名称 | 宫永咲 |
-| `faction` | 所属阵营 | 清澄高校 |
-| `tier` | 强度等级 | T0 |
-| `limit` | 限定技（每局有限次数的大招） | 岭上开花：... |
-| `innate` | 固有技（角色固有技能） | 正负零：... |
-| `passive` | 被动技（持续生效） | 岭上感知：... |
-| `extra` | 附加技（额外技能） | — |
-| `retain` | 是否可保留连战 | true / false |
-| `note` | 备注说明 | — |
-| `image` | 头像文件名 | Miyanaga_Saki.png |
-
-### 技能类型说明
-
-| 技能类型 | 触发方式 | 说明 |
-|---------|---------|------|
-| 🎯 **限定技 (limit)** | 每局限定次数 | 最强技能，使用次数有限 |
-| ⚡ **固有技 (innate)** | 角色固有 | 角色天生具备的能力 |
-| 🔄 **被动技 (passive)** | 持续生效 | 无需主动触发，始终生效 |
-| ➕ **附加技 (extra)** | 附加能力 | 额外获得的技能 |
-
-### 强度等级
-
-| 等级 | 说明 |
-|------|------|
-| **T0** | 顶级角色，拥有极为强力的技能 |
-| **T1** | 强力角色，竞技核心选择 |
-| **T2** | 中等角色，需要配合阵容 |
-| **T3** | 一般角色，特定场景有用 |
-
-### 角色头像
-
-- PNG 头像存放在 `png/` 目录下
-- 72/76 个角色拥有专属头像 (如 `宫永咲 → Miyanaga_Saki.png`)
-- 暂无头像的 4 个角色会自动显示灰色占位符（角色名首字）
-- 图片加载失败时也会自动降级为占位符
-- 角色详情、选择卡片、对战页面、选角结果、历史记录等位置均已集成头像展示
+推荐配置：0.5 核 CPU / 1GB 内存 / 端口 3000
 
 ---
 
@@ -275,195 +227,80 @@ Windows 用户可直接双击 `运行.bat`，选择 `[1] 启动服务器`。
 
 ```
 super-mahjong/
-├── server.js                 # 主服务器（Express + Socket.IO）
-├── package.json              # 项目配置与依赖
-├── .env                      # 环境变量（Supabase 配置）
-├── super-mahjong.csv         # 角色原始数据（CSV 格式）
-├── run.bat                   # Windows 一键启动脚本
-├── npm.bat                   # 一键安装依赖脚本
-├── GitHub.bat                # GitHub 推送脚本
+├── server.js              # 主服务器（Express + Socket.IO）
+├── package.json
+├── Dockerfile
+├── .env                   # 环境变量（不提交到 Git）
+├── cloudbaserc.json       # CloudBase 部署配置
 │
-├── png/                      # 角色头像图片（73 个 PNG）
-│   ├── Miyanaga_Saki.png
-│   ├── Haramura_Nodoka.png
-│   └── ...
+├── data/
+│   └── characters.json    # 角色数据（首次部署时导入 Supabase）
 │
-├── data/                     # 本地数据存储（JSON）
-│   ├── characters.json       # 角色数据（从 CSV 自动生成）
-│   ├── character-images.json # 角色名→头像文件名映射
-│   ├── users.json            # 用户数据
-│   ├── rooms.json            # 房间数据
-│   ├── socket_rooms.json     # Socket 房间状态
-│   ├── draft_results.json    # 选角结果
-│   ├── game_history.json     # 历史对局
-│   ├── character_states.json # 角色休息状态
-│   └── battle_selections.json# 出战选择
+├── public/                # 前端页面
+│   ├── login.html         # 登录/注册
+│   ├── lobby.html         # 大厅（房间列表/历史记录）
+│   ├── index.html         # 房间（准备/投票/选角）
+│   ├── game.html          # 选将（出战选择）
+│   └── battle_round.html  # 回合对战（揭晓/投票）
 │
-├── public/                   # 前端页面
-│   ├── style.css             # 全局样式（日麻主题配色）
-│   ├── login.html            # 登录/注册页
-│   ├── lobby.html            # 大厅（创建/加入房间/历史记录）
-│   ├── index.html            # 房间页（准备/投票/选角结果）
-│   ├── game.html             # 选将页（出战选择/角色详情）
-│   └── battle_round.html     # 回合对战页（揭晓/投票）
-│
-└── supabase/                 # Supabase 数据库迁移脚本
+└── tools/
+    └── migrate_characters.sql  # Supabase 建表 SQL
 ```
 
 ---
 
-## 📡 API 接口参考
+## 🃏 角色系统
 
-### REST API
+76 个角色，4 种技能，5 个强度等级：
+
+| 技能类型 | 说明 |
+|---------|------|
+| 🎯 **限定技** | 每局限定次数的大招 |
+| ⚡ **固有技** | 角色天生能力 |
+| 🔄 **被动技** | 持续生效 |
+| ➕ **附加技** | 额外技能 |
+
+| 等级 | T0 | T1 | T2 | T3 |
+|------|----|----|----|-----|
+| 定位 | 顶级 | 强力 | 中等 | 一般 |
+
+---
+
+## 📡 API 参考
 
 | 方法 | 路由 | 功能 |
 |------|------|------|
-| `POST` | `/api/register` | 用户注册 |
-| `POST` | `/api/login` | 用户登录 |
-| `POST` | `/api/create-room` | 创建房间（返回 6 位房间号） |
+| `POST` | `/api/register` | 注册 |
+| `POST` | `/api/login` | 登录 |
+| `POST` | `/api/create-room` | 创建房间 |
 | `POST` | `/api/join-room` | 加入房间 |
-| `GET` | `/api/characters` | 获取全部角色列表（含头像字段） |
-| `POST` | `/api/upload-csv` | 上传 CSV 覆盖角色数据 |
-| `POST` | `/api/start-game` | 标记游戏开始 |
-| `GET` | `/api/rooms` | 获取活跃房间列表 |
-| `POST` | `/api/draft-results` | 保存选角结果 |
-| `GET` | `/api/my-draft` | 获取当前用户的选角结果 |
-| `GET` | `/api/character-states` | 获取角色休息/保留状态 |
-| `GET` | `/api/battle-selections` | 获取当前回合出战选择 |
-| `GET` | `/api/all-draft` | 获取房间所有玩家角色 |
-| `GET` | `/api/game-history` | 获取历史对局列表 |
-| `GET` | `/api/game-history-detail` | 获取对局详情 |
-| `GET` | `/api/room-status` | 查询房间状态（断线重连用） |
+| `GET` | `/api/characters` | 获取角色列表 |
+| `POST` | `/api/upload-json` | 上传角色 JSON |
+| `GET` | `/api/rooms` | 活跃房间列表 |
+| `GET` | `/api/game-history` | 历史对局 |
+| `GET` | `/api/room-status` | 房间状态（断线重连） |
+| `POST` | `/api/upload-avatar` | 上传自定义头像 |
 
-### Socket 事件说明
-
-| 事件 | 方向 | 功能 |
-|------|------|------|
-| `joinRoom` | 客户端 → 服务端 | 加入 Socket 房间 |
-| `toggleReady` | 客户端 → 服务端 | 切换准备状态 |
-| `voteSelect` | 客户端 → 服务端 | 投票选择角色抽取方式 |
-| `selectBattleCharacter` | 客户端 → 服务端 | 选择出战角色（保密） |
-| `resetBattleSelection` | 客户端 → 服务端 | 取消出战选择 |
-| `getBattleState` | 客户端 → 服务端 | 查询当前选将状态 |
-| `voteEndRound` | 客户端 → 服务端 | 投票结束当前回合 |
-| `voteEndGame` | 客户端 → 服务端 | 投票结束整局游戏 |
-| `getRoomState` | 客户端 → 服务端 | 获取房间状态 |
-| `requestBattleRoundData` | 客户端 → 服务端 | 请求完整对战数据 |
-
----
-
-## 📝 自定义角色数据
-
-### 通过 CSV 上传
-
-1. 进入房间页面，点击「上传 CSV」
-2. 选择符合格式的 CSV 文件上传
-3. 上传后服务器角色池立即更新
-
-### CSV 格式要求
-
-```csv
-name,faction,tier,limit,innate,passive,extra,retain,note
-宫永咲,清澄高校,T0,岭上开花：...,正负零：...,岭上感知：...,,,
-原村和,清澄高校,T1,网络麻将：...,理论派：...,数据分析：...,,TRUE,
-```
-
-| 字段 | 必填 | 说明 |
-|------|------|------|
-| `name` | ✅ | 角色名称 |
-| `faction` | ✅ | 所属阵营 |
-| `tier` | ✅ | 强度等级 (T0~T3) |
-| `limit` | 选填 | 限定技描述 |
-| `innate` | 选填 | 固有技描述 |
-| `passive` | 选填 | 被动技描述 |
-| `extra` | 选填 | 附加技描述 |
-| `retain` | 选填 | 是否可保留 (TRUE/FALSE) |
-| `note` | 选填 | 备注 |
-
-> 上传新 CSV 后，需手动更新 `data/character-images.json` 来为新角色匹配头像。
-
----
-
-## 🔐 环境变量配置
-
-在项目根目录创建 `.env` 文件：
-
-```env
-# Supabase 配置（用于云存储）
-
-SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
-
-# 如果不配置，游戏将回退到本地 JSON 文件存储
-```
-
-> **本地模式**：不配置 Supabase 时，数据存储在 `data/` 目录的 JSON 文件中，适合单机测试。
-
----
-
-## ☁️ CloudBase 部署信息
-
-| 项目 | 详情 |
-|------|------|
-| **环境 ID** | `sr-mahjong-d0g8mp6w19f37dd37` |
-| **区域** | 上海 (ap-shanghai) |
-| **部署方式** | CloudRun 容器模式 |
-| **容器配置** | 0.5 核 CPU / 1GB 内存 / 1-5 实例 / 端口 3000 |
-| **Dockerfile** | 项目根目录 `Dockerfile` |
-| **访问地址** | `https://super-mahjong-267217-4-1324905494.sh.run.tcloudbase.com` |
-| **控制台** | [CloudRun 管理](https://tcb.cloud.tencent.com/dev?envId=sr-mahjong-d0g8mp6w19f37dd37#/platform-run) |
-
----
-
-## 🖼️ 运行截图预览
-
-| 页面 | 说明 |
-|------|------|
-| 登录页 | 注册/登录表单，Tab 切换 |
-| 大厅 | 创建房间、加入房间、活跃对局列表、历史记录 |
-| 房间页 | 玩家列表、准备状态、选角投票、选角结果展示 |
-| 选将页 | 6 个角色卡片（含头像）、出战选择、技能详情弹窗 |
-| 回合页 | 2×2 网格揭晓、角色详情、投票结束回合/对局 |
+> Socket 事件：`joinRoom` · `toggleReady` · `voteSelect` · `selectBattleCharacter` · `voteEndRound` · `voteEndGame` · `getRoomState`
 
 ---
 
 ## ❓ 常见问题
 
-### Q: 如何让朋友加入我的房间？
-A: 创建房间后会显示 6 位房间号，将房间号发给朋友，他们在大厅输入房间号即可加入。
+> **Q: 支持几人游玩？**  
+> 最少 2 人，最多 4 人。
 
-### Q: 为什么有些角色不能选？
-A: 角色出战后会进入「休息中」状态，下一回合不可选。注意查看带有金色虚线边框的「保留」角色，它们可以连续出战。
+> **Q: 中途断线如何恢复？**  
+> 重新登录后大厅会自动检测未完成的对局并提示重连，对局状态不会丢失。
 
-### Q: 角色头像显示不出来怎么办？
-A: 部分角色暂未配置头像，会自动显示灰色占位符。你也可以在 `png/` 目录下放入对应名称的 PNG 图片，并更新 `data/character-images.json` 的映射关系。
+> **Q: 部分角色为何不可选择？**  
+> 已出战的角色需要休息一回合后方可再次使用。带有金色虚线边框的角色具有「保留」属性，不受此限制。
 
-### Q: 如何添加新角色？
-A: 三种方式：
-1. 编辑 `super-mahjong.csv` 添加新行，重启服务器自动重新生成
-2. 在房间页面上传新的 CSV 文件
-3. 直接编辑 `data/characters.json`
-
-### Q: 服务器重启后数据会丢失吗？
-A: 配置了 Supabase 后数据会持久化到云端。如果使用本地 JSON 模式，数据保存在 `data/` 目录下，服务器重启不会丢失，但需要注意备份。
-
-### Q: 最少需要几个人玩？
-A: 最少 2 人。房间最大人数默认为 4 人。
-
-### Q: 断线了怎么办？
-A: 重新打开页面登录后，大厅会自动检测是否有未完成的房间并提示重连。只要房间未超时清理，即可无缝恢复。
-
-### Q: 如何结束一局游戏？
-A: 在选将页或回合页点击「结束本局」投票，全员同意后对局结束，返回大厅。或者等到系统超时自动清理（60 分钟无活动）。
+> **Q: 服务器重启会丢失数据吗？**  
+> 不会。所有用户、房间、对局数据均实时持久化至 Supabase。
 
 ---
 
-## 📄 License
-
-本项目仅供学习交流使用。角色数据和图片版权归原作者所有。
-
----
-
-<p align="center">
-  <b> 超能力立直麻将 —— 与好友一起享受策略博弈的乐趣！</b>
-</p>
+<div align="center">
+  <sub>仅供学习交流 · 角色数据版权归原作者</sub>
+</div>

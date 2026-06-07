@@ -89,12 +89,18 @@ window.API = {
   },
 
   // ── 对局历史 ──
-  async getGameHistory(username) {
-    return fetch('/api/game-history?username=' + encodeURIComponent(username)).then(x => x.json());
+  async getGameHistory(username, sort, search) {
+    var params = 'username=' + encodeURIComponent(username);
+    if (sort) params += '&sort=' + sort;
+    if (search) params += '&search=' + encodeURIComponent(search);
+    return fetch('/api/game-history?' + params).then(x => x.json());
   },
 
-  async getGameHistoryDetail(roomId) {
-    return fetch('/api/game-history-detail?roomId=' + roomId).then(x => x.json());
+  async getGameHistoryDetail(id) {
+    // id 可能是 roomId 或 gameId；由后端自动判断
+    var isGameId = id && id.startsWith('g');
+    var key = isGameId ? 'gameId' : 'roomId';
+    return fetch('/api/game-history-detail?' + key + '=' + encodeURIComponent(id)).then(x => x.json());
   },
 
   // ── CSV ──

@@ -11,6 +11,35 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
+    /* ── 工具栏 ── */
+    .hist-toolbar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .sort-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: var(--r-pill);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--hairline);
+      background: var(--surface-2); color: var(--ink-muted);
+      transition: all .2s; user-select: none;
+    }
+    .sort-btn:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+    .sort-btn .sort-arrow { transition: transform .3s ease; display: inline-block; }
+    .sort-btn.desc .sort-arrow { transform: rotate(180deg); }
+    .hist-search {
+      padding: 6px 14px; background: var(--surface-2);
+      color: var(--text-primary); border: 1px solid var(--hairline);
+      border-radius: var(--r-pill); font-size: 12px; outline: none;
+      transition: border-color .2s; width: 200px;
+    }
+    .hist-search:focus { border-color: var(--accent-blue); }
+    .hist-search::placeholder { color: var(--ink-muted); }
+    .hist-toolbar .divider-spacer { flex: 1; }
+    .hist-toolbar .count-label {
+      font-size: 12px; color: var(--ink-muted);
+    }
+
     /* ── 历史记录项 ── */
     .history-item {
       background: var(--surface-2);
@@ -21,6 +50,10 @@
       gap: 10px; cursor: pointer; transition: box-shadow .2s, border-color .2s;
     }
     .history-item:hover { border-color: var(--hairline-soft); box-shadow: var(--shadow-sm); }
+    .history-item .hist-gameid {
+      color: var(--ink-muted); font-size: 10px; font-family: monospace;
+      margin-top: 2px;
+    }
     .history-item .hist-room {
       color: var(--accent-blue); font-weight: 700; font-size: 14px;
     }
@@ -35,10 +68,10 @@
     .history-popup {
       background: var(--surface-1);
       border-radius: var(--r-xl);
-      padding: 24px; max-width: 500px; width: 90%;
+      padding: 24px; max-width: 560px; width: 90%;
       box-shadow: var(--shadow-lg);
       border: 2px solid var(--hairline);
-      max-height: 80vh; overflow-y: auto;
+      max-height: 85vh; overflow-y: auto;
     }
     .history-popup h3 {
       color: var(--accent-blue); margin-top: 0; font-size: 18px; font-weight: 700;
@@ -63,9 +96,70 @@
       vertical-align: middle; margin-right: 4px;
     }
 
+    /* ── 回合切换控件 ── */
+    .round-nav {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      margin: 16px 0 12px; padding: 10px 0;
+      border-top: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .round-nav-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--hairline); background: var(--surface-2);
+      color: var(--text-primary); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; user-select: none;
+    }
+    .round-nav-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+    .round-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+    .round-nav-label {
+      font-size: 14px; font-weight: 700; color: var(--text-primary);
+      min-width: 80px; text-align: center;
+    }
+    .round-nav-label span { color: var(--accent-blue); }
+
+    /* ── 回合内出战快照 ── */
+    .battle-snapshot {
+      margin-top: 8px; padding: 10px 12px;
+      background: var(--surface-2); border-radius: var(--r-md);
+      border: 1px solid var(--hairline);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .battle-snapshot .bs-title {
+      font-size: 13px; font-weight: 700; color: var(--accent-blue); margin-bottom: 8px;
+    }
+    .battle-snapshot .bs-row {
+      display: flex; align-items: center; gap: 8px; margin: 4px 0;
+      font-size: 13px; color: var(--text-primary); padding: 4px 8px;
+      border-radius: var(--r-sm);
+      transition: background .15s;
+    }
+    .battle-snapshot .bs-row:hover { background: var(--surface-3); }
+    .battle-snapshot .bs-player { font-weight: 600; min-width: 60px; color: var(--gold); }
+    .battle-snapshot .bs-arrow { color: var(--ink-muted); font-size: 14px; }
+    .battle-snapshot .bs-empty {
+      text-align: center; color: var(--ink-muted); font-size: 12px;
+      padding: 8px 0;
+    }
+
+    /* ── 详情标签栏 ── */
+    .detail-tabs {
+      display: flex; gap: 0; margin-bottom: 0; border-bottom: 2px solid var(--hairline);
+    }
+    .detail-tab {
+      padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+      color: var(--ink-muted); border-bottom: 2px solid transparent;
+      margin-bottom: -2px; transition: all .2s; user-select: none;
+    }
+    .detail-tab:hover { color: var(--text-primary); }
+    .detail-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+
     @media (max-width: 768px) {
       .history-item { padding: 10px 14px; margin: 5px 0; }
       .history-item .hist-room { font-size: 13px; }
+      .hist-toolbar { flex-direction: column; align-items: stretch; }
+      .hist-search { width: 100%; }
+      .history-popup { max-width: 100%; padding: 16px; }
     }
     @media (max-width: 540px) {
       .history-item { padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 4px; }
@@ -92,6 +186,15 @@
       <h2>我的对局历史</h2>
       <button class="btn btn-cyan" style="font-size:12px;padding:6px 14px;" id="btnRefreshHistory">刷新</button>
     </div>
+    <!-- 工具栏 -->
+    <div class="hist-toolbar">
+      <button class="sort-btn desc" id="btnSort">
+        时间 <span class="sort-arrow">↓</span>
+      </button>
+      <input class="hist-search" id="histSearch" type="text" placeholder="搜索对局 ID…">
+      <span class="divider-spacer"></span>
+      <span class="count-label" id="countLabel">0 条记录</span>
+    </div>
     <div id="historyList">
       <div class="no-data">加载中...</div>
     </div>
@@ -111,6 +214,8 @@ var user = Auth.user();
 Auth.renderNav(document.getElementById('navUser'));
 
 var charImageMap = {};
+var currentSort = 'desc'; // desc | asc
+var currentSearch = '';
 
 // ── 加载角色头像映射 ──
 (async function loadCharImages() {
@@ -120,20 +225,37 @@ var charImageMap = {};
   } catch (e) { /* ignore */ }
 })();
 
+// ── 渲染角色头像 ──
+function renderAvatar(cname) {
+  var img = charImageMap[cname];
+  var initial = cname ? cname.charAt(0) : '?';
+  if (img) {
+    return '<img class="draft-char-avatar" src="https://sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com/png/' + img + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline-flex\';">' +
+      '<span class="draft-char-placeholder" style="display:none">' + initial + '</span>';
+  }
+  return '<span class="draft-char-placeholder">' + initial + '</span>';
+}
+
 // ── 加载对局历史 ──
 async function loadHistory() {
   try {
-    var list = await API.getGameHistory(user);
+    var list = await API.getGameHistory(user, currentSort, currentSearch);
     var box = document.getElementById('historyList');
+    var countLabel = document.getElementById('countLabel');
+    countLabel.textContent = list.length + ' 条记录';
+
     if (list.length === 0) {
-      box.innerHTML = '<div class="no-data">暂无历史对局记录</div>';
+      box.innerHTML = '<div class="no-data">' + (currentSearch ? '未找到匹配的对局' : '暂无历史对局记录') + '</div>';
       return;
     }
     box.innerHTML = list.map(function (h) {
       var date = h.endedAt ? new Date(h.endedAt).toLocaleString('zh-CN') : '未知';
-      return '<div class="history-item" data-room="' + h.roomId + '">' +
+      var gid = h.gameId || '';
+      var idDisplay = gid ? '<div class="hist-gameid">' + Utils.escHTML(gid) + '</div>' : '';
+      return '<div class="history-item" data-id="' + Utils.escHTML(gid || h.roomId) + '">' +
         '<div>' +
-        '<div class="hist-room">房间 ' + h.roomId + '</div>' +
+        '<div class="hist-room">房间 ' + Utils.escHTML(h.roomId) + '</div>' +
+        idDisplay +
         '<div class="hist-meta">' + h.playerCount + '人对局 | ' + h.totalRounds + ' 回合 | 房主: ' + Utils.escHTML(h.host || '未知') + '</div>' +
         '<div class="hist-meta">玩家: ' + Utils.escHTML((h.players || []).join('、')) + '</div>' +
         '</div>' +
@@ -143,7 +265,7 @@ async function loadHistory() {
 
     // 事件委托
     box.querySelectorAll('.history-item').forEach(function (item) {
-      item.addEventListener('click', function () { viewHistoryDetail(item.dataset.room); });
+      item.addEventListener('click', function () { viewHistoryDetail(item.dataset.id); });
     });
 
     gsap.from(box.querySelectorAll('.history-item'), {
@@ -161,15 +283,35 @@ function refreshHistory() {
 
 document.getElementById('btnRefreshHistory').addEventListener('click', refreshHistory);
 
+// ── 排序切换 ──
+document.getElementById('btnSort').addEventListener('click', function() {
+  currentSort = currentSort === 'desc' ? 'asc' : 'desc';
+  this.classList.toggle('desc', currentSort === 'desc');
+  this.querySelector('.sort-arrow').textContent = currentSort === 'desc' ? '\u2193' : '\u2191';
+  loadHistory();
+});
+
+// ── 搜索输入（防抖） ──
+var searchTimer;
+document.getElementById('histSearch').addEventListener('input', function() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(function() {
+    currentSearch = document.getElementById('histSearch').value.trim();
+    loadHistory();
+  }, 350);
+});
+
 // ── 查看对局详情 ──
-async function viewHistoryDetail(roomId) {
+async function viewHistoryDetail(id) {
   try {
-    var detail = await API.getGameHistoryDetail(roomId);
+    var detail = await API.getGameHistoryDetail(id);
     if (!detail) { Utils.showToast('无法加载对局详情'); return; }
 
     var date = detail.endedAt ? new Date(detail.endedAt).toLocaleString('zh-CN') : '未知';
     var draft = detail.draftResults || {};
+    var battles = detail.battleHistory || [];
 
+    // 生成 "选角一览" 标签页内容
     var draftHtml = '';
     if (Object.keys(draft).length > 0) {
       draftHtml = '<div style="margin-top:12px;"><strong>选角情况：</strong></div>';
@@ -177,31 +319,125 @@ async function viewHistoryDetail(roomId) {
         var chars = draft[player] || [];
         var charItems = chars.map(function (c) {
           var cname = c.name || c;
-          var img = charImageMap[cname];
-          var avatarHTML = img
-            ? '<img class="draft-char-avatar" src="https://sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com/png/' + img + '" onerror="this.style.display=\'none\'">'
-            : '<span class="draft-char-placeholder">' + cname.charAt(0) + '</span>';
-          return avatarHTML + Utils.escHTML(cname);
+          return '<span>' + renderAvatar(cname) + Utils.escHTML(cname) + '</span>';
         }).join(' ');
-        draftHtml += '<div class="draft-char-item">• ' + Utils.escHTML(player) + '：' + charItems + '</div>';
+        draftHtml += '<div class="draft-char-item">&bull; ' + Utils.escHTML(player) + '：' + charItems + '</div>';
       }
+    }
+
+    // 默认显示回合 1
+    var currentRound = 1;
+    var totalRounds = Math.max(1, battles.length, detail.totalRounds || 1);
+
+    function buildRoundContent(r) {
+      var ri = r - 1;
+      var snap = battles[ri];
+      var html = '';
+      if (snap && snap.selections && Object.keys(snap.selections).length > 0) {
+        html += '<div class="battle-snapshot">';
+        html += '<div class="bs-title">第 ' + r + ' 回合出战情况</div>';
+        for (var p in snap.selections) {
+          var cname = snap.selections[p] || '';
+          html += '<div class="bs-row">' +
+            '<span class="bs-player">' + Utils.escHTML(p) + '</span>' +
+            '<span class="bs-arrow">→</span>' +
+            renderAvatar(cname) +
+            '<span>' + Utils.escHTML(cname) + '</span>' +
+            '</div>';
+        }
+        html += '</div>';
+      } else {
+        html += '<div class="battle-snapshot"><div class="bs-empty">该回合无出战记录</div></div>';
+      }
+      return html;
     }
 
     var popup = Utils.createOverlay(
       '<div class="history-popup">' +
         '<h3>对局详情</h3>' +
         '<div class="popup-row">' +
-        '<div>房间号：<strong>' + detail.roomId + '</strong></div>' +
-        '<div>房主：' + Utils.escHTML(detail.host || '未知') + '</div>' +
-        '<div>总回合数：' + detail.totalRounds + '</div>' +
+        '<div>对局 ID：<strong style="font-family:monospace;font-size:12px;word-break:break-all;">' + Utils.escHTML(detail.gameId || detail.roomId) + '</strong></div>' +
+        '<div>房间号：' + Utils.escHTML(detail.roomId) + ' &middot; 房主：' + Utils.escHTML(detail.host || '未知') + '</div>' +
         '<div>参与玩家：' + Utils.escHTML((detail.players || []).join('、')) + '</div>' +
-        '<div>结束时间：' + date + '</div>' +
-        draftHtml +
+        '<div>总回合数：' + totalRounds + ' &middot; 结束时间：' + date + '</div>' +
         '</div>' +
+
+        // 标签栏
+        '<div class="detail-tabs">' +
+        '<span class="detail-tab active" data-tab="draft">选角一览</span>' +
+        '<span class="detail-tab" data-tab="battle">回合回放</span>' +
+        '</div>' +
+
+        // 选角内容
+        '<div id="tab-draft" class="detail-tab-content">' + draftHtml + '</div>' +
+
+        // 回合回放内容
+        '<div id="tab-battle" class="detail-tab-content" style="display:none">' +
+        (battles.length > 0 ? buildRoundContent(currentRound) : '<div class="battle-snapshot"><div class="bs-empty">暂无回合出战记录<br><small>（旧对局可能没有回合数据）</small></div></div>') +
+        (battles.length > 1 ?
+          '<div class="round-nav">' +
+          '<button class="round-nav-btn" id="btnPrevRound" ' + (currentRound <= 1 ? 'disabled' : '') + '>&#9664;</button>' +
+          '<span class="round-nav-label"><span id="roundNum">' + currentRound + '</span> / ' + totalRounds + '</span>' +
+          '<button class="round-nav-btn" id="btnNextRound" ' + (currentRound >= totalRounds ? 'disabled' : '') + '>&#9654;</button>' +
+          '</div>' : '') +
+        '</div>' +
+
         '<button class="btn btn-primary" style="margin-top:16px;width:100%;" id="popupClose">关闭</button>' +
       '</div>',
       'modal-overlay'
     );
+
+    // 标签切换
+    popup.querySelectorAll('.detail-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        popup.querySelectorAll('.detail-tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        popup.querySelectorAll('.detail-tab-content').forEach(function(c) { c.style.display = 'none'; });
+        document.getElementById('tab-' + tab.dataset.tab).style.display = '';
+      });
+    });
+
+    // 回合切换
+    if (battles.length > 1) {
+      function updateRoundView() {
+        var roundNumEl = document.getElementById('roundNum');
+        if (roundNumEl) roundNumEl.textContent = currentRound;
+        var btnPrev = document.getElementById('btnPrevRound');
+        var btnNext = document.getElementById('btnNextRound');
+        if (btnPrev) btnPrev.disabled = currentRound <= 1;
+        if (btnNext) btnNext.disabled = currentRound >= totalRounds;
+        // 替换回合内容
+        var tabBattle = document.getElementById('tab-battle');
+        var nav = tabBattle.querySelector('.round-nav');
+        var oldSnap = tabBattle.querySelector('.battle-snapshot');
+        var newSnap = document.createElement('div');
+        newSnap.innerHTML = buildRoundContent(currentRound);
+        var snapEl = newSnap.firstElementChild;
+        if (oldSnap) {
+          oldSnap.style.opacity = '0';
+          oldSnap.style.transform = 'translateY(6px)';
+          tabBattle.insertBefore(snapEl, nav || oldSnap.nextSibling);
+          var o = oldSnap;
+          snapEl.style.transition = 'opacity .2s ease, transform .2s ease';
+          snapEl.style.transform = 'translateY(6px)';
+          requestAnimationFrame(function() {
+            snapEl.style.opacity = '1';
+            snapEl.style.transform = 'translateY(0)';
+          });
+          setTimeout(function() { if (o.parentNode) o.remove(); }, 250);
+        } else {
+          if (nav) tabBattle.insertBefore(snapEl, nav);
+          else tabBattle.appendChild(snapEl);
+        }
+      }
+      document.getElementById('btnPrevRound').addEventListener('click', function() {
+        if (currentRound > 1) { currentRound--; updateRoundView(); }
+      });
+      document.getElementById('btnNextRound').addEventListener('click', function() {
+        if (currentRound < totalRounds) { currentRound++; updateRoundView(); }
+      });
+    }
+
     // 关闭逻辑
     document.getElementById('popupClose').addEventListener('click', function () { popup.remove(); });
     popup.addEventListener('click', function (e) { if (e.target === popup) popup.remove(); });

@@ -119,17 +119,36 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 18px;
+    min-height: 200px;
+    position: relative;
   }
 
-  /* ── 图鉴卡片 ── */
+  /* ── 图鉴卡片（含过渡动画） ── */
   .ency-card {
     background: var(--surface-1);
     border-radius: var(--r-lg);
     border: 1px solid var(--hairline);
     overflow: hidden;
     cursor: pointer;
-    transition: all .25s;
+    transition: all .25s ease;
     position: relative;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .ency-card.ency-enter {
+    animation: encyFadeUp .35s ease both;
+  }
+  .ency-card.ency-exit {
+    animation: encyFadeDown .2s ease both;
+    pointer-events: none;
+  }
+  @keyframes encyFadeUp {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes encyFadeDown {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(8px) scale(0.96); }
   }
   .ency-card:hover {
     border-color: var(--hairline-strong);
@@ -335,8 +354,13 @@ function renderCharImg(c, imgCls, phCls) {
   return '<div class="' + phCls + '">' + Utils.escHTML(c.name.charAt(0)) + '</div>';
 }
 
-// ── 渲染网格 ──
+// ── 渲染网格（带动画过渡） ──
+var isRendering = false;
+
 function renderGrid() {
+  if (isRendering) return;
+  isRendering = true;
+
   var filtered = allChars;
 
   if (activeTier) {
@@ -354,20 +378,18 @@ function renderGrid() {
   updateStats(filtered);
 
   var grid = document.getElementById('encyclopediaGrid');
-  if (filtered.length === 0) {
-    grid.innerHTML = '<div class="no-results">没有找到匹配的角色</div>';
-    return;
-  }
+  var oldCards = grid.querySelectorAll('.ency-card');
 
-  grid.innerHTML = filtered.map(function(c) {
+  // 生成新数据
+  var newHtml = filtered.map(function(c) {
     var imgHTML = renderCharImg(c, 'ency-avatar', 'ency-avatar-placeholder');
     var skills = [];
     if (c.limit)   skills.push('<span class="ency-skill-tag limit">限</span>');
     if (c.innate)  skills.push('<span class="ency-skill-tag innate">固</span>');
     if (c.passive) skills.push('<span class="ency-skill-tag passive">被</span>');
     if (c.extra)   skills.push('<span class="ency-skill-tag extra">附</span>');
-
-    return '<div class="ency-card tier-' + Utils.escHTML(c.tier) + '" onclick="showDetail(\'' + Utils.escHTML(c.id || c.name) + '\')" data-char-id="' + Utils.escHTML(c.id || c.name) + '">' +
+    var cid = Utils.escHTML(c.id || c.name);
+    return '<div class="ency-card tier-' + Utils.escHTML(c.tier) + '" data-char-id="' + cid + '" onclick="showDetail(\'' + cid + '\')" style="opacity:0;transform:translateY(12px)">' +
       '<div class="ency-card-header">' +
         imgHTML +
         '<div class="ency-card-info">' +
@@ -379,6 +401,34 @@ function renderGrid() {
       '<div class="ency-skills">' + skills.join('') + '</div>' +
     '</div>';
   }).join('');
+
+  // 旧卡片出场动画
+  if (oldCards.length > 0) {
+    oldCards.forEach(function(card, i) {
+      card.classList.add('ency-exit');
+      card.style.animationDelay = (i * 0.015) + 's';
+    });
+  }
+
+  // 无结果显示
+  if (filtered.length === 0) {
+    setTimeout(function() {
+      grid.innerHTML = '<div class="no-results">没有找到匹配的角色</div>';
+      isRendering = false;
+    }, oldCards.length > 0 ? 200 : 0);
+    return;
+  }
+
+  // 替换内容 → 新卡片入场动画
+  setTimeout(function() {
+    grid.innerHTML = newHtml;
+    var newCards = grid.querySelectorAll('.ency-card');
+    newCards.forEach(function(card, i) {
+      card.classList.add('ency-enter');
+      card.style.animationDelay = (i * 0.03) + 's';
+    });
+    isRendering = false;
+  }, oldCards.length > 0 ? 180 : 0);
 }
 
 function updateStats(filtered) {
