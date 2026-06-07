@@ -3,6 +3,12 @@
 ## 项目概述
 Super Mahjong — 一个多人在线麻将游戏 Web 应用，包含登录、大厅、房间、选角、对战等页面。
 
+## CloudBase 部署
+- 环境 ID: `sr-mahjong-d0g8mp6w19f37dd37`（上海 ap-shanghai）
+- CloudRun 容器服务: `super-mahjong`（0.5核/1GB/1-5实例/端口3000/公网）
+- 在线地址: `https://super-mahjong-267217-4-1324905494.sh.run.tcloudbase.com`
+- Dockerfile 位于项目根目录（Node 18, npm start）
+
 ## 技术栈
 - 前端: 原生 HTML/CSS/JS，无框架
 - 后端: Node.js (server.js)

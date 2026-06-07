@@ -147,6 +147,5 @@ body::before {
 
 /* 确保内容在网点背景之上 */
 .navbar, .container, .profile-page {
-  position: relative;
   z-index: 1;
 }

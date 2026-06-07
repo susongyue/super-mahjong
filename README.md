@@ -78,6 +78,16 @@
 
 ---
 
+## 🌐 在线体验
+
+已部署到 **腾讯云 CloudBase CloudRun**：
+
+```
+https://super-mahjong-267217-4-1324905494.sh.run.tcloudbase.com
+```
+
+---
+
 ## 🚀 快速开始
 
 ### 环境要求
@@ -388,6 +398,20 @@ SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
 ```
 
 > **本地模式**：不配置 Supabase 时，数据存储在 `data/` 目录的 JSON 文件中，适合单机测试。
+
+---
+
+## ☁️ CloudBase 部署信息
+
+| 项目 | 详情 |
+|------|------|
+| **环境 ID** | `sr-mahjong-d0g8mp6w19f37dd37` |
+| **区域** | 上海 (ap-shanghai) |
+| **部署方式** | CloudRun 容器模式 |
+| **容器配置** | 0.5 核 CPU / 1GB 内存 / 1-5 实例 / 端口 3000 |
+| **Dockerfile** | 项目根目录 `Dockerfile` |
+| **访问地址** | `https://super-mahjong-267217-4-1324905494.sh.run.tcloudbase.com` |
+| **控制台** | [CloudRun 管理](https://tcb.cloud.tencent.com/dev?envId=sr-mahjong-d0g8mp6w19f37dd37#/platform-run) |
 
 ---
 
