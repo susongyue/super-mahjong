@@ -17,6 +17,11 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
 
+// ── 首页重定向到登录页 ──
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 // 缓存头配置
 const ONE_YEAR = 31536000; // 1 年（秒）
 const ONE_DAY = 86400;     // 1 天
@@ -1798,9 +1803,9 @@ async function start() {
   cleanupStaleSelections(); // 异步清理过期数据，不阻塞启动
   server.listen(PORT, () => {
     console.log(`✅ 服务器运行在 http://localhost:${PORT}`);
-    console.log('   - 登录页:  http://localhost:' + PORT + '/login.html');
-    console.log('   - 大厅页:  http://localhost:' + PORT + '/lobby.html');
-    console.log('   - 房间页:  http://localhost:' + PORT + '/index.html');
+  console.log('   - 首页/登录: http://localhost:' + PORT + '/');
+  console.log('   - 大厅页:  http://localhost:' + PORT + '/lobby.html');
+  console.log('   - 房间页:  http://localhost:' + PORT + '/index.html');
     console.log('   - 对局页:  http://localhost:' + PORT + '/game.html');
     console.log('   - 回合页:  http://localhost:' + PORT + '/battle_round.html');
   });

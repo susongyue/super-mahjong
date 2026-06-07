@@ -11,18 +11,25 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
     body {
-      display: grid;
-      place-items: center;
-      padding: 56px 20px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      min-height: 100vh;
+      min-height: 100dvh;
     }
 
     .login-box {
       background: var(--surface-1);
-      padding: 40px 36px;
+      padding: 48px 40px;
       border-radius: var(--r-xxl);
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       text-align: center;
       border: 2px solid var(--hairline);
       box-shadow: var(--shadow-lg);
@@ -46,6 +53,7 @@
 
     .login-panel .input {
       margin-bottom: 10px;
+      width: 100%;
     }
     .login-panel .btn {
       width: 100%;
@@ -53,21 +61,34 @@
     }
 
     @media (max-width: 768px) {
-      .login-box { padding: 28px 22px; border-radius: var(--r-xl); }
-      .login-box h1 { font-size: 22px; }
-      .login-box .subtitle { font-size: 13px; margin-bottom: 22px; }
+      body { padding: 16px; }
+      .login-box { padding: 36px 28px; border-radius: var(--r-xl); }
+      .login-box h1 { font-size: 24px; }
+      .login-box .subtitle { font-size: 13px; margin-bottom: 24px; }
     }
     @media (max-width: 480px) {
-      body { padding: 64px 16px 16px; }
-      .login-box { padding: 24px 16px; max-width: 100%; }
-      .login-box h1 { font-size: 20px; }
+      body { padding: 12px; }
+      .login-box {
+        padding: 32px 20px;
+        max-width: 100%;
+        border-radius: var(--r-lg);
+      }
+      .login-box h1 { font-size: 22px; }
+      .login-box .subtitle { font-size: 13px; margin-bottom: 20px; }
+      .tab-bar { margin-bottom: 16px; }
+      .login-panel .input {
+        margin-bottom: 8px;
+        height: 48px;
+        font-size: 16px;
+      }
+      .login-panel .btn {
+        height: 48px;
+        font-size: 16px;
+      }
     }
   </style>
 </head>
 <body>
-<nav class="navbar">
-  <span class="logo">Mahjong</span>
-</nav>
 
 <div class="login-box" id="loginBox">
   <h1>Super Reach Mahjong</h1>
@@ -149,8 +170,7 @@ document.getElementById('reg-pwd').addEventListener('keydown', function (e) {
 });
 
 // ── GSAP 入场动画 ──
-gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.6, ease: 'power3.out' });
-gsap.from('#loginBox', { opacity: 0, y: 30, scale: 0.97, duration: 0.7, delay: 0.2, ease: 'power3.out' });
+gsap.from('#loginBox', { opacity: 0, y: 20, scale: 0.97, duration: 0.5, ease: 'power3.out' });
 </script>
 </body>
 </html>

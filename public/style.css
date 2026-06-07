@@ -159,7 +159,7 @@ body::-webkit-scrollbar { display: none; } /* Chrome/Safari/Edge */
 .container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 12px var(--sp-lg) var(--sp-xxl);
+  padding: 72px var(--sp-lg) var(--sp-xxl); /* 56px navbar + 16px spacing */
 }
 
 /* ── 区块卡片 ── */
@@ -1018,7 +1018,7 @@ body::-webkit-scrollbar { display: none; } /* Chrome/Safari/Edge */
   .navbar .nav-user { font-size: 11px; }
   .toast { top: 60px; font-size: 13px; padding: 10px 20px; }
 
-  .container { padding: 10px 10px 24px; }
+  .container { padding: 68px 10px 24px; }
   .section { padding: 14px 12px; border-radius: var(--r-lg); margin-bottom: 12px; }
   .section h2 { font-size: 15px; margin-bottom: 10px; }
 
