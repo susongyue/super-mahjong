@@ -4,7 +4,7 @@ All notable changes to super-mahjong will be documented in this file.
 
 ---
 
-## v1.0.1 (2026-06-07)
+## v1.1.0 (2026-06-07)
 
 ### 对局历史改造
 - **唯一对局 ID**：`game_history` 新增 `game_id` 字段，格式 `g` + timestamp36 + random36，持久化存储
