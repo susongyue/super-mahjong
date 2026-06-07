@@ -351,7 +351,7 @@ sortMenu.querySelectorAll('.sort-option').forEach(function(opt) {
     // 更新 UI
     sortMenu.querySelectorAll('.sort-option').forEach(function(o) { o.classList.remove('active'); });
     this.classList.add('active');
-    sortTrigger.textContent = (val === 'desc' ? '时间倒序' : '时间正序') + '<span class="sd-caret">▾</span>';
+    sortTrigger.innerHTML = (val === 'desc' ? '时间倒序' : '时间正序') + '<span class="sd-caret">▾</span>';
     closeSort();
     loadHistory();
   });
