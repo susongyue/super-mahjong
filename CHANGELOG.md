@@ -4,20 +4,6 @@ All notable changes to super-mahjong will be documented in this file.
 
 ---
 
-## v1.0.3 (2026-06-07)
-
-### 投票去重漏洞修复
-- **根因**：`roundEndVotes` / `gameEndVotes` 用 `socket.id` 做投票 key，刷新页面后 socket.id 变更，同一玩家可重复投票（4人投票 → 1人刷4票）
-- **修复**：改用 `player.name`（用户名，持久标识）做投票 key
-- `voteEndRound` / `voteEndGame`：新增 `player` 查找容错（找不到则忽略投票）；`votedNames` 计算从 `p.id` 改为 `p.name`
-- `disconnect`：断开连接时清理该玩家名在 `roundEndVotes` / `gameEndVotes` 中的残留记录
-- `getRoomState`：投票计数只统计当前在线玩家，过滤孤立 socket.id 投票
-
-### Bug 修复
-- 排序下拉按钮 HTML 标签显示为纯文本（`textContent` → `innerHTML`）
-
----
-
 ## v1.0.1 (2026-06-07)
 
 ### 对局历史改造
@@ -33,10 +19,6 @@ All notable changes to super-mahjong will be documented in this file.
 - 搜索/筛选切换：旧卡片逐一出场（0.2s）→ 新卡片逐次入场（0.35s stagger）
 - Stagger 延迟防止卡片同时出现，`isRendering` 锁防止快速切换时动画重叠
 
----
-
-## v1.0.2 (2026-06-07)
-
 ### 对局历史工具栏重排
 - **布局**：刷新按钮移入工具栏，排列为 刷新 → 排序下拉 → 搜索框 → 记录数量
 - **排序改为下拉式**：点击展开菜单（时间倒序/时间正序），选择后自动刷新列表；带 ✓ 高亮当前选项和 fade 动画
@@ -45,6 +27,16 @@ All notable changes to super-mahjong will be documented in this file.
 - 工具栏从单行 flex 改为纵向两行：
   - 第一行：筛选 chips（全部 / T0 / T1 / T2 / T3）
   - 第二行：搜索框 + 统计条（显示 N 名角色 · 各 tier 数量）
+
+### 投票去重漏洞修复
+- **根因**：`roundEndVotes` / `gameEndVotes` 用 `socket.id` 做投票 key，刷新页面后 socket.id 变更，同一玩家可重复投票（4人投票 → 1人刷4票）
+- **修复**：改用 `player.name`（用户名，持久标识）做投票 key
+- `voteEndRound` / `voteEndGame`：新增 `player` 查找容错（找不到则忽略投票）；`votedNames` 计算从 `p.id` 改为 `p.name`
+- `disconnect`：断开连接时清理该玩家名在 `roundEndVotes` / `gameEndVotes` 中的残留记录
+- `getRoomState`：投票计数只统计当前在线玩家，过滤孤立 socket.id 投票
+
+### Bug 修复
+- 排序下拉按钮 HTML 标签显示为纯文本（`textContent` → `innerHTML`）
 
 ### 新增 CHANGELOG.md
 - 版本变更记录文件，每次改动后追加更新
