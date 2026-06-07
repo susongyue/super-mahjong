@@ -38,6 +38,13 @@ All notable changes to super-mahjong will be documented in this file.
 ### Bug 修复
 - 排序下拉按钮 HTML 标签显示为纯文本（`textContent` → `innerHTML`）
 
+### 对局开始时间戳
+- `rooms` 和 `game_history` 新增 `started_at TIMESTAMPTZ` 列，记录每场对局的实际开始时间
+- 4 处游戏开始点统一设置 `rooms[roomId].startedAt`：`/api/start-game`、`/api/draft-results`、`voteResult`、`draftAllDone`
+- `saveRooms` / `saveGameHistory` 写入 `started_at` 到 Supabase
+- `loadFromDB` 加载时保留 `startedAt` 字段
+- 已有数据库迁移：`ALTER TABLE rooms/game_history ADD COLUMN IF NOT EXISTS started_at`
+
 ### 新增 CHANGELOG.md
 - 版本变更记录文件，每次改动后追加更新
 
