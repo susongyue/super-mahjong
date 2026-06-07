@@ -306,8 +306,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="js/lib/auth.js"></script>
+<script>if(window.Auth&&typeof Auth.syncProfile!=='function'){Auth.syncProfile=function(){return this.user()?API.getProfile(this.user()).then(function(r){if(r&&r.success){localStorage.nickname=r.nickname;localStorage.avatar=r.avatar||'';if(r.bio!==undefined)localStorage.bio=r.bio;return r}return null}).catch(function(){return null}):Promise.resolve(null)}}</script>
 <script src="js/lib/utils.js"></script>
+<script>if(window.Utils&&typeof Utils.safeAnimate!=='function'){Utils.safeAnimate=function(t,v){if(typeof gsap!=='undefined'&&gsap.from){try{gsap.from(t,v)}catch(_){}}};Utils.setBtnLoading=function(b,t){if(b){b.disabled=true;b.textContent=t||'处理中…'}};Utils.resetBtn=function(b){if(b){b.disabled=false}}}</script>
 <script src="js/lib/api.js"></script>
+<script>if(window.API&&typeof API.adminCheck!=='function'){API.adminCheck=function(u){return fetch('/api/admin/check?username='+encodeURIComponent(u)).then(function(r){return r.json()})}}</script>
 <script src="js/lib/theme-switcher.js"></script>
 
 <script>
@@ -360,7 +363,7 @@ let customAvatarUrl = '';
   renderAvatarGrid();
   loadStats();
 
-  // GSAP 入场动画（CDN 失败时安全跳过）
+  // GSAP 入场动画
   Utils.safeAnimate('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
   Utils.safeAnimate('#profileHeader', {
     opacity: 0, y: -30, duration: 0.6, delay: 0.1, ease: 'power3.out'
@@ -587,6 +590,10 @@ async function useHistoryAvatar(idx) {
 
 // ── 管理员面板 ──
 async function checkIsAdmin() {
+  if (typeof API.adminCheck !== 'function') {
+    console.log('[admin] API.adminCheck 不可用（需更新部署）');
+    return;
+  }
   try {
     var r = await API.adminCheck(username);
     if (r && r.success && r.isAdmin) {

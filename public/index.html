@@ -355,7 +355,9 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/lib/auth.js"></script>
+<script>if(window.Auth&&typeof Auth.syncProfile!=='function'){Auth.syncProfile=function(){return this.user()?API.getProfile(this.user()).then(function(r){if(r&&r.success){localStorage.nickname=r.nickname;localStorage.avatar=r.avatar||'';if(r.bio!==undefined)localStorage.bio=r.bio;return r}return null}).catch(function(){return null}):Promise.resolve(null)}}</script>
 <script src="/js/lib/utils.js"></script>
+<script>if(window.Utils&&typeof Utils.safeAnimate!=='function'){Utils.safeAnimate=function(t,v){if(typeof gsap!=='undefined'&&gsap.from){try{gsap.from(t,v)}catch(_){}}};Utils.setBtnLoading=function(b,t){if(b){b.disabled=true;b.textContent=t||'处理中…'}};Utils.resetBtn=function(b){if(b){b.disabled=false}}}</script>
 <script src="/js/lib/api.js"></script>
 <script src="/js/lib/components.js"></script>
 <script src="/js/lib/theme-switcher.js"></script>
