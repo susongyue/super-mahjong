@@ -1700,11 +1700,16 @@ io.on('connection', (socket) => {
     const room = socketRooms[roomId];
     if (!room) return;
     touchRoom(roomId);
+    // 找到当前 socket 对应的玩家
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+    const playerName = player.name;
     if (!room.roundEndVotes) room.roundEndVotes = {};
-    room.roundEndVotes[socket.id] = true;
+    // 用玩家名（持久标识）替代 socket.id 做投票 key，防止刷新换 ID 后重复投票
+    room.roundEndVotes[playerName] = true;
     const votedCount = Object.keys(room.roundEndVotes).length;
     const totalCount = room.players.length;
-    const votedNames = room.players.filter(p => room.roundEndVotes[p.id]).map(p => p.name);
+    const votedNames = room.players.filter(p => room.roundEndVotes[p.name]).map(p => p.name);
     io.to(roomId).emit('roundEndVoteUpdate', { voted: votedCount, total: totalCount, votedNames });
     if (votedCount >= totalCount && totalCount > 0) {
       // ── 保存本轮出战选择到历史（用于对局记录回放）──
@@ -1729,12 +1734,17 @@ io.on('connection', (socket) => {
   socket.on('voteEndGame', async (roomId) => {
     const room = socketRooms[roomId];
     if (!room) return;
+    // 找到当前 socket 对应的玩家
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+    const playerName = player.name;
     if (!room.gameEndVotes) room.gameEndVotes = {};
-    room.gameEndVotes[socket.id] = true;
+    // 用玩家名（持久标识）替代 socket.id 做投票 key，防止刷新换 ID 后重复投票
+    room.gameEndVotes[playerName] = true;
     touchRoom(roomId);
     const votedCount = Object.keys(room.gameEndVotes).length;
     const totalCount = room.players.length;
-    const votedNames = room.players.filter(p => room.gameEndVotes[p.id]).map(p => p.name);
+    const votedNames = room.players.filter(p => room.gameEndVotes[p.name]).map(p => p.name);
     io.to(roomId).emit('gameEndVoteUpdate', { voted: votedCount, total: totalCount, votedNames });
     if (votedCount >= totalCount && totalCount > 0) {
       // ── 保存对局历史 ──
@@ -1769,10 +1779,14 @@ io.on('connection', (socket) => {
     const room = socketRooms[roomId];
     if (room) {
       const selections = battleSelections[roomId] || {};
+      // 只统计当前在线玩家的有效投票数
+      const activeNames = new Set(room.players.map(p => p.name));
+      const roundVotes = room.roundEndVotes ? Object.keys(room.roundEndVotes).filter(k => activeNames.has(k)).length : 0;
+      const gameVotes = room.gameEndVotes ? Object.keys(room.gameEndVotes).filter(k => activeNames.has(k)).length : 0;
       socket.emit('roomState', {
         round: room.round || 1,
-        roundEndVotes: room.roundEndVotes ? Object.keys(room.roundEndVotes).length : 0,
-        gameEndVotes: room.gameEndVotes ? Object.keys(room.gameEndVotes).length : 0,
+        roundEndVotes: roundVotes,
+        gameEndVotes: gameVotes,
         totalPlayers: room.players.length,
         selectedCount: Object.keys(selections).length,
         readyPlayerNames: Object.keys(selections)
@@ -1859,6 +1873,9 @@ io.on('connection', (socket) => {
       if (idx > -1) {
         const playerName = room.players[idx].name;
         room.players.splice(idx, 1);
+        // 清理该玩家的投票记录，防止断开后残留旧投票
+        if (room.roundEndVotes) delete room.roundEndVotes[playerName];
+        if (room.gameEndVotes) delete room.gameEndVotes[playerName];
         touchRoom(roomId);
         // 不删除作战选择：断开连接不是真正的退出游戏，玩家重连后仍需保留其选择
         saveSocketRooms();
