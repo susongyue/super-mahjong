@@ -204,7 +204,7 @@ async function loadFromDB() {
       gameHistory = {};
       finishedRooms = {};
       ghData.forEach(h => {
-        gameHistory[h.room_id] = { room_id: h.room_id, game_id: h.game_id, players: h.players, totalRounds: h.total_rounds, draftResults: h.draft_results, battle_history: h.battle_history, host: h.host, createdAt: h.created_at, endedAt: h.ended_at };
+        gameHistory[h.room_id] = { room_id: h.room_id, game_id: h.game_id, players: h.players, totalRounds: h.total_rounds, draftResults: h.draft_results, battle_history: h.battle_history, host: h.host, createdAt: h.created_at, startedAt: h.started_at, endedAt: h.ended_at };
         finishedRooms[h.room_id] = new Date(h.ended_at).getTime();
       });
       console.log('✅ 从 Supabase 加载 ' + ghData.length + ' 条对局历史');
@@ -319,6 +319,7 @@ async function saveRooms() {
         players: room.players || [],
         max_players: room.maxPlayers || 4,
         started: room.started || false,
+        started_at: room.startedAt || null,
         created_at: room.createdAt
       }, { onConflict: 'room_id' });
     }
@@ -546,6 +547,7 @@ async function saveGameHistory(roomId, data) {
       battle_history: battleHistory,
       host: data.host || '',
       created_at: data.createdAt || new Date().toISOString(),
+      started_at: data.startedAt || null,
       ended_at: data.endedAt || new Date().toISOString()
     }, { onConflict: 'room_id' });
     gameHistory[roomId] = { ...data, game_id: gameId, battle_history: battleHistory };
@@ -611,6 +613,7 @@ setInterval(async () => {
           draftResults: draftResults[roomId] || {},
           host: rooms[roomId] ? rooms[roomId].host : '',
           createdAt: rooms[roomId] ? rooms[roomId].createdAt : null,
+          startedAt: rooms[roomId] ? rooms[roomId].startedAt : null,
           endedAt: new Date().toISOString()
         });
         finishedRooms[roomId] = Date.now();
@@ -916,6 +919,7 @@ app.post('/api/start-game', async (req, res) => {
   const { roomId } = req.body;
   if (roomId && rooms[roomId]) {
     rooms[roomId].started = true;
+    rooms[roomId].startedAt = rooms[roomId].startedAt || new Date().toISOString();
     saveRooms();
   }
   res.json({ success: true });
@@ -972,6 +976,7 @@ app.post('/api/draft-results', async (req, res) => {
   saveDraftResults();
   if (roomId && rooms[roomId]) {
     rooms[roomId].started = true;
+    rooms[roomId].startedAt = rooms[roomId].startedAt || new Date().toISOString();
     saveRooms();
   }
   res.json({ success: true });
@@ -1462,6 +1467,7 @@ io.on('connection', (socket) => {
 
     if (rooms[roomId]) {
       rooms[roomId].started = true;
+      rooms[roomId].startedAt = rooms[roomId].startedAt || new Date().toISOString();
       saveRooms();
     }
 
@@ -1533,6 +1539,7 @@ io.on('connection', (socket) => {
 
       if (rooms[roomId]) {
         rooms[roomId].started = true;
+        rooms[roomId].startedAt = rooms[roomId].startedAt || new Date().toISOString();
         saveRooms();
       }
 
@@ -1757,6 +1764,7 @@ io.on('connection', (socket) => {
         draftResults: draftResults[roomId] || {},
         host: restRoom.host || '',
         createdAt: restRoom.createdAt || null,
+        startedAt: restRoom.startedAt || null,
         endedAt: new Date().toISOString()
       });
       // 标记为已结束，阻止重连

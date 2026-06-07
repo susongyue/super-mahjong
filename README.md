@@ -92,6 +92,9 @@ CREATE TABLE IF NOT EXISTS rooms (
   status TEXT DEFAULT 'waiting',
   draft_method TEXT DEFAULT '',
   round INTEGER DEFAULT 0,
+  started BOOLEAN DEFAULT FALSE,
+  max_players INTEGER DEFAULT 4,
+  started_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -133,6 +136,7 @@ CREATE TABLE IF NOT EXISTS game_history (
   host TEXT DEFAULT '',
   total_rounds INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  started_at TIMESTAMPTZ,
   ended_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -155,6 +159,10 @@ BEGIN
     EXECUTE format('CREATE POLICY "允许公开读写" ON %I FOR ALL USING (true) WITH CHECK (true)', t);
   END LOOP;
 END $$;
+
+-- ═══ 迁移：已有数据库执行以下 ALTER（IF NOT EXISTS 安全，已有则跳过） ═══
+ALTER TABLE rooms ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
+ALTER TABLE game_history ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
 ```
 
 ### 2. 导入角色数据
