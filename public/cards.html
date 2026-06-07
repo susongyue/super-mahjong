@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>角色收藏卡 - Super Reach Mahjong</title>
+<link rel="icon" type="image/png" href="dong.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0a0a0f;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  font-family: 'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+  padding:40px 20px;
+  color:#fff;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(212,175,55,.08),transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(128,0,255,.06),transparent 50%);
+}
+h1{
+  font-size:2rem;font-weight:800;
+  margin-bottom:8px;
+  background:linear-gradient(135deg,#d4af37,#f0e68c,#d4af37);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:2px;
+}
+.subtitle{
+  color:#888;font-size:.85rem;margin-bottom:40px;letter-spacing:1px;
+}
+
+/* ── 卡片网格 ── */
+.cards-grid{
+  display:flex;flex-wrap:wrap;justify-content:center;
+  gap:32px;max-width:1400px;width:100%;
+}
+
+/* ── 卡片本体 ── */
+.card{
+  width:260px;min-height:420px;
+  border-radius:16px;
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1),box-shadow .4s;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);
+}
+.card:hover{
+  transform:translateY(-12px) scale(1.03);
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.card-inner{
+  position:relative;width:100%;height:100%;
+  display:flex;flex-direction:column;
+}
+
+/* ── 等级边框光效 ── */
+.card.t0{ border:2px solid rgba(212,175,55,.5); }
+.card.t0:hover{ border-color:rgba(212,175,55,.9); box-shadow:0 20px 60px rgba(212,175,55,.25); }
+.card.t1{ border:2px solid rgba(160,80,255,.5); }
+.card.t1:hover{ border-color:rgba(160,80,255,.9); box-shadow:0 20px 60px rgba(160,80,255,.25); }
+.card.t2{ border:2px solid rgba(80,160,255,.5); }
+.card.t2:hover{ border-color:rgba(80,160,255,.9); box-shadow:0 20px 60px rgba(80,160,255,.25); }
+
+/* ── 卡片顶部（头像区） ── */
+.card-top{
+  height:200px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.card-bg{
+  position:absolute;inset:0;
+  background-size:cover;background-position:center 20%;
+  filter:brightness(.55);
+  transform:scale(1.05);
+  transition:transform .5s,filter .5s;
+}
+.card:hover .card-bg{ transform:scale(1.15);filter:brightness(.7); }
+.card-avatar{
+  position:relative;z-index:1;
+  width:100px;height:100px;
+  border-radius:50%;
+  border:3px solid rgba(255,255,255,.3);
+  object-fit:cover;
+  background:#1a1a2e;
+  transition:border-color .3s,transform .3s;
+}
+.card:hover .card-avatar{ border-color:rgba(255,255,255,.7);transform:scale(1.08); }
+
+/* ── 等级徽章 ── */
+.tier-badge{
+  position:absolute;top:12px;right:12px;z-index:2;
+  font-size:.7rem;font-weight:800;letter-spacing:2px;
+  padding:4px 10px;border-radius:20px;
+  backdrop-filter:blur(8px);
+}
+.t0 .tier-badge{
+  background:linear-gradient(135deg,rgba(212,175,55,.3),rgba(240,230,140,.2));
+  color:#ffd700;border:1px solid rgba(212,175,55,.5);
+}
+.t1 .tier-badge{
+  background:linear-gradient(135deg,rgba(160,80,255,.3),rgba(200,150,255,.2));
+  color:#c084fc;border:1px solid rgba(160,80,255,.5);
+}
+.t2 .tier-badge{
+  background:linear-gradient(135deg,rgba(80,160,255,.3),rgba(140,200,255,.2));
+  color:#60a5fa;border:1px solid rgba(80,160,255,.5);
+}
+
+/* ── 稀有度星星 ── */
+.rarity-stars{
+  font-size:.55rem;letter-spacing:1px;margin-top:3px;text-align:center;
+}
+.t0 .rarity-stars{ color:#ffd700; }
+.t1 .rarity-stars{ color:#c084fc; }
+.t2 .rarity-stars{ color:#60a5fa; }
+
+/* ── 卡片信息区 ── */
+.card-body{
+  flex:1;padding:16px 18px 20px;
+  background:linear-gradient(180deg,rgba(20,20,35,.95),rgba(15,15,28,.98));
+  display:flex;flex-direction:column;gap:8px;
+}
+.card-name{
+  font-size:1.2rem;font-weight:700;
+  text-align:center;letter-spacing:1px;
+}
+.card-faction{
+  font-size:.72rem;color:#888;text-align:center;
+  padding:2px 12px;border-radius:10px;
+  background:rgba(255,255,255,.05);
+  display:inline-block;margin:0 auto;
+}
+.card-line{
+  height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+  margin:4px 0;
+}
+.skill-label{
+  font-size:.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:2px;margin-bottom:1px;
+}
+.skill-text{
+  font-size:.7rem;color:#aaa;line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.skill-block{margin-bottom:2px;}
+
+/* 技能色 */
+.sk-limit .skill-label{ color:#ff6b6b; }
+.sk-innate .skill-label{ color:#ffd93d; }
+.sk-passive .skill-label{ color:#6bcb77; }
+.sk-extra .skill-label{ color:#4d96ff; }
+
+/* ── 卡片底部 ID ── */
+.card-id{
+  font-size:.6rem;color:#555;text-align:center;
+  padding:8px 0;border-top:1px solid rgba(255,255,255,.05);
+  letter-spacing:1px;
+}
+
+/* ── 图例 ── */
+.legend{display:flex;gap:24px;margin-top:32px;flex-wrap:wrap;justify-content:center;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.75rem;color:#aaa;}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.ld0{background:#ffd700} .ld1{background:#c084fc} .ld2{background:#60a5fa}
+
+/* ── 响应式 ── */
+@media(max-width:640px){
+  .card{width:220px;min-height:380px}
+  .card-top{height:170px}
+  .card-avatar{width:80px;height:80px}
+  .card-body{padding:12px 14px 16px}
+}
+
+.nav-back{
+  position:fixed;top:20px;left:20px;
+  color:#888;text-decoration:none;font-size:.85rem;
+  padding:8px 16px;border-radius:8px;
+  background:rgba(255,255,255,.05);
+  transition:all .2s;z-index:10;
+}
+.nav-back:hover{color:#fff;background:rgba(255,255,255,.1)}
+</style>
+</head>
+<body>
+<a class="nav-back" href="/">← 返回</a>
+<h1>角色收藏卡</h1>
+<p class="subtitle">CHARACTER COLLECTOR CARDS · 样卡展示</p>
+
+<div class="cards-grid">
+
+  <!-- 卡1：原村和 T0 -->
+  <div class="card t0">
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-bg" style="background-image:url('webp/Haramura_Nodoka.webp')"></div>
+        <img class="card-avatar" src="webp/Haramura_Nodoka.webp" alt="原村和" loading="lazy" onerror="this.src='dong.png'">
+        <div class="tier-badge">T0<div class="rarity-stars">★★★★★</div></div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">原村 和</div>
+        <div class="card-faction">📍 清澄高校</div>
+        <div class="card-line"></div>
+        <div class="skill-block sk-innate">
+          <div class="skill-label">◆ 固有技</div>
+          <div class="skill-text">你的断幺/平和可以副露</div>
+        </div>
+        <div class="skill-block sk-passive">
+          <div class="skill-label">◆ 被动技</div>
+          <div class="skill-text">副露断幺/平和1番，复合3番；门清2番，复合5番</div>
+        </div>
+        <div class="skill-block sk-limit">
+          <div class="skill-label">◆ 限定技</div>
+          <div class="skill-text">舍牌时倒置一枚舍牌；立直玩家巡目无视次数</div>
+        </div>
+      </div>
+      <div class="card-id">No. SRM0001</div>
+    </div>
+  </div>
+
+  <!-- 卡2：天江衣 T0 -->
+  <div class="card t0">
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-bg" style="background-image:url('webp/Amae_Koromo.webp')"></div>
+        <img class="card-avatar" src="webp/Amae_Koromo.webp" alt="天江衣" loading="lazy" onerror="this.src='dong.png'">
+        <div class="tier-badge">T0<div class="rarity-stars">★★★★★</div></div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">天江 衣</div>
+        <div class="card-faction">📍 龙门渊高校</div>
+        <div class="card-line"></div>
+        <div class="skill-block sk-innate">
+          <div class="skill-label">◆ 固有技</div>
+          <div class="skill-text">舍牌前可移动海底牌到王牌；立直时可移2张</div>
+        </div>
+        <div class="skill-block sk-passive">
+          <div class="skill-label">◆ 被动技</div>
+          <div class="skill-text">海底/河底为2番役</div>
+        </div>
+        <div class="skill-block sk-limit">
+          <div class="skill-label">◆ 限定技</div>
+          <div class="skill-text">听牌时海底/河底牌视为胡牌，无视振听</div>
+        </div>
+        <div class="skill-block sk-extra">
+          <div class="skill-label">◆ 附加技</div>
+          <div class="skill-text">移动前可用摸牌交换同花色/点数牌</div>
+        </div>
+      </div>
+      <div class="card-id">No. SRM0007</div>
+    </div>
+  </div>
+
+  <!-- 卡3：宫永咲 T1 -->
+  <div class="card t1">
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-bg" style="background-image:url('webp/Miyanaga_Saki.webp')"></div>
+        <img class="card-avatar" src="webp/Miyanaga_Saki.webp" alt="宫永咲" loading="lazy" onerror="this.src='dong.png'">
+        <div class="tier-badge">T1<div class="rarity-stars">★★★★☆</div></div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">宫永 咲</div>
+        <div class="card-faction">📍 清澄高校</div>
+        <div class="card-line"></div>
+        <div class="skill-block sk-innate">
+          <div class="skill-label">◆ 固有技</div>
+          <div class="skill-text">手牌中任意字牌可当做西风</div>
+        </div>
+        <div class="skill-block sk-passive">
+          <div class="skill-label">◆ 被动技</div>
+          <div class="skill-text">胡牌时每组暗刻追加1番</div>
+        </div>
+        <div class="skill-block sk-limit">
+          <div class="skill-label">◆ 限定技</div>
+          <div class="skill-text">听牌时开杠，岭上牌视为胡牌</div>
+        </div>
+      </div>
+      <div class="card-id">No. SRM0003</div>
+    </div>
+  </div>
+
+  <!-- 卡4：园城寺怜 T1 -->
+  <div class="card t1">
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-bg" style="background-image:url('webp/Onjouji_Toki.webp')"></div>
+        <img class="card-avatar" src="webp/Onjouji_Toki.webp" alt="园城寺怜" loading="lazy" onerror="this.src='dong.png'">
+        <div class="tier-badge">T1<div class="rarity-stars">★★★★☆</div></div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">园城寺 怜</div>
+        <div class="card-faction">📍 千里山女子高校</div>
+        <div class="card-line"></div>
+        <div class="skill-block sk-innate">
+          <div class="skill-label">◆ 固有技</div>
+          <div class="skill-text">首舍牌前额外摸2张，将2张手牌作为备牌</div>
+        </div>
+        <div class="skill-block sk-passive">
+          <div class="skill-label">◆ 被动技</div>
+          <div class="skill-text">巡目舍牌前可交换手牌与备牌；备牌有听牌时打点+100%</div>
+        </div>
+        <div class="skill-block sk-limit">
+          <div class="skill-label">◆ 限定技</div>
+          <div class="skill-text">4位时可置入2张备牌入海底重摸2张（限2次）</div>
+        </div>
+      </div>
+      <div class="card-id">No. SRM0041</div>
+    </div>
+  </div>
+
+  <!-- 卡5：时崎狂三 T2 -->
+  <div class="card t2">
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-bg" style="background-image:url('webp/Tokisaki_Kurumi.webp')"></div>
+        <img class="card-avatar" src="webp/Tokisaki_Kurumi.webp" alt="时崎狂三" loading="lazy" onerror="this.src='dong.png'">
+        <div class="tier-badge">T2<div class="rarity-stars">★★★☆☆</div></div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">时崎 狂三</div>
+        <div class="card-faction">📍 客串角色</div>
+        <div class="card-line"></div>
+        <div class="skill-block sk-innate">
+          <div class="skill-label">◆ 固有技</div>
+          <div class="skill-text">「四之弹」：摸牌前交换1张手牌与自家牌河</div>
+        </div>
+        <div class="skill-block sk-extra">
+          <div class="skill-label">◆ 附加技</div>
+          <div class="skill-text">「八之弹」：手切后交换牌河中两张牌位置</div>
+        </div>
+        <div class="skill-block sk-passive">
+          <div class="skill-label">◆ 被动技</div>
+          <div class="skill-text">适当时机射出四之弹或八之弹</div>
+        </div>
+        <div class="skill-block sk-limit">
+          <div class="skill-label">◆ 限定技</div>
+          <div class="skill-text">舍出4/8数牌蓄发子弹（每弹上限1枚）</div>
+        </div>
+      </div>
+      <div class="card-id">No. SRM0076</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot ld0"></span> T0 传说</div>
+  <div class="legend-item"><span class="legend-dot ld1"></span> T1 稀有</div>
+  <div class="legend-item"><span class="legend-dot ld2"></span> T2 精良</div>
+  <div class="legend-item" style="color:#ff6b6b">◆限定技</div>
+  <div class="legend-item" style="color:#ffd93d">◆固有技</div>
+  <div class="legend-item" style="color:#6bcb77">◆被动技</div>
+  <div class="legend-item" style="color:#4d96ff">◆附加技</div>
+</div>
+
+</body>
+</html>
