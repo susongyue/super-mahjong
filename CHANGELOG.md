@@ -4,6 +4,20 @@ All notable changes to super-mahjong will be documented in this file.
 
 ---
 
+## v1.0.3 (2026-06-07)
+
+### 投票去重漏洞修复
+- **根因**：`roundEndVotes` / `gameEndVotes` 用 `socket.id` 做投票 key，刷新页面后 socket.id 变更，同一玩家可重复投票（4人投票 → 1人刷4票）
+- **修复**：改用 `player.name`（用户名，持久标识）做投票 key
+- `voteEndRound` / `voteEndGame`：新增 `player` 查找容错（找不到则忽略投票）；`votedNames` 计算从 `p.id` 改为 `p.name`
+- `disconnect`：断开连接时清理该玩家名在 `roundEndVotes` / `gameEndVotes` 中的残留记录
+- `getRoomState`：投票计数只统计当前在线玩家，过滤孤立 socket.id 投票
+
+### Bug 修复
+- 排序下拉按钮 HTML 标签显示为纯文本（`textContent` → `innerHTML`）
+
+---
+
 ## v1.0.1 (2026-06-07)
 
 ### 对局历史改造
