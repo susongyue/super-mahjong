@@ -17,6 +17,32 @@ window.Utils = {
     setTimeout(() => t.remove(), duration);
   },
 
+  /** GSAP 安全动画 — CDN 加载失败时静默跳过，避免阻断后续 JS */
+  safeAnimate(target, vars) {
+    if (typeof gsap !== 'undefined' && gsap.from) {
+      try { gsap.from(target, vars); } catch (_) {}
+    }
+  },
+
+  /** 按钮加载态：禁用 + 显示文字 */
+  setBtnLoading(btn, text) {
+    if (!btn) return;
+    btn.disabled = true;
+    btn._origText = btn.textContent;
+    btn.textContent = text || '处理中…';
+    btn.style.opacity = '0.7';
+    btn.style.pointerEvents = 'none';
+  },
+
+  /** 按钮恢复 */
+  resetBtn(btn) {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.textContent = btn._origText || btn.textContent;
+    btn.style.opacity = '';
+    btn.style.pointerEvents = '';
+  },
+
   /** 创建全屏遮罩 */
   createOverlay(innerHTML, className = 'redirect-overlay') {
     const el = document.createElement('div');

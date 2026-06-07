@@ -425,7 +425,7 @@ socket.on('allReady', function (msg) {
   document.getElementById('voteArea').classList.remove('hidden');
   document.getElementById('readyBtn').disabled = true;
   document.getElementById('voteTip').innerText = msg;
-  gsap.from('#voteArea', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' });
+  Utils.safeAnimate('#voteArea', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' });
 });
 
 // ── 投票 ──
@@ -450,7 +450,7 @@ socket.on('voteResult', function (data) {
   document.getElementById('draftContent').innerHTML =
     '<p style="text-align:center;padding:20px;color:var(--ink-muted)">正在准备角色池...</p>';
   document.getElementById('redirectHint').classList.add('hidden');
-  gsap.from('#draftArea', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' });
+  Utils.safeAnimate('#draftArea', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' });
 });
 
 // ─── Draft 角色卡片渲染 ───
@@ -488,7 +488,7 @@ document.getElementById('draftContent').addEventListener('click', function (e) {
 socket.on('draftPoolStart', function (data) {
   document.getElementById('draftContent').innerHTML = renderPoolDraftUI(data);
   document.getElementById('redirectHint').classList.add('hidden');
-  gsap.from('.draft-pool-grid .draft-char', {
+  Utils.safeAnimate('.draft-pool-grid .draft-char', {
     opacity: 0, y: 15, stagger: 0.04, duration: 0.4, ease: 'power2.out'
   });
 });
@@ -637,7 +637,7 @@ socket.on('draftRandomResult', function (data) {
       '</div>' +
     '</div>';
   document.getElementById('draftContent').innerHTML = html;
-  gsap.from('.draft-grid .draft-char', {
+  Utils.safeAnimate('.draft-grid .draft-char', {
     opacity: 0, y: 15, stagger: 0.05, duration: 0.4, ease: 'power2.out'
   });
 });
@@ -667,9 +667,9 @@ socket.emit('getDraftState', roomId);
 socket.on('error', function (msg) { Utils.showToast('错误：' + msg); });
 
 // ── GSAP 入场动画 ──
-gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
-gsap.from('.room-header', { opacity: 0, y: -10, duration: 0.4, delay: 0.15, ease: 'power2.out' });
-gsap.from('.container', { opacity: 0, y: 20, duration: 0.6, delay: 0.3, ease: 'power3.out' });
+Utils.safeAnimate('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
+Utils.safeAnimate('.room-header', { opacity: 0, y: -10, duration: 0.4, delay: 0.15, ease: 'power2.out' });
+Utils.safeAnimate('.container', { opacity: 0, y: 20, duration: 0.6, delay: 0.3, ease: 'power3.out' });
 </script>
 </body>
 </html>

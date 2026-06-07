@@ -55,6 +55,10 @@ window.API = {
   },
 
   // ── 管理员 ──
+  async adminCheck(username) {
+    return fetch('/api/admin/check?username=' + encodeURIComponent(username)).then(x => x.json());
+  },
+
   async adminStatus(username) {
     return fetch('/api/admin/status?username=' + encodeURIComponent(username)).then(x => x.json());
   },

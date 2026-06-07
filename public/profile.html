@@ -360,12 +360,12 @@ let customAvatarUrl = '';
   renderAvatarGrid();
   loadStats();
 
-  // GSAP 入场动画
-  gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
-  gsap.from('#profileHeader', {
+  // GSAP 入场动画（CDN 失败时安全跳过）
+  Utils.safeAnimate('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
+  Utils.safeAnimate('#profileHeader', {
     opacity: 0, y: -30, duration: 0.6, delay: 0.1, ease: 'power3.out'
   });
-  gsap.from('.section-box, .logout-section', {
+  Utils.safeAnimate('.section-box, .logout-section, .admin-section', {
     opacity: 0, y: 20, duration: 0.5, stagger: 0.12, ease: 'power2.out', delay: 0.2
   });
 })();
@@ -588,12 +588,18 @@ async function useHistoryAvatar(idx) {
 // ── 管理员面板 ──
 async function checkIsAdmin() {
   try {
-    var r = await API.adminStatus(username);
-    // 管理员返回 success:true；非管理员返回 403 + success:false
-    if (r && r.success) {
+    var r = await API.adminCheck(username);
+    if (r && r.success && r.isAdmin) {
       document.getElementById('adminSection').style.display = '';
+      console.log('[admin] 管理员面板已激活, 配置人数:', r.adminUsers);
+    } else if (r && r.success && r.adminUsers > 0 && !r.isAdmin) {
+      console.log('[admin] 非管理员用户 (已配置' + r.adminUsers + '个管理员)');
+    } else {
+      console.log('[admin] 未配置管理员或检测失败');
     }
-  } catch (e) { /* 非管理员，不显示 */ }
+  } catch (e) {
+    console.warn('[admin] 检测失败:', e.message || e);
+  }
 }
 checkIsAdmin();
 

@@ -170,7 +170,7 @@ document.getElementById('reg-pwd').addEventListener('keydown', function (e) {
 });
 
 // ── GSAP 入场动画 ──
-gsap.from('#loginBox', { opacity: 0, y: 20, scale: 0.97, duration: 0.5, ease: 'power3.out' });
+Utils.safeAnimate('#loginBox', { opacity: 0, y: 20, scale: 0.97, duration: 0.5, ease: 'power3.out' });
 </script>
 </body>
 </html>

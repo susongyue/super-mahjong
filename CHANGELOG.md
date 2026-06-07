@@ -4,6 +4,28 @@ All notable changes to super-mahjong will be documented in this file.
 
 ---
 
+## v1.2.1 (2026-06-07)
+
+### 稳定性修复
+- **GSAP 崩溃防护**：所有页面 `gsap.from/to` 调用改为 `Utils.safeAnimate()` 包装，CDN 加载失败时静默跳过而非阻断后续 JS 执行
+- **工具函数增强**：`Utils` 新增 `safeAnimate()`、`setBtnLoading()`、`resetBtn()` 用于安全动画和按钮反馈
+- **创建房间**：`saveRooms()` 改为 `await` 等待 Supabase 持久化，添加 try-catch 错误处理
+- **加入房间**：`.single()` 改为 `.maybeSingle()`，避免空结果抛异常
+
+### 管理员面板修复
+- 新增 `GET /api/admin/check` 轻量检测端点（不返回 403，避免前端误判）
+- `checkIsAdmin()` 改用新端点 + Console 日志输出，方便排查配置问题
+
+### 交互反馈增强
+- 大厅"创建房间"按钮：点击后显示"创建中…" + 禁用态，失败自动恢复
+- 大厅"进入房间"按钮：点击后显示"查询中…" + 禁用态
+
+### 动画补充
+- `profile.html` 管理员面板 `.admin-section` 纳入入场动画序列
+- 所有页面 GSAP 调用统一使用安全回退机制
+
+---
+
 ## v1.2.0 (2026-06-07)
 
 ### 头像系统增强

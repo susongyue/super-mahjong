@@ -185,29 +185,45 @@ var myReconnectInfo = null;
 
 // ── 创建房间 ──
 document.getElementById('btnCreate').addEventListener('click', async function () {
-  var oldRoomId = Auth.roomId();
-  if (oldRoomId) {
-    try {
-      var r = await API.getRoomStatus(oldRoomId, user);
-      if (r.exists && r.isStarted && r.isPlayer) {
-        if (!confirm('您有一个进行中的对局（房间 ' + oldRoomId + '），创建新房间将离开当前对局。确定要继续吗？')) {
-          return;
+  var btn = this;
+  Utils.setBtnLoading(btn, '创建中…');
+  try {
+    var oldRoomId = Auth.roomId();
+    if (oldRoomId) {
+      try {
+        var r = await API.getRoomStatus(oldRoomId, user);
+        if (r.exists && r.isStarted && r.isPlayer) {
+          Utils.resetBtn(btn);
+          if (!confirm('您有一个进行中的对局（房间 ' + oldRoomId + '），创建新房间将离开当前对局。确定要继续吗？')) {
+            return;
+          }
+          Utils.setBtnLoading(btn, '创建中…');
         }
-      }
-    } catch (e) { /* ignore */ }
-  }
+      } catch (e) { /* ignore */ }
+    }
 
-  var res = await API.createRoom(user);
-  if (!res.success) { Utils.showToast(res.msg); return; }
-  localStorage.roomId = res.roomId;
-  location.href = '/index.html';
+    var res = await API.createRoom(user);
+    if (!res.success) { Utils.resetBtn(btn); Utils.showToast(res.msg); return; }
+    localStorage.roomId = res.roomId;
+    Utils.showToast('房间已创建');
+    location.href = '/index.html';
+  } catch (e) {
+    Utils.resetBtn(btn);
+    Utils.showToast('创建失败，请检查网络后重试');
+  }
 });
 
 // ── 统一的加入/重连处理 ──
 document.getElementById('btnJoin').addEventListener('click', async function () {
   var roomId = document.getElementById('roomId').value.trim();
   if (!roomId) { Utils.showToast('请输入房间号'); return; }
-  handleJoinOrReconnect(roomId);
+  var btn = this;
+  Utils.setBtnLoading(btn, '查询中…');
+  try {
+    await handleJoinOrReconnect(roomId);
+  } finally {
+    Utils.resetBtn(btn);
+  }
 });
 
 async function handleJoinOrReconnect(roomId) {
@@ -341,7 +357,7 @@ async function loadRooms() {
     });
 
     // GSAP 列表入场
-    gsap.from(box.querySelectorAll('.room-item'), {
+    Utils.safeAnimate(box.querySelectorAll('.room-item'), {
       opacity: 0, x: -20, stagger: 0.06, duration: 0.35, ease: 'power2.out'
     });
   } catch (e) {
@@ -353,9 +369,9 @@ async function loadRooms() {
 loadRooms();
 setInterval(loadRooms, 5000);
 
-// ── GSAP 入场动画 ──
-gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
-gsap.from('.container > .section', {
+// ── GSAP 入场动画（CDN 失败时安全跳过） ──
+Utils.safeAnimate('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
+Utils.safeAnimate('.container > .section', {
   opacity: 0, y: 24, stagger: 0.12, duration: 0.5, delay: 0.2, ease: 'power3.out'
 });
 </script>

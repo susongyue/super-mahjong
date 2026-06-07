@@ -929,18 +929,24 @@ app.post('/api/use-avatar', async (req, res) => {
 app.post('/api/create-room', async (req, res) => {
   const { username } = req.body;
   if (!username) return res.json({ success: false, msg: '用户名为空' });
-  let roomId;
-  do { roomId = String(Math.floor(100000 + Math.random() * 900000)); } while (rooms[roomId]);
-  rooms[roomId] = {
-    id: roomId,
-    host: username,
-    players: [username],
-    maxPlayers: 4,
-    started: false,
-    createdAt: new Date().toISOString()
-  };
-  saveRooms();
-  res.json({ success: true, roomId });
+  try {
+    let roomId;
+    do { roomId = String(Math.floor(100000 + Math.random() * 900000)); } while (rooms[roomId]);
+    rooms[roomId] = {
+      id: roomId,
+      host: username,
+      players: [username],
+      maxPlayers: 4,
+      started: false,
+      createdAt: new Date().toISOString()
+    };
+    await saveRooms(); // 等待 Supabase 持久化完成
+    console.log('✅ 房间 ' + roomId + ' 已创建（房主: ' + username + '）');
+    res.json({ success: true, roomId });
+  } catch (e) {
+    console.error('❌ 创建房间失败: ' + (e.message || e));
+    res.json({ success: false, msg: '服务器错误，请稍后重试' });
+  }
 });
 
 // 加入房间（支持内存未命中时从 Supabase 查询）
@@ -952,7 +958,7 @@ app.post('/api/join-room', async (req, res) => {
   // 内存未命中，从 Supabase 查询
   if (!room) {
     try {
-      const { data, error } = await supabase.from('rooms').select('*').eq('room_id', roomId).single();
+      const { data, error } = await supabase.from('rooms').select('*').eq('room_id', roomId).maybeSingle();
       if (!error && data) {
         room = { id: data.room_id, host: data.host, players: data.players, maxPlayers: data.max_players, started: data.started, createdAt: data.created_at };
         rooms[roomId] = room; // 回填内存
@@ -1266,6 +1272,13 @@ app.get('/api/game-history-detail', async (req, res) => {
     console.error('[game-history-detail] exception:', e.message || e);
     res.status(500).json({ error: e.message || 'unknown', detail: null });
   }
+});
+
+// ── 管理员检测（轻量，不返回 403 避免前端误判） ──
+app.get('/api/admin/check', (req, res) => {
+  const { username } = req.query;
+  const admin = !!(username && isAdmin(username));
+  res.json({ success: true, isAdmin: admin, adminUsers: ADMIN_USERS.length });
 });
 
 // ── 管理员面板 ──

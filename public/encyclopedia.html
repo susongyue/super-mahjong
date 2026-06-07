@@ -570,10 +570,10 @@ async function uploadJSON(file) {
 loadCharacters();
 
 // ── GSAP 入场动画 ──
-gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
-gsap.from('.upload-section', { opacity: 0, y: -10, duration: 0.4, delay: 0.15, ease: 'power2.out' });
-gsap.from('.toolbar', { opacity: 0, y: -10, duration: 0.4, delay: 0.2, ease: 'power2.out' });
-gsap.from('.encyclopedia-grid', { opacity: 0, y: 20, duration: 0.6, delay: 0.3, ease: 'power3.out' });
+Utils.safeAnimate('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
+Utils.safeAnimate('.upload-section', { opacity: 0, y: -10, duration: 0.4, delay: 0.15, ease: 'power2.out' });
+Utils.safeAnimate('.toolbar', { opacity: 0, y: -10, duration: 0.4, delay: 0.2, ease: 'power2.out' });
+Utils.safeAnimate('.encyclopedia-grid', { opacity: 0, y: 20, duration: 0.6, delay: 0.3, ease: 'power3.out' });
 </script>
 </body>
 </html>
