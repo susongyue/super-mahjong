@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="themes.css">
   <meta name="theme-color" content="#000000">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
 
@@ -247,6 +248,7 @@
 </div>
 
 <!-- 公共模块 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="js/lib/auth.js"></script>
 <script src="js/lib/utils.js"></script>
@@ -277,11 +279,17 @@ let customAvatarUrl = '';
     const r = await API.getProfile(username);
     if (r.success) {
       currentProfile = { nickname: r.nickname, avatar: r.avatar, bio: r.bio || '' };
-      selectedAvatar = currentProfile.avatar;
-      if (selectedAvatar.startsWith('/avatars/')) {
+      selectedAvatar = currentProfile.avatar || '';
+      // 自定义上传头像：本地路径 /avatars/... 或 CDN URL
+      if (selectedAvatar.startsWith('/avatars/') || selectedAvatar.startsWith('https://')) {
         selectedAvatarType = 'custom';
         customAvatarUrl = selectedAvatar;
       }
+
+      // 同步到 localStorage
+      localStorage.nickname = r.nickname;
+      localStorage.avatar = r.avatar || '';
+      if (r.bio !== undefined) localStorage.bio = r.bio;
     }
   } catch (e) { /* 使用默认值 */ }
 
@@ -289,26 +297,28 @@ let customAvatarUrl = '';
   document.getElementById('profileNickname').innerText = currentProfile.nickname;
   document.getElementById('profileUsername').innerText = '@' + username;
   document.getElementById('editNickname').value = currentProfile.nickname;
-  document.getElementById('editBio').value = currentProfile.bio;
+  document.getElementById('editBio').value = currentProfile.bio || '';
+
+  // 导航栏同步最新资料
+  Auth.renderNav(document.getElementById('navUser'));
 
   renderAvatarGrid();
   loadStats();
 
   // GSAP 入场动画
-  if (typeof gsap !== 'undefined') {
-    gsap.from('#profileHeader', {
-      opacity: 0, y: -30, duration: 0.6, ease: 'power3.out'
-    });
-    gsap.from('.section-box', {
-      opacity: 0, y: 20, duration: 0.5, stagger: 0.12, ease: 'power2.out', delay: 0.15
-    });
-  }
+  gsap.from('.navbar', { y: -60, opacity: 0, duration: 0.5, ease: 'power3.out' });
+  gsap.from('#profileHeader', {
+    opacity: 0, y: -30, duration: 0.6, delay: 0.1, ease: 'power3.out'
+  });
+  gsap.from('.section-box, .logout-section', {
+    opacity: 0, y: 20, duration: 0.5, stagger: 0.12, ease: 'power2.out', delay: 0.2
+  });
 })();
 
 // ─── 头像显示/选择 ───
 function updateProfileAvatarDisplay() {
   const el = document.getElementById('profileAvatarDisplay');
-  if (selectedAvatarType === 'custom' && (customAvatarUrl || selectedAvatar.startsWith('/avatars/'))) {
+  if (selectedAvatarType === 'custom' && (customAvatarUrl || selectedAvatar.startsWith('/avatars/') || selectedAvatar.startsWith('https://'))) {
     const url = customAvatarUrl || selectedAvatar;
     el.innerHTML = '<img src="' + Utils.escHTML(url) + '" alt="头像" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
   } else {

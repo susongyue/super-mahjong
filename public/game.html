@@ -520,8 +520,8 @@ function openFullscreen(idx, cardEl) {
   // 头像
   var avatarHTML = '';
   if (c.image) {
-    var webpSrc = '/webp/' + c.image.replace(/\.png$/i, '.webp');
-    var pngSrc = '/png/' + c.image;
+    var webpSrc = 'https://sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com/webp/' + c.image.replace(/\.png$/i, '.webp');
+    var pngSrc = 'https://sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com/png/' + c.image;
     avatarHTML = '<picture>' +
       '<source srcset="' + webpSrc + '" type="image/webp">' +
       '<img class="detail-avatar" src="' + pngSrc + '" alt="' + Utils.escHTML(c.name) + '" onerror="this.style.display=\'none\';this.parentElement.nextElementSibling.style.display=\'flex\';">' +

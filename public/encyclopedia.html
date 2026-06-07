@@ -324,8 +324,8 @@ async function loadCharacters() {
 // ── 渲染角色头像 ──
 function renderCharImg(c, imgCls, phCls) {
   if (c.image) {
-    var webpSrc = '/webp/' + c.image.replace(/\.png$/i, '.webp');
-    var pngSrc = '/png/' + c.image;
+    var webpSrc = 'https://sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com/webp/' + c.image.replace(/\.png$/i, '.webp');
+    var pngSrc = 'https://sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com/png/' + c.image;
     return '<picture>' +
       '<source srcset="' + webpSrc + '" type="image/webp">' +
       '<img class="' + imgCls + '" src="' + pngSrc + '" alt="' + Utils.escHTML(c.name) + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.nextElementSibling.style.display=\'flex\';">' +

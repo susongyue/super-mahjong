@@ -179,7 +179,7 @@ async function viewHistoryDetail(roomId) {
           var cname = c.name || c;
           var img = charImageMap[cname];
           var avatarHTML = img
-            ? '<img class="draft-char-avatar" src="/png/' + img + '" onerror="this.style.display=\'none\'">'
+            ? '<img class="draft-char-avatar" src="https://sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com/png/' + img + '" onerror="this.style.display=\'none\'">'
             : '<span class="draft-char-placeholder">' + cname.charAt(0) + '</span>';
           return avatarHTML + Utils.escHTML(cname);
         }).join(' ');

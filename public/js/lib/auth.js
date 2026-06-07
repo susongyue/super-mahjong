@@ -36,7 +36,7 @@ window.Auth = {
   renderNav(navUserEl) {
     const avatar = this.avatar();
     const nickname = this.nickname();
-    const avatarHTML = avatar.startsWith('/avatars/')
+    const avatarHTML = (avatar.startsWith('/') || avatar.startsWith('http'))
       ? '<img src="' + avatar + '" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;">'
       : avatar;
     navUserEl.innerHTML = '<span style="cursor:pointer" onclick="location.href=\'/profile.html\'">' + avatarHTML + ' ' + Utils.escHTML(nickname) + '</span>';

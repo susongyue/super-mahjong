@@ -562,7 +562,7 @@ function renderBattleGrid() {
         var playerCharsForImg = allChars[pname] || [];
         var cc = playerCharsForImg.find(function (x) { return x.name === c.name; });
         if (cc && cc.image) {
-          return '<img class="char-avatar" src="/png/' + cc.image +
+          return '<img class="char-avatar" src="https://sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com/png/' + cc.image +
             '" alt="' + Utils.escHTML(c.name) +
             '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
         }
@@ -629,7 +629,7 @@ function openFullscreen(playerName, charName, cardEl) {
   // 头像
   var avatarHTML = '';
   if (c.image) {
-    avatarHTML = '<img class="detail-avatar" src="/png/' + c.image +
+    avatarHTML = '<img class="detail-avatar" src="https://sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com/png/' + c.image +
       '" alt="' + Utils.escHTML(c.name) +
       '" onerror="this.style.display=\'none\';this.parentElement.nextElementSibling.style.display=\'flex\';">' +
       '<div class="detail-avatar-placeholder" style="display:none">' + Utils.escHTML(c.name.charAt(0)) + '</div>';

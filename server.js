@@ -7,6 +7,22 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+const cloudbase = require('@cloudbase/node-sdk');
+
+// ── CloudBase 云存储 ──
+const TCB_ENV = 'sr-mahjong-d0g8mp6w19f37dd37';
+let tcbApp = null;
+if (process.env.TENCENT_SECRET_ID && process.env.TENCENT_SECRET_KEY) {
+  tcbApp = cloudbase.init({
+    env: TCB_ENV,
+    secretId: process.env.TENCENT_SECRET_ID,
+    secretKey: process.env.TENCENT_SECRET_KEY
+  });
+  console.log('✅ CloudBase SDK 已初始化');
+} else {
+  console.log('⚠️ 未配置 TENCENT_SECRET_ID/TENCENT_SECRET_KEY，CloudBase 云存储不可用，头像将使用本地存储');
+}
+const AVATAR_CACHE = new Map(); // fileID → { url, expires }
 
 const app = express();
 
@@ -42,7 +58,33 @@ app.use(express.static('public', {
   }
 }));
 
-// 角色头像：WebP 优先（体积减少 96%），PNG 作为原始路径保留
+// 角色头像：已迁移至 CloudBase 静态托管 CDN（sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com）
+// 本地 /webp、/png、/avatars 路由保留作为兜底
+
+// ── 辅助：解析 CDN 图片地址 ──
+async function resolveAvatarUrl(avatar) {
+  if (!avatar) return '';
+  // 旧格式本地路径 → 直接返回（兜底）
+  if (avatar.startsWith('/avatars/')) return avatar;
+  // CloudBase fileID → 解析为临时 CDN URL
+  if (avatar.startsWith('cloud://')) {
+    if (!tcbApp) return ''; // SDK 未初始化，无法解析
+    const cached = AVATAR_CACHE.get(avatar);
+    if (cached && cached.expires > Date.now()) return cached.url;
+    try {
+      const result = await tcbApp.getTempFileURL({
+        fileList: [{ fileID: avatar, maxAge: 7200 }] // 2 小时有效期
+      });
+      const url = result.fileList?.[0]?.tempFileURL || result.fileList?.[0]?.download_url || '';
+      if (url) {
+        AVATAR_CACHE.set(avatar, { url, expires: Date.now() + 7000 * 1000 }); // 缓存 1.9h
+      }
+      return url;
+    } catch (e) { return ''; }
+  }
+  return avatar;
+}
+
 app.use('/webp', express.static('public/webp', {
   setHeaders: (res) => {
     res.setHeader('Cache-Control', `public, max-age=${ONE_YEAR}, immutable`);
@@ -615,21 +657,23 @@ app.post('/api/login', async (req, res) => {
   }
 
   const profile = users[username] || { nickname: username, avatar: '' };
-  res.json({ success: true, msg: '登录成功', nickname: profile.nickname, avatar: profile.avatar });
+  const displayAvatar = await resolveAvatarUrl(profile.avatar);
+  res.json({ success: true, msg: '登录成功', nickname: profile.nickname, avatar: displayAvatar });
 });
 
 // ── 获取用户资料 ──
-app.get('/api/profile', (req, res) => {
+app.get('/api/profile', async (req, res) => {
   const { username } = req.query;
   if (!username) return res.json({ success: false, msg: '缺少用户名' });
 
   const userObj = users[username];
   if (userObj && typeof userObj === 'object') {
+    const displayAvatar = await resolveAvatarUrl(userObj.avatar || '');
     return res.json({
       success: true,
       username,
       nickname: userObj.nickname || username,
-      avatar: userObj.avatar || '',
+      avatar: displayAvatar,
       bio: userObj.bio || ''
     });
   }
@@ -657,11 +701,12 @@ app.put('/api/profile', async (req, res) => {
   const ok = await updateUserInDB(username, updateFields);
   if (!ok) return res.json({ success: false, msg: '更新失败，数据库异常' });
 
+  const displayAvatar = await resolveAvatarUrl(users[username].avatar);
   res.json({
     success: true,
     msg: '资料已更新',
     nickname: users[username].nickname,
-    avatar: users[username].avatar,
+    avatar: displayAvatar,
     bio: users[username].bio
   });
 });
@@ -690,7 +735,7 @@ app.post('/api/change-password', async (req, res) => {
   res.json({ success: true, msg: '密码修改成功' });
 });
 
-// ── 上传自定义头像（base64） ──
+// ── 上传自定义头像（CloudBase 云存储 + 本地兜底） ──
 app.post('/api/upload-avatar', async (req, res) => {
   const { username, image } = req.body;
   if (!username || !image) return res.json({ success: false, msg: '缺少参数' });
@@ -715,31 +760,69 @@ app.post('/api/upload-avatar', async (req, res) => {
   const buf = Buffer.from(base64, 'base64');
   if (buf.length > 2 * 1024 * 1024) return res.json({ success: false, msg: '图片不能超过 2MB' });
 
-  // 确保目录存在
-  const avatarsDir = path.join(__dirname, 'public', 'avatars');
-  if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
-
   const filename = username + '_' + Date.now() + '.' + ext;
-  const filePath = path.join(avatarsDir, filename);
+  const cloudPath = 'avatars/' + filename;
+
+  // 先删除旧头像
+  const oldAvatar = users[username].avatar || '';
 
   try {
-    fs.writeFileSync(filePath, buf);
+    // 尝试上传到 CloudBase 云存储（需要配置 TENCENT_SECRET_ID / TENCENT_SECRET_KEY）
+    if (!tcbApp) throw new Error('CloudBase SDK 未初始化');
+    const uploadResult = await tcbApp.uploadFile({
+      cloudPath: cloudPath,
+      fileContent: buf
+    });
 
-    // 删除旧自定义头像文件（如果之前有上传过）
-    const oldAvatar = users[username].avatar || '';
+    const fileID = uploadResult.fileID;
+
+    // 删除 CloudBase 上的旧头像
+    if (oldAvatar && oldAvatar.startsWith('cloud://')) {
+      try { await tcbApp.deleteFile({ fileList: [oldAvatar] }); } catch (_) {}
+    }
+    // 同时清理本地旧文件
     if (oldAvatar.startsWith('/avatars/')) {
       const oldPath = path.join(__dirname, 'public', oldAvatar);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      try { if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath); } catch (_) {}
     }
 
-    const avatarUrl = '/avatars/' + filename;
-    users[username].avatar = avatarUrl;
-    await updateUserInDB(username, { avatar: avatarUrl });
+    // 解析为临时 CDN URL 存储（方便直接使用）
+    const tempRes = await tcbApp.getTempFileURL({
+      fileList: [{ fileID: fileID, maxAge: 86400 }] // 24h
+    });
+    const displayUrl = tempRes.fileList?.[0]?.tempFileURL || tempRes.fileList?.[0]?.download_url || '';
 
-    res.json({ success: true, msg: '头像上传成功', avatar: avatarUrl });
-  } catch (e) {
-    console.log('⚠️ 头像上传失败: ' + e.message);
-    res.json({ success: false, msg: '上传失败，请重试' });
+    users[username].avatar = fileID; // 存储 fileID，可通过 resolveAvatarUrl 解析
+    users[username]._avatarUrl = displayUrl; // 缓存临时 URL
+    AVATAR_CACHE.set(fileID, { url: displayUrl, expires: Date.now() + 85000 * 1000 });
+    await updateUserInDB(username, { avatar: fileID });
+
+    console.log('✅ 头像上传成功 CloudBase: ' + fileID + ' | CDN: ' + displayUrl);
+    res.json({ success: true, msg: '头像上传成功', avatar: displayUrl });
+  } catch (uploadErr) {
+    console.log('⚠️ CloudBase 上传失败，使用本地存储: ' + uploadErr.message);
+
+    // ── 兜底：本地文件系统 ──
+    try {
+      const avatarsDir = path.join(__dirname, 'public', 'avatars');
+      if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
+      const filePath = path.join(avatarsDir, filename);
+      fs.writeFileSync(filePath, buf);
+
+      if (oldAvatar.startsWith('/avatars/')) {
+        const oldPath = path.join(__dirname, 'public', oldAvatar);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+
+      const avatarUrl = '/avatars/' + filename;
+      users[username].avatar = avatarUrl;
+      await updateUserInDB(username, { avatar: avatarUrl });
+      console.log('✅ 头像上传成功 本地: ' + avatarUrl);
+      res.json({ success: true, msg: '头像上传成功', avatar: avatarUrl });
+    } catch (e) {
+      console.log('⚠️ 本地头像保存也失败: ' + e.message);
+      res.json({ success: false, msg: '上传失败，请重试' });
+    }
   }
 });
 

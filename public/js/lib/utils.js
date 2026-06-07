@@ -71,12 +71,17 @@ window.Utils = {
     return '<div class="' + cls + '">' + (name || '').charAt(0) + '</div>';
   },
 
-  /** 玩家头像 HTML（用户自定义头像） */
+  /** 玩家头像 HTML（用户自定义头像）
+   *  支持：本地路径 /avatars/...、CDN URL https://...、Emoji 文字头像 */
   playerAvatarHTML(avatar) {
-    if (!avatar) avatar = '';
-    if (avatar.startsWith('/avatars/')) {
-      return '<img src="' + avatar + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+    if (!avatar) return '';
+    // 任何可显示图片的 URL（本地路径或远程 CDN）→ 渲染 <img>
+    if (avatar.startsWith('/') || avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      return '<img src="' + avatar + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" loading="lazy">';
     }
+    // cloud:// fileID（兜底：后端已解析，不应走到这里）
+    if (avatar.startsWith('cloud://')) return '';
+    // Emoji / 文字头像 → 直接返回 HTML
     return avatar;
   }
 };
