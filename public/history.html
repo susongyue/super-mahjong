@@ -581,7 +581,7 @@ async function viewHistoryDetail(id) {
       });
     });
 
-    // 回合切换
+    // 回合切换（渐入渐出动画）
     if (battles.length > 1) {
       function updateRoundView() {
         var roundNumEl = document.getElementById('roundNum');
@@ -590,29 +590,29 @@ async function viewHistoryDetail(id) {
         var btnNext = document.getElementById('btnNextRound');
         if (btnPrev) btnPrev.disabled = currentRound <= 1;
         if (btnNext) btnNext.disabled = currentRound >= totalRounds;
-        // 替换回合内容
+
         var tabBattle = document.getElementById('tab-battle');
-        var nav = tabBattle.querySelector('.round-nav');
         var oldSnap = tabBattle.querySelector('.battle-snapshot');
-        var newSnap = document.createElement('div');
-        newSnap.innerHTML = buildRoundContent(currentRound);
-        var snapEl = newSnap.firstElementChild;
-        if (oldSnap) {
-          oldSnap.style.opacity = '0';
-          oldSnap.style.transform = 'translateY(6px)';
-          tabBattle.insertBefore(snapEl, nav || oldSnap.nextSibling);
-          var o = oldSnap;
-          snapEl.style.transition = 'opacity .2s ease, transform .2s ease';
-          snapEl.style.transform = 'translateY(6px)';
+        if (!oldSnap) return;
+
+        // 1) 淡出当前
+        oldSnap.style.transition = 'opacity 0.2s ease';
+        oldSnap.style.opacity = '0';
+
+        setTimeout(function() {
+          // 2) 替换为新内容
+          var tmp = document.createElement('div');
+          tmp.innerHTML = buildRoundContent(currentRound);
+          var newSnap = tmp.firstElementChild;
+          oldSnap.parentNode.replaceChild(newSnap, oldSnap);
+
+          // 3) 淡入新内容
+          newSnap.style.opacity = '0';
+          newSnap.style.transition = 'opacity 0.2s ease';
           requestAnimationFrame(function() {
-            snapEl.style.opacity = '1';
-            snapEl.style.transform = 'translateY(0)';
+            newSnap.style.opacity = '1';
           });
-          setTimeout(function() { if (o.parentNode) o.remove(); }, 250);
-        } else {
-          if (nav) tabBattle.insertBefore(snapEl, nav);
-          else tabBattle.appendChild(snapEl);
-        }
+        }, 220);
       }
       document.getElementById('btnPrevRound').addEventListener('click', function() {
         if (currentRound > 1) { currentRound--; updateRoundView(); }
