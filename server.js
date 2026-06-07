@@ -58,14 +58,12 @@ app.use(express.static('public', {
   }
 }));
 
-// 角色头像：已迁移至 CloudBase 静态托管 CDN（sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com）
-// 本地 /webp、/png、/avatars 路由保留作为兜底
+// 角色头像：CloudBase 静态托管 CDN（sr-mahjong-d0g8mp6w19f37dd37-1324905494.tcloudbaseapp.com）
+// 用户自定义头像：CloudBase 云存储（cloud:// fileID）
 
-// ── 辅助：解析 CDN 图片地址 ──
+// ── 辅助：解析 CloudBase 头像 CDN 地址 ──
 async function resolveAvatarUrl(avatar) {
   if (!avatar) return '';
-  // 旧格式本地路径 → 直接返回（兜底）
-  if (avatar.startsWith('/avatars/')) return avatar;
   // CloudBase fileID → 解析为临时 CDN URL
   if (avatar.startsWith('cloud://')) {
     if (!tcbApp) return ''; // SDK 未初始化，无法解析
@@ -95,11 +93,6 @@ app.use('/png', express.static('png', {
     res.setHeader('Cache-Control', `public, max-age=${ONE_YEAR}, immutable`);
   }
 }));
-app.use('/avatars', express.static('public/avatars', {
-  setHeaders: (res) => {
-    res.setHeader('Cache-Control', `public, max-age=${ONE_DAY}`);
-  }
-}));
 
 // ── Supabase 客户端 ──
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rvdvdgriyleoiuglzgch.supabase.co';
@@ -124,16 +117,6 @@ let gameHistory = {};
 // finishedRooms 用于标记已结束的房间（防止重连）；值 = 结束时间戳
 let finishedRooms = {};
 
-// ── 数据路径（兼容旧数据导入） ──
-const DATA_DIR = path.join(__dirname, 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const ROOMS_FILE = path.join(DATA_DIR, 'rooms.json');
-const CHARS_FILE = path.join(DATA_DIR, 'characters.json');
-const SOCKET_ROOMS_FILE = path.join(DATA_DIR, 'socket_rooms.json');
-const DRAFT_RESULTS_FILE = path.join(DATA_DIR, 'draft_results.json');
-
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-
 // ── 从 Supabase 加载数据到内存缓存 ──
 async function loadFromDB() {
   try {
@@ -156,11 +139,18 @@ async function loadFromDB() {
       console.log('✅ 从 Supabase 加载 ' + roomData.length + ' 个 REST 房间');
     }
 
+
     // 加载 Socket 房间
     const { data: srData } = await supabase.from('socket_rooms').select('*');
     if (srData) {
       socketRooms = {};
-      srData.forEach(r => { socketRooms[r.room_id] = r.state_data; });
+      srData.forEach(r => {
+        socketRooms[r.room_id] = r.state_data;
+        // 恢复进行中的 draft pool 状态
+        if (r.state_data._draftPool) {
+          draftPools[r.room_id] = r.state_data._draftPool;
+        }
+      });
       // 重启后清空玩家连接
       Object.keys(socketRooms).forEach(id => {
         if (socketRooms[id] && socketRooms[id].players) socketRooms[id].players = [];
@@ -210,23 +200,80 @@ async function loadFromDB() {
     const { data: ghData } = await supabase.from('game_history').select('*').order('ended_at', { ascending: false });
     if (ghData) {
       gameHistory = {};
-      ghData.forEach(h => { gameHistory[h.room_id] = h; });
+      finishedRooms = {};
+      ghData.forEach(h => {
+        gameHistory[h.room_id] = h;
+        finishedRooms[h.room_id] = new Date(h.ended_at).getTime();
+      });
       console.log('✅ 从 Supabase 加载 ' + ghData.length + ' 条对局历史');
     }
+
+    // 加载角色数据
+    await loadCharactersFromDB();
+
   } catch (e) {
-    console.log('⚠️ Supabase 加载失败，尝试从本地 JSON 恢复: ' + e.message);
-    loadFromLocalJSON();
+    console.log('❌ Supabase 加载失败，服务器将以空数据启动: ' + e.message);
+    console.log('⚠️ 请检查 SUPABASE_URL 和 SUPABASE_ANON_KEY 环境变量');
+    // 角色数据也需要初始化（否则游戏无法进行）
+    _charCache = [];
+    _charCacheTime = Date.now();
   }
 }
 
-// 从本地 JSON 导入数据（兼容旧数据迁移）
-function loadFromLocalJSON() {
-  try { if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); } catch (e) { users = {}; }
-  try { if (fs.existsSync(ROOMS_FILE)) rooms = JSON.parse(fs.readFileSync(ROOMS_FILE, 'utf8')); } catch (e) { rooms = {}; }
-  try { if (fs.existsSync(SOCKET_ROOMS_FILE)) { socketRooms = JSON.parse(fs.readFileSync(SOCKET_ROOMS_FILE, 'utf8')); } } catch (e) { socketRooms = {}; }
-  try { if (fs.existsSync(DRAFT_RESULTS_FILE)) draftResults = JSON.parse(fs.readFileSync(DRAFT_RESULTS_FILE, 'utf8')); } catch (e) { draftResults = {}; }
-  Object.keys(socketRooms).forEach(id => { if (socketRooms[id].players) socketRooms[id].players = []; });
-  console.log('✅ 从本地 JSON 文件加载数据');
+// 从 Supabase 加载角色数据（含自动建表和初始种数据）
+async function loadCharactersFromDB() {
+  try {
+    const { data, error } = await supabase.from('characters').select('*');
+    if (error) {
+      // 表可能不存在，尝试自动创建
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        console.log('⚠️ characters 表不存在，尝试从本地 JSON 种数据...');
+        return seedCharactersFromLocal();
+      }
+      throw error;
+    }
+    if (data && data.length > 0) {
+      _charCache = data;
+      _charCacheTime = Date.now();
+      console.log('✅ 从 Supabase 加载 ' + data.length + ' 个角色');
+      return;
+    }
+    // 表存在但为空，自动种数据
+    console.log('⚠️ characters 表为空，从本地 JSON 种数据...');
+    return seedCharactersFromLocal();
+  } catch (e) {
+    console.log('⚠️ Supabase 角色加载失败: ' + e.message);
+    _charCache = [];
+    _charCacheTime = Date.now();
+  }
+}
+
+// 从本地 characters.json 读取数据并种入 Supabase（仅首次初始化/迁移用）
+async function seedCharactersFromLocal() {
+  const CHARS_FILE = path.join(__dirname, 'data', 'characters.json');
+  let locals;
+  try {
+    locals = JSON.parse(fs.readFileSync(CHARS_FILE, 'utf8'));
+  } catch (e) {
+    console.log('⚠️ 无法读取本地 characters.json: ' + e.message);
+    _charCache = [];
+    _charCacheTime = Date.now();
+    return;
+  }
+  if (!locals || locals.length === 0) { _charCache = []; _charCacheTime = Date.now(); return; }
+
+  try {
+    const { error } = await supabase.from('characters').upsert(locals, { onConflict: 'id' });
+    if (error) {
+      console.log('⚠️ 角色数据种子到 Supabase 失败: ' + error.message + '，仅加载到内存');
+    } else {
+      console.log('✅ 已从本地 JSON 种 ' + locals.length + ' 个角色到 Supabase');
+    }
+  } catch (e) {
+    console.log('⚠️ 种子角色失败: ' + e.message + '，仅加载到内存');
+  }
+  _charCache = locals;
+  _charCacheTime = Date.now();
 }
 
 // ── 从 Supabase 查询单个用户（登录时内存缓存缺失的兜底） ──
@@ -360,10 +407,7 @@ let _charCache = null;
 let _charCacheTime = 0;
 
 function getCharacterData(name) {
-  const now = Date.now();
-  if (!_charCache || now - _charCacheTime > 30000) {
-    try { _charCache = JSON.parse(fs.readFileSync(CHARS_FILE, 'utf8')); _charCacheTime = now; } catch (e) { _charCache = []; }
-  }
+  if (!_charCache || _charCache.length === 0) return null;
   return _charCache.find(c => c.name === name) || null;
 }
 
@@ -595,22 +639,6 @@ setInterval(async () => {
 //  REST API 路由
 // ═══════════════════════════════════════
 
-// 如果 characters.json 不存在，从 CSV 自动生成
-const CSV_FILE = path.join(__dirname, 'super-mahjong.csv');
-const IMG_MAP_FILE = path.join(__dirname, 'data', 'character-images.json');
-if (!fs.existsSync(CHARS_FILE) && fs.existsSync(CSV_FILE)) {
-  try {
-    const csvText = fs.readFileSync(CSV_FILE, 'utf8');
-    const result = parseCSV(csvText);
-    // 合并头像映射
-    let imgMap = {};
-    try { imgMap = JSON.parse(fs.readFileSync(IMG_MAP_FILE, 'utf8')); } catch (e) {}
-    const withImages = result.map(c => ({ ...c, image: imgMap[c.name] || null }));
-    fs.writeFileSync(CHARS_FILE, JSON.stringify(withImages, null, 2), 'utf8');
-    console.log('✅ 已从 CSV 自动生成 ' + withImages.length + ' 个角色（含头像映射）');
-  } catch (e) { console.log('⚠️ CSV 解析失败: ' + e.message); }
-}
-
 // 注册
 app.post('/api/register', async (req, res) => {
   const { username, password, nickname, avatar } = req.body;
@@ -735,7 +763,7 @@ app.post('/api/change-password', async (req, res) => {
   res.json({ success: true, msg: '密码修改成功' });
 });
 
-// ── 上传自定义头像（CloudBase 云存储 + 本地兜底） ──
+// ── 上传自定义头像（CloudBase 云存储） ──
 app.post('/api/upload-avatar', async (req, res) => {
   const { username, image } = req.body;
   if (!username || !image) return res.json({ success: false, msg: '缺少参数' });
@@ -763,66 +791,40 @@ app.post('/api/upload-avatar', async (req, res) => {
   const filename = username + '_' + Date.now() + '.' + ext;
   const cloudPath = 'avatars/' + filename;
 
-  // 先删除旧头像
+  // 先获取旧头像 fileID
   const oldAvatar = users[username].avatar || '';
 
+  // CloudBase 云存储上传
+  if (!tcbApp) return res.json({ success: false, msg: 'CloudBase SDK 未初始化，请配置 TENCENT_SECRET_ID / TENCENT_SECRET_KEY' });
+
   try {
-    // 尝试上传到 CloudBase 云存储（需要配置 TENCENT_SECRET_ID / TENCENT_SECRET_KEY）
-    if (!tcbApp) throw new Error('CloudBase SDK 未初始化');
     const uploadResult = await tcbApp.uploadFile({
       cloudPath: cloudPath,
       fileContent: buf
     });
-
     const fileID = uploadResult.fileID;
 
     // 删除 CloudBase 上的旧头像
     if (oldAvatar && oldAvatar.startsWith('cloud://')) {
       try { await tcbApp.deleteFile({ fileList: [oldAvatar] }); } catch (_) {}
     }
-    // 同时清理本地旧文件
-    if (oldAvatar.startsWith('/avatars/')) {
-      const oldPath = path.join(__dirname, 'public', oldAvatar);
-      try { if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath); } catch (_) {}
-    }
 
-    // 解析为临时 CDN URL 存储（方便直接使用）
+    // 解析为临时 CDN URL
     const tempRes = await tcbApp.getTempFileURL({
       fileList: [{ fileID: fileID, maxAge: 86400 }] // 24h
     });
     const displayUrl = tempRes.fileList?.[0]?.tempFileURL || tempRes.fileList?.[0]?.download_url || '';
 
-    users[username].avatar = fileID; // 存储 fileID，可通过 resolveAvatarUrl 解析
-    users[username]._avatarUrl = displayUrl; // 缓存临时 URL
+    users[username].avatar = fileID;
+    users[username]._avatarUrl = displayUrl;
     AVATAR_CACHE.set(fileID, { url: displayUrl, expires: Date.now() + 85000 * 1000 });
     await updateUserInDB(username, { avatar: fileID });
 
-    console.log('✅ 头像上传成功 CloudBase: ' + fileID + ' | CDN: ' + displayUrl);
+    console.log('✅ 头像上传成功: ' + fileID + ' | CDN: ' + displayUrl);
     res.json({ success: true, msg: '头像上传成功', avatar: displayUrl });
-  } catch (uploadErr) {
-    console.log('⚠️ CloudBase 上传失败，使用本地存储: ' + uploadErr.message);
-
-    // ── 兜底：本地文件系统 ──
-    try {
-      const avatarsDir = path.join(__dirname, 'public', 'avatars');
-      if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
-      const filePath = path.join(avatarsDir, filename);
-      fs.writeFileSync(filePath, buf);
-
-      if (oldAvatar.startsWith('/avatars/')) {
-        const oldPath = path.join(__dirname, 'public', oldAvatar);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
-
-      const avatarUrl = '/avatars/' + filename;
-      users[username].avatar = avatarUrl;
-      await updateUserInDB(username, { avatar: avatarUrl });
-      console.log('✅ 头像上传成功 本地: ' + avatarUrl);
-      res.json({ success: true, msg: '头像上传成功', avatar: avatarUrl });
-    } catch (e) {
-      console.log('⚠️ 本地头像保存也失败: ' + e.message);
-      res.json({ success: false, msg: '上传失败，请重试' });
-    }
+  } catch (err) {
+    console.log('❌ 头像上传失败: ' + err.message);
+    res.json({ success: false, msg: '上传失败: ' + err.message });
   }
 });
 
@@ -871,96 +873,29 @@ app.post('/api/join-room', async (req, res) => {
 
 // 获取角色列表
 app.get('/api/characters', (req, res) => {
-  try {
-    const chars = JSON.parse(fs.readFileSync(CHARS_FILE, 'utf8'));
-    // 合并头像映射
-    let imgMap = {};
-    try {
-      imgMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'character-images.json'), 'utf8'));
-    } catch (e) { /* ignore */ }
-    const result = chars.map(c => ({
-      ...c,
-      image: imgMap[c.name] || null
-    }));
-    res.json(result);
-  } catch (e) {
-    res.json([]);
-  }
+  res.json(_charCache || []);
 });
 
-// CSV 解析辅助函数
-function parseCSV(csvText) {
-  const lines = csvText.replace(/\r\n/g, '\n').trim().split('\n');
-  if (lines.length < 2) throw new Error('CSV 格式错误');
-  const headers = lines[0].split(',');
-  const result = [];
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    const obj = {};
-    let current = '', fieldIdx = 0, inQuotes = false;
-    for (let j = 0; j < lines[i].length; j++) {
-      const ch = lines[i][j];
-      if (ch === '"') { inQuotes = !inQuotes; }
-      else if (ch === ',' && !inQuotes) { obj[headers[fieldIdx]] = current; current = ''; fieldIdx++; }
-      else { current += ch; }
-    }
-    obj[headers[fieldIdx]] = current;
-    // 规范化键名（同时支持中文表头和英文表头）
-    const normalized = {};
-    Object.keys(obj).forEach(k => {
-      const nk = k.trim().toLowerCase()
-        .replace(/（/g, '(').replace(/）/g, ')')
-        .replace(/\s+/g, '');
-      if (nk === '姓名' || nk === '角色' || nk === '角色名' || nk === '名称' || nk === 'name') normalized.name = obj[k];
-      else if (nk === '强度' || nk === 'tier') normalized.tier = obj[k];
-      else if (nk === '阵营' || nk === '势力' || nk === 'faction') normalized.faction = obj[k];
-      else if (nk === '限定技' || nk === 'limit') normalized.limit = obj[k];
-      else if (nk === '固有技' || nk === '天赋技' || nk === 'innate') normalized.innate = obj[k];
-      else if (nk === '被动技' || nk === '被动' || nk === 'passive') normalized.passive = obj[k];
-      else if (nk === '附加技' || nk === '额外技' || nk === '额外' || nk === 'extra') normalized.extra = obj[k];
-      else if (nk === '保留' || nk === 'retain') normalized.retain = (obj[k] && (obj[k].toLowerCase() === 'true' || obj[k] === '1' || obj[k] === '是' || obj[k] === 'yes'));
-      else if (nk === '备注' || nk === 'note') normalized.note = obj[k];
-    });
-    result.push(normalized);
-  }
-  return result;
-}
-
-// CSV 上传
-app.post('/api/upload-csv', express.text({ type: ['text/csv', 'text/plain'], limit: '5mb' }), (req, res) => {
-  try {
-    const result = parseCSV(req.body);
-    // 合并头像映射
-    let imgMap = {};
-    try { imgMap = JSON.parse(fs.readFileSync(IMG_MAP_FILE, 'utf8')); } catch (e) { /* ignore */ }
-    const withImages = result.map(c => ({ ...c, image: imgMap[c.name] || null }));
-    fs.writeFileSync(CHARS_FILE, JSON.stringify(withImages, null, 2), 'utf8');
-    // 同时备份 CSV 到 data 目录
-    fs.writeFileSync(CSV_FILE, req.body, 'utf8');
-    console.log('✅ CSV 上传成功，共 ' + withImages.length + ' 个角色（含头像映射）');
-    res.json({ success: true, count: withImages.length });
-  } catch (e) {
-    res.json({ success: false, msg: e.message });
-  }
-});
-
-// JSON 上传（使用全局 express.json 中间件）
-app.post('/api/upload-json', (req, res) => {
+// JSON 上传 — 直接写入 Supabase
+app.post('/api/upload-json', async (req, res) => {
   try {
     const chars = req.body;
     if (!Array.isArray(chars)) {
       return res.json({ success: false, msg: 'JSON 必须是一个角色数组' });
     }
-    // 合并头像映射
-    let imgMap = {};
-    try { imgMap = JSON.parse(fs.readFileSync(IMG_MAP_FILE, 'utf8')); } catch (e) { /* ignore */ }
-    const withImages = chars.map(c => ({
-      ...c,
-      image: imgMap[c.name] || c.image || null
-    }));
-    fs.writeFileSync(CHARS_FILE, JSON.stringify(withImages, null, 2), 'utf8');
-    console.log('✅ JSON 上传成功，共 ' + withImages.length + ' 个角色（含头像映射）');
-    res.json({ success: true, count: withImages.length });
+
+    const { error } = await supabase.from('characters').upsert(chars, { onConflict: 'id' });
+    if (error) {
+      console.log('❌ Supabase 角色写入失败: ' + error.message);
+      return res.json({ success: false, msg: '数据库写入失败: ' + error.message });
+    }
+
+    // 更新内存缓存
+    _charCache = chars;
+    _charCacheTime = Date.now();
+
+    console.log('✅ 角色数据已上传到 Supabase，共 ' + chars.length + ' 个角色');
+    res.json({ success: true, count: chars.length });
   } catch (e) {
     res.json({ success: false, msg: e.message });
   }
@@ -1389,13 +1324,9 @@ io.on('connection', (socket) => {
   //  池选 draft：正常模式（服务端管理）
   // ═══════════════════════════════════════
 
-  // 同步读取角色列表
+  // 同步读取角色列表（启动时已从 Supabase 加载到内存）
   function getCharactersSync() {
-    const now = Date.now();
-    if (!_charCache || now - _charCacheTime > 30000) {
-      try { _charCache = JSON.parse(fs.readFileSync(CHARS_FILE, 'utf8')); _charCacheTime = now; } catch (e) { _charCache = []; }
-    }
-    return _charCache;
+    return _charCache || [];
   }
 
   // 发下一轮池（最多10张）
@@ -1464,6 +1395,10 @@ io.on('connection', (socket) => {
       pickOrderPreview: pickOrder.slice(0, 6),
       pickOrder // 完整顺序供客户端显示"你是第几个选"
     });
+
+    // 持久化 draft pool 状态（防止服务器重启丢失）
+    socketRooms[roomId]._draftPool = draftPools[roomId];
+    saveSocketRooms();
   }
 
   // 随机模式：直接分配角色（每人仅看自己的）
@@ -1552,6 +1487,8 @@ io.on('connection', (socket) => {
       dp.phase = 'complete';
       draftResults[roomId] = dp.hands;
       saveDraftResults();
+      // 清除持久化的 draft pool 状态
+      if (socketRooms[roomId]) delete socketRooms[roomId]._draftPool;
 
       if (rooms[roomId]) {
         rooms[roomId].started = true;
@@ -1566,6 +1503,11 @@ io.on('connection', (socket) => {
     } else {
       // 广播更新状态
       broadcastDraftState(roomId);
+      // 持久化当前 draft pool 状态
+      if (socketRooms[roomId]) {
+        socketRooms[roomId]._draftPool = dp;
+        saveSocketRooms();
+      }
     }
 
     saveSocketRooms();
