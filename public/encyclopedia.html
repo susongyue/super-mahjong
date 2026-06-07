@@ -69,12 +69,11 @@
   /* ── 工具栏 ── */
   .toolbar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
     margin-bottom: 16px;
   }
+  /* 筛选行：全部/T0~T3 */
   .toolbar .filters {
     display: flex;
     gap: 6px;
@@ -95,6 +94,12 @@
   .filter-chip:hover { border-color: var(--accent-blue); color: var(--text-primary); }
   .filter-chip.active { background: var(--accent-blue); color: var(--on-primary); border-color: var(--accent-blue); }
 
+  /* 搜索+统计行 */
+  .toolbar .search-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
   .search-box {
     display: flex;
     align-items: center;
@@ -258,8 +263,10 @@
     .ency-name { font-size: 13px; }
     .ency-skills { padding: 4px 8px 10px; }
     .upload-section { padding: 14px; }
-    .toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+    .search-row { flex-direction: column; align-items: stretch; gap: 8px; }
     .search-input { width: 100%; }
+    .stats-bar { justify-content: center; }
   }
 </style>
 </head>
@@ -290,6 +297,7 @@
 
   <!-- 工具栏 -->
   <div class="toolbar">
+    <!-- 筛选行 -->
     <div class="filters">
       <span class="filter-chip active" data-tier="">全部</span>
       <span class="filter-chip" data-tier="T0">T0</span>
@@ -297,7 +305,8 @@
       <span class="filter-chip" data-tier="T2">T2</span>
       <span class="filter-chip" data-tier="T3">T3</span>
     </div>
-    <div class="search-box">
+    <!-- 搜索 + 统计行 -->
+    <div class="search-row">
       <input class="search-input" id="searchInput" type="text" placeholder="搜索角色名…">
       <span class="stats-bar" id="statsBar"></span>
     </div>

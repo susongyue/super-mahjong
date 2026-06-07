@@ -27,6 +27,11 @@ Super Mahjong — 一个多人在线麻将游戏 Web 应用，包含登录、大
   - K 列（片假名）不在 JSON schema 中，永不覆盖
   - 格式模板通过 `copy.copy()` 复制（避免 openpyxl 3.1+ 弃用警告）
 
+## 版本管理约定
+- 每次完成实质性改动后，将修改内容追加写入 `CHANGELOG.md`（按版本号分段），每次推送后版本号默认递增0.0.1
+- **仅在用户明确发出推送指令后**才执行 `git push`，否则只 commit 不 push
+- 当前版本：**v1.0.1**
+
 ## 项目文件结构
 - `public/` — 前端静态文件
   - `*.html` — 各页面
@@ -36,6 +41,7 @@ Super Mahjong — 一个多人在线麻将游戏 Web 应用，包含登录、大
 - `server.js` — 后端服务
 - `data/` — JSON 数据文件
 - `tools/` — 工具脚本（`sync_characters.py` xlsx↔JSON 双向同步，格式保护设计）
+- `CHANGELOG.md` — 版本变更记录
 
 ---
 

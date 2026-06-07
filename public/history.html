@@ -13,31 +13,72 @@
   <style>
     /* ── 工具栏 ── */
     .hist-toolbar {
-      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
       margin-bottom: 16px;
     }
-    .sort-btn {
-      display: inline-flex; align-items: center; gap: 6px;
+    /* 刷新按钮（工具栏内） */
+    .refresh-btn-inline {
       padding: 6px 14px; border-radius: var(--r-pill);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--accent-green); color: var(--green);
+      background: rgba(0,200,83,.08); transition: all .2s;
+      user-select: none; white-space: nowrap;
+    }
+    .refresh-btn-inline:hover { background: rgba(0,200,83,.16); }
+
+    /* 排序下拉按钮 */
+    .sort-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .sort-dropdown-trigger {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 6px 12px; border-radius: var(--r-pill);
       font-size: 12px; font-weight: 600; cursor: pointer;
       border: 1px solid var(--hairline);
       background: var(--surface-2); color: var(--ink-muted);
-      transition: all .2s; user-select: none;
+      transition: all .2s; user-select: none; white-space: nowrap;
     }
-    .sort-btn:hover { border-color: var(--accent-blue); color: var(--text-primary); }
-    .sort-btn .sort-arrow { transition: transform .3s ease; display: inline-block; }
-    .sort-btn.desc .sort-arrow { transform: rotate(180deg); }
+    .sort-dropdown-trigger:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+    .sort-dropdown-trigger .sd-caret {
+      font-size: 9px; margin-left: 2px; transition: transform .2s;
+    }
+    .sort-dropdown.open .sd-caret { transform: rotate(180deg); }
+
+    .sort-dropdown-menu {
+      position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+      min-width: 140px; padding: 4px; border-radius: var(--r-md);
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      box-shadow: var(--shadow-md);
+      opacity: 0; visibility: hidden; transform: translateY(-4px);
+      transition: opacity .15s ease, transform .15s ease, visibility .15s;
+    }
+    .sort-dropdown.open .sort-dropdown-menu {
+      opacity: 1; visibility: visible; transform: translateY(0);
+    }
+    .sort-option {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 10px; border-radius: var(--r-sm);
+      font-size: 12px; color: var(--text-primary); cursor: pointer;
+      transition: background .15s;
+    }
+    .sort-option:hover { background: var(--surface-3); }
+    .sort-option.active { color: var(--accent-blue); font-weight: 700; }
+    .sort-option-check { font-size: 11px; opacity: 0; transition: opacity .15s; }
+    .sort-option.active .sort-option-check { opacity: 1; }
+
     .hist-search {
       padding: 6px 14px; background: var(--surface-2);
       color: var(--text-primary); border: 1px solid var(--hairline);
       border-radius: var(--r-pill); font-size: 12px; outline: none;
-      transition: border-color .2s; width: 200px;
+      transition: border-color .2s; flex: 1; max-width: 220px; min-width: 120px;
     }
     .hist-search:focus { border-color: var(--accent-blue); }
     .hist-search::placeholder { color: var(--ink-muted); }
     .hist-toolbar .divider-spacer { flex: 1; }
     .hist-toolbar .count-label {
-      font-size: 12px; color: var(--ink-muted);
+      font-size: 12px; color: var(--ink-muted); white-space: nowrap;
     }
 
     /* ── 历史记录项 ── */
@@ -157,8 +198,12 @@
     @media (max-width: 768px) {
       .history-item { padding: 10px 14px; margin: 5px 0; }
       .history-item .hist-room { font-size: 13px; }
-      .hist-toolbar { flex-direction: column; align-items: stretch; }
-      .hist-search { width: 100%; }
+      .hist-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+      .hist-search { width: 100%; max-width: none; }
+      .sort-dropdown { width: 100%; }
+      .sort-dropdown-trigger, .refresh-btn-inline { justify-content: center; flex: 1; text-align: center; display: inline-flex; }
+      .hist-toolbar .divider-spacer { display: none; }
+      .count-label { text-align: center; display: block; }
       .history-popup { max-width: 100%; padding: 16px; }
     }
     @media (max-width: 540px) {
@@ -184,13 +229,17 @@
   <div class="section">
     <div class="section-header">
       <h2>我的对局历史</h2>
-      <button class="btn btn-cyan" style="font-size:12px;padding:6px 14px;" id="btnRefreshHistory">刷新</button>
     </div>
-    <!-- 工具栏 -->
+    <!-- 工具栏：刷新 - 排序下拉 - 搜索框 - 记录数量 -->
     <div class="hist-toolbar">
-      <button class="sort-btn desc" id="btnSort">
-        时间 <span class="sort-arrow">↓</span>
-      </button>
+      <button class="refresh-btn-inline" id="btnRefreshHistory">刷新</button>
+      <div class="sort-dropdown" id="sortDropdown">
+        <span class="sort-dropdown-trigger" id="sortTrigger">时间倒序<span class="sd-caret">▾</span></span>
+        <div class="sort-dropdown-menu" id="sortMenu">
+          <div class="sort-option active" data-val="desc">时间倒序（新→旧）<span class="sort-option-check">✓</span></div>
+          <div class="sort-option" data-val="asc">时间正序（旧→新）<span class="sort-option-check">✓</span></div>
+        </div>
+      </div>
       <input class="hist-search" id="histSearch" type="text" placeholder="搜索对局 ID…">
       <span class="divider-spacer"></span>
       <span class="count-label" id="countLabel">0 条记录</span>
@@ -283,13 +332,32 @@ function refreshHistory() {
 
 document.getElementById('btnRefreshHistory').addEventListener('click', refreshHistory);
 
-// ── 排序切换 ──
-document.getElementById('btnSort').addEventListener('click', function() {
-  currentSort = currentSort === 'desc' ? 'asc' : 'desc';
-  this.classList.toggle('desc', currentSort === 'desc');
-  this.querySelector('.sort-arrow').textContent = currentSort === 'desc' ? '\u2193' : '\u2191';
-  loadHistory();
+// ── 排序下拉 ──
+var sortDropdown = document.getElementById('sortDropdown');
+var sortTrigger = document.getElementById('sortTrigger');
+var sortMenu = document.getElementById('sortMenu');
+
+function openSort() { sortDropdown.classList.add('open'); }
+function closeSort() { sortDropdown.classList.remove('open'); }
+sortTrigger.addEventListener('click', function(e) { e.stopPropagation(); sortDropdown.classList.contains('open') ? closeSort() : openSort(); });
+
+// 点击选项应用排序
+sortMenu.querySelectorAll('.sort-option').forEach(function(opt) {
+  opt.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var val = this.dataset.val;
+    if (val === currentSort) { closeSort(); return; }
+    currentSort = val;
+    // 更新 UI
+    sortMenu.querySelectorAll('.sort-option').forEach(function(o) { o.classList.remove('active'); });
+    this.classList.add('active');
+    sortTrigger.textContent = (val === 'desc' ? '时间倒序' : '时间正序') + '<span class="sd-caret">▾</span>';
+    closeSort();
+    loadHistory();
+  });
 });
+// 点击外部关闭
+document.addEventListener('click', closeSort);
 
 // ── 搜索输入（防抖） ──
 var searchTimer;
