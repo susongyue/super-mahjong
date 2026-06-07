@@ -195,6 +195,36 @@
     .detail-tab:hover { color: var(--text-primary); }
     .detail-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
 
+    /* ── 分页 ── */
+    .page-nav {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      margin-top: 20px; flex-wrap: wrap;
+    }
+    .page-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 36px; height: 36px; padding: 0 10px;
+      border-radius: var(--r-sm); border: 1px solid var(--hairline);
+      background: var(--surface-2); color: var(--text-primary);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all .15s; user-select: none;
+    }
+    .page-btn:hover:not(.page-active):not(:disabled) {
+      border-color: var(--accent-blue); color: var(--accent-blue);
+    }
+    .page-btn.page-active {
+      background: var(--accent-blue); color: #fff; border-color: var(--accent-blue);
+    }
+    .page-btn:disabled {
+      opacity: 0.3; cursor: not-allowed; pointer-events: none;
+    }
+    .page-ellipsis {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; font-size: 13px; color: var(--ink-muted);
+    }
+    .page-info {
+      font-size: 12px; color: var(--ink-muted); margin-left: 8px; white-space: nowrap;
+    }
+
     @media (max-width: 768px) {
       .history-item { padding: 10px 14px; margin: 5px 0; }
       .history-item .hist-room { font-size: 13px; }
@@ -205,10 +235,14 @@
       .hist-toolbar .divider-spacer { display: none; }
       .count-label { text-align: center; display: block; }
       .history-popup { max-width: 100%; padding: 16px; }
+      .page-btn { min-width: 32px; height: 32px; font-size: 12px; padding: 0 8px; }
     }
     @media (max-width: 540px) {
       .history-item { padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 4px; }
       .history-item .hist-room { font-size: 12px; }
+      .page-nav { gap: 3px; }
+      .page-btn { min-width: 28px; height: 28px; font-size: 11px; padding: 0 6px; }
+      .page-ellipsis { width: 28px; height: 28px; }
     }
   </style>
 </head>
@@ -236,8 +270,8 @@
       <div class="sort-dropdown" id="sortDropdown">
         <span class="sort-dropdown-trigger" id="sortTrigger">时间倒序<span class="sd-caret">▾</span></span>
         <div class="sort-dropdown-menu" id="sortMenu">
-          <div class="sort-option active" data-val="desc">时间倒序（新→旧）<span class="sort-option-check">✓</span></div>
-          <div class="sort-option" data-val="asc">时间正序（旧→新）<span class="sort-option-check">✓</span></div>
+          <div class="sort-option active" data-val="desc">时间倒序<span class="sort-option-check">✓</span></div>
+          <div class="sort-option" data-val="asc">时间正序<span class="sort-option-check">✓</span></div>
         </div>
       </div>
       <input class="hist-search" id="histSearch" type="text" placeholder="搜索对局 ID…">
@@ -247,6 +281,7 @@
     <div id="historyList">
       <div class="no-data">加载中...</div>
     </div>
+    <div id="pageNav" class="page-nav" style="display:none"></div>
   </div>
 </div>
 
@@ -265,6 +300,9 @@ Auth.renderNav(document.getElementById('navUser'));
 var charImageMap = {};
 var currentSort = 'desc'; // desc | asc
 var currentSearch = '';
+var allHistory = [];       // 全部对局数据
+var currentPage = 1;
+var PAGE_SIZE = 10;
 
 // ── 加载角色头像映射 ──
 (async function loadCharImages() {
@@ -285,48 +323,121 @@ function renderAvatar(cname) {
   return '<span class="draft-char-placeholder">' + initial + '</span>';
 }
 
+// ── 渲染当前页 ──
+function renderPage() {
+  var box = document.getElementById('historyList');
+  var totalPages = Math.ceil(allHistory.length / PAGE_SIZE) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  var start = (currentPage - 1) * PAGE_SIZE;
+  var pageList = allHistory.slice(start, start + PAGE_SIZE);
+
+  box.innerHTML = pageList.map(function (h) {
+    var dateStr = h.endedAt || h.createdAt || null;
+    var date = dateStr ? new Date(dateStr).toLocaleString('zh-CN') : '未知';
+    var gid = h.gameId || '';
+    return '<div class="history-item" data-id="' + Utils.escHTML(gid || h.roomId) + '">' +
+      '<div>' +
+      '<div class="hist-room">' + Utils.escHTML(date) + '</div>' +
+      '<div class="hist-gameid">房间 ' + Utils.escHTML(h.roomId) + '</div>' +
+      '<div class="hist-meta">' + h.playerCount + '人对局 | ' + h.totalRounds + ' 回合 | 房主: ' + Utils.escHTML(h.host || '未知') + '</div>' +
+      '<div class="hist-meta">玩家: ' + Utils.escHTML((h.players || []).join('、')) + '</div>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+
+  // 事件委托
+  box.querySelectorAll('.history-item').forEach(function (item) {
+    item.addEventListener('click', function () { viewHistoryDetail(item.dataset.id); });
+  });
+
+  // 分页导航
+  renderPageNav(totalPages);
+
+  // 入场动画
+  gsap.from(box.querySelectorAll('.history-item'), {
+    opacity: 0, x: -20, stagger: 0.06, duration: 0.35, ease: 'power2.out'
+  });
+}
+
+// ── 渲染分页导航 ──
+function renderPageNav(totalPages) {
+  var nav = document.getElementById('pageNav');
+  if (totalPages <= 1) { nav.style.display = 'none'; return; }
+  nav.style.display = '';
+
+  var html = '';
+  // 上一页
+  html += '<button class="page-btn" id="btnPrevPage" ' + (currentPage <= 1 ? 'disabled' : '') + '>◀</button>';
+
+  // 页码按钮（省略号逻辑）
+  var pages = [];
+  if (totalPages <= 7) {
+    for (var i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push('...');
+    var s = Math.max(2, currentPage - 1);
+    var e = Math.min(totalPages - 1, currentPage + 1);
+    for (var i = s; i <= e; i++) pages.push(i);
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+  }
+
+  pages.forEach(function (p) {
+    if (p === '...') {
+      html += '<span class="page-ellipsis">…</span>';
+    } else {
+      html += '<button class="page-btn' + (p === currentPage ? ' page-active' : '') + '" data-page="' + p + '">' + p + '</button>';
+    }
+  });
+
+  // 下一页
+  html += '<button class="page-btn" id="btnNextPage" ' + (currentPage >= totalPages ? 'disabled' : '') + '>▶</button>';
+  html += '<span class="page-info">共 ' + allHistory.length + ' 条</span>';
+
+  nav.innerHTML = html;
+
+  // 绑定事件
+  document.getElementById('btnPrevPage').addEventListener('click', function () {
+    if (currentPage > 1) { currentPage--; renderPage(); window.scrollTo({ top: 180, behavior: 'smooth' }); }
+  });
+  document.getElementById('btnNextPage').addEventListener('click', function () {
+    if (currentPage < totalPages) { currentPage++; renderPage(); window.scrollTo({ top: 180, behavior: 'smooth' }); }
+  });
+  nav.querySelectorAll('.page-btn[data-page]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var p = parseInt(this.dataset.page);
+      if (p !== currentPage) { currentPage = p; renderPage(); window.scrollTo({ top: 180, behavior: 'smooth' }); }
+    });
+  });
+}
+
 // ── 加载对局历史 ──
 async function loadHistory() {
   try {
     var list = await API.getGameHistory(user, currentSort, currentSearch);
-    var box = document.getElementById('historyList');
+    allHistory = list;
+    currentPage = 1;
     var countLabel = document.getElementById('countLabel');
     countLabel.textContent = list.length + ' 条记录';
 
     if (list.length === 0) {
-      box.innerHTML = '<div class="no-data">' + (currentSearch ? '未找到匹配的对局' : '暂无历史对局记录') + '</div>';
+      document.getElementById('historyList').innerHTML = '<div class="no-data">' + (currentSearch ? '未找到匹配的对局' : '暂无历史对局记录') + '</div>';
+      document.getElementById('pageNav').style.display = 'none';
       return;
     }
-    box.innerHTML = list.map(function (h) {
-      var date = h.endedAt ? new Date(h.endedAt).toLocaleString('zh-CN') : '未知';
-      var gid = h.gameId || '';
-      var idDisplay = gid ? '<div class="hist-gameid">' + Utils.escHTML(gid) + '</div>' : '';
-      return '<div class="history-item" data-id="' + Utils.escHTML(gid || h.roomId) + '">' +
-        '<div>' +
-        '<div class="hist-room">房间 ' + Utils.escHTML(h.roomId) + '</div>' +
-        idDisplay +
-        '<div class="hist-meta">' + h.playerCount + '人对局 | ' + h.totalRounds + ' 回合 | 房主: ' + Utils.escHTML(h.host || '未知') + '</div>' +
-        '<div class="hist-meta">玩家: ' + Utils.escHTML((h.players || []).join('、')) + '</div>' +
-        '</div>' +
-        '<div class="hist-date">' + date + '</div>' +
-        '</div>';
-    }).join('');
 
-    // 事件委托
-    box.querySelectorAll('.history-item').forEach(function (item) {
-      item.addEventListener('click', function () { viewHistoryDetail(item.dataset.id); });
-    });
-
-    gsap.from(box.querySelectorAll('.history-item'), {
-      opacity: 0, x: -20, stagger: 0.06, duration: 0.35, ease: 'power2.out'
-    });
+    renderPage();
   } catch (e) {
     document.getElementById('historyList').innerHTML = '<div class="no-data">加载失败，请检查网络</div>';
+    document.getElementById('pageNav').style.display = 'none';
   }
 }
 
 function refreshHistory() {
   document.getElementById('historyList').innerHTML = '<div class="no-data">加载中...</div>';
+  document.getElementById('pageNav').style.display = 'none';
   loadHistory();
 }
 

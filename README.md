@@ -199,7 +199,10 @@ PORT=3000
 
 ```bash
 npm install
-node server.js
+# 开发模式（文件改动自动重启）
+npm run dev
+# 或生产模式
+npm start
 # 访问 http://localhost:3000
 ```
 

@@ -1085,18 +1085,19 @@ app.get('/api/game-history', async (req, res) => {
 
     // 排序：默认倒序（新→旧），支持 asc 正序
     result.sort((a, b) => {
-      const ta = new Date(a.ended_at || 0).getTime();
-      const tb = new Date(b.ended_at || 0).getTime();
+      const ta = new Date(a.ended_at || a.endedAt || a.created_at || a.createdAt || 0).getTime();
+      const tb = new Date(b.ended_at || b.endedAt || b.created_at || b.createdAt || 0).getTime();
       return sort === 'asc' ? ta - tb : tb - ta;
     });
 
     res.json(result.map(h => ({
-      roomId: h.room_id,
-      gameId: h.game_id || '',
+      roomId: h.room_id || h.roomId,
+      gameId: (h.game_id || h.gameId) || '',
       players: h.players,
-      totalRounds: h.total_rounds,
+      totalRounds: h.total_rounds || h.totalRounds,
       host: h.host,
-      endedAt: h.ended_at,
+      endedAt: h.ended_at || h.endedAt,
+      createdAt: h.created_at || h.createdAt,
       playerCount: h.players ? h.players.length : 0
     })));
   } catch (e) {
@@ -1130,15 +1131,15 @@ app.get('/api/game-history-detail', async (req, res) => {
     }
     if (record) {
       res.json({
-        roomId: record.room_id,
-        gameId: record.game_id || '',
+        roomId: record.room_id || record.roomId,
+        gameId: (record.game_id || record.gameId) || '',
         players: record.players,
-        totalRounds: record.total_rounds,
-        draftResults: record.draft_results,
-        battleHistory: record.battle_history || [],
+        totalRounds: record.total_rounds || record.totalRounds,
+        draftResults: record.draft_results || record.draftResults,
+        battleHistory: record.battle_history || record.battleHistory || [],
         host: record.host,
-        createdAt: record.created_at,
-        endedAt: record.ended_at
+        createdAt: record.created_at || record.createdAt,
+        endedAt: record.ended_at || record.endedAt
       });
     } else {
       res.json(null);
