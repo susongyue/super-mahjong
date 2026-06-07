@@ -1109,26 +1109,33 @@ app.get('/api/game-history', async (req, res) => {
 app.get('/api/game-history-detail', async (req, res) => {
   const { roomId, gameId } = req.query;
   const lookup = roomId || gameId;
-  if (!lookup) return res.json(null);
+  if (!lookup) return res.status(400).json({ error: 'missing param', detail: null });
 
   try {
     let record = null;
-    // 优先用 gameId / roomId 从内存查找
+
+    // 1) 优先用 gameId / roomId 从内存查找
     for (const h of Object.values(gameHistory)) {
       if ((roomId && h.room_id === roomId) || (gameId && h.game_id === gameId)) {
         record = h;
         break;
       }
     }
+
+    // 2) 内存未命中 → 查 Supabase（确保跨实例可用）
     if (!record) {
       let query = supabase.from('game_history').select('*');
       query = roomId ? query.eq('room_id', roomId) : query.eq('game_id', gameId);
-      const { data } = await query.single();
+      const { data, error: sbError } = await query.maybeSingle();
+      if (sbError) {
+        console.error('[game-history-detail] Supabase error:', JSON.stringify(sbError));
+      }
       if (data) {
         record = data;
-        gameHistory[data.room_id] = data;
+        gameHistory[data.room_id] = data; // 回填缓存
       }
     }
+
     if (record) {
       res.json({
         roomId: record.room_id || record.roomId,
@@ -1142,10 +1149,12 @@ app.get('/api/game-history-detail', async (req, res) => {
         endedAt: record.ended_at || record.endedAt
       });
     } else {
+      console.warn('[game-history-detail] not found, lookup:', lookup);
       res.json(null);
     }
   } catch (e) {
-    res.json(null);
+    console.error('[game-history-detail] exception:', e.message || e);
+    res.status(500).json({ error: e.message || 'unknown', detail: null });
   }
 });
 

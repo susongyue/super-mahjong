@@ -483,8 +483,13 @@ document.getElementById('histSearch').addEventListener('input', function() {
 // ── 查看对局详情 ──
 async function viewHistoryDetail(id) {
   try {
-    var detail = await API.getGameHistoryDetail(id);
-    if (!detail) { Utils.showToast('无法加载对局详情'); return; }
+    var resp = await fetch('/api/game-history-detail?' + (id && id.startsWith('g') ? 'gameId=' : 'roomId=') + encodeURIComponent(id));
+    var detail = await resp.json();
+    if (!detail || detail.error) {
+      Utils.showToast(detail && detail.error ? '详情加载失败: ' + detail.error : '无法加载对局详情');
+      console.warn('[history] detail failed for', id, detail);
+      return;
+    }
 
     var date = detail.endedAt ? new Date(detail.endedAt).toLocaleString('zh-CN') : '未知';
     var draft = detail.draftResults || {};
