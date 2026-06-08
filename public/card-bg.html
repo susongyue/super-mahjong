@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>卡背设计 · 立直麻将 · Super Reach Mahjong</title>
+<link rel="icon" type="image/png" href="dong.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0d0d12;
+  min-height:100vh;font-family:'PingFang SC','Microsoft YaHei',sans-serif;
+  color:#fff;padding:40px 20px;
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(0,200,100,.04),transparent 60%);
+}
+h1{text-align:center;font-size:2rem;font-weight:800;margin-bottom:4px}
+.sub{text-align:center;color:#666;font-size:.85rem;margin-bottom:36px}
+
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:28px;max-width:1200px;margin:0 auto;
+}
+
+/* ── 设计卡 ── */
+.design-card{
+  border-radius:16px;overflow:hidden;
+  transition:transform .3s,box-shadow .3s;
+  box-shadow:0 8px 30px rgba(0,0,0,.4);
+  cursor:pointer;
+}
+.design-card:hover{transform:translateY(-6px);box-shadow:0 16px 50px rgba(0,0,0,.6)}
+.design-preview{
+  aspect-ratio:2.5/3.5;
+  position:relative;overflow:hidden;
+}
+.design-info{
+  background:#1a1a24;padding:14px 18px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.design-info h3{font-size:.9rem;font-weight:700}
+.design-info span{font-size:.7rem;color:#888}
+
+/* ── 设计1：和风金纹 ── */
+#bg1{
+  background:linear-gradient(145deg,#0a2a1a,#0d1f14,#0a2a1a);
+  display:flex;align-items:center;justify-content:center;
+}
+#bg1 .inner{
+  width:85%;height:88%;border:3px solid rgba(212,175,55,.25);
+  border-radius:12px;position:relative;
+  background:linear-gradient(180deg,rgba(10,30,18,.95),rgba(8,20,12,.95));
+  display:flex;align-items:center;justify-content:center;
+}
+#bg1 .inner::before{
+  content:'';position:absolute;inset:8px;
+  border:1.5px solid rgba(212,175,55,.15);
+  border-radius:8px;
+}
+#bg1 .inner::after{
+  content:'';position:absolute;inset:20px;
+  border:1px solid rgba(212,175,55,.08);
+  border-radius:4px;
+}
+#bg1 .emblem{
+  position:relative;z-index:1;
+  width:60%;aspect-ratio:1;
+  border:2px solid rgba(212,175,55,.2);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+#bg1 .emblem::before{
+  content:'';position:absolute;
+  width:85%;height:85%;
+  border:1px solid rgba(212,175,55,.12);
+  border-radius:50%;
+}
+#bg1 .riichi{
+  font-size:2.2rem;font-weight:900;
+  color:#d4af37;
+  text-shadow:0 0 20px rgba(212,175,55,.5),0 2px 4px rgba(0,0,0,.6);
+  letter-spacing:4px;
+}
+#bg1 .corners{position:absolute;inset:0}
+#bg1 .corner{
+  position:absolute;width:32px;height:32px;
+  border:1px solid rgba(212,175,55,.2);
+}
+#bg1 .corner.tl{top:0;left:0;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+#bg1 .corner.tr{top:0;right:0;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+#bg1 .corner.bl{bottom:0;left:0;border-right:0;border-top:0;border-radius:0 0 0 8px}
+#bg1 .corner.br{bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 8px 0}
+#bg1 .pin{
+  position:absolute;font-size:.6rem;color:rgba(212,175,55,.25);
+  font-weight:900;
+}
+#bg1 .p1{top:8px;left:12px}
+#bg1 .p2{top:8px;right:12px}
+#bg1 .p3{bottom:8px;left:12px}
+#bg1 .p4{bottom:8px;right:12px}
+#bg1 .stick{
+  position:absolute;width:2px;height:55%;
+  background:linear-gradient(180deg,transparent,rgba(212,175,55,.2),transparent);
+  top:22.5%;right:12px;border-radius:1px;
+}
+
+/* ── 设计2：深黑牌背 ── */
+#bg2{
+  background:linear-gradient(135deg,#1a0a0a,#0d0505,#1a0a0a);
+  display:flex;align-items:center;justify-content:center;
+}
+#bg2 .table{
+  width:88%;height:90%;
+  background:radial-gradient(ellipse at center,rgba(30,10,5,.4),rgba(10,3,2,.8));
+  border:2px solid rgba(180,140,80,.2);
+  border-radius:6px;position:relative;overflow:hidden;
+}
+#bg2 .grid-line{position:absolute;background:rgba(180,140,80,.05)}
+#bg2 .gl-h{height:1px;width:100%}
+#bg2 .gl-v{width:1px;height:100%}
+#bg2 .gl-1{top:25%}.gl-2{top:50%}.gl-3{top:75%}
+#bg2 .gl-4{left:25%}.gl-2-5{left:50%}.gl-6{left:75%}
+#bg2 .center-tile{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:60px;height:72px;background:linear-gradient(180deg,#f5e6c8,#e8d5a8);
+  border-radius:4px;border:2px solid #c4a060;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 15px rgba(0,0,0,.5);
+}
+#bg2 .center-tile span{
+  font-size:1.8rem;color:#1a3a1a;font-weight:900;
+}
+#bg2 .tile-small{
+  position:absolute;width:22px;height:28px;
+  background:linear-gradient(180deg,rgba(245,230,200,.15),rgba(232,213,168,.1));
+  border-radius:2px;border:1px solid rgba(196,160,96,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.55rem;color:rgba(255,255,255,.15);font-weight:700;
+}
+#bg2 .ts1{top:15%;left:15%} #bg2 .ts2{top:15%;right:15%}
+#bg2 .ts3{bottom:15%;left:15%} #bg2 .ts4{bottom:15%;right:15%}
+#bg2 .ts5{top:40%;left:8%} #bg2 .ts6{top:40%;right:8%}
+#bg2 .ts7{bottom:40%;left:8%} #bg2 .ts8{bottom:40%;right:8%}
+
+/* ── 设计3：青海波 × 一筒 ── */
+#bg3{
+  background:#0a1a2a;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+#bg3 .waves{
+  position:absolute;inset:0;opacity:.08;
+  background-image:
+    radial-gradient(circle at 25% 30%, #4a90d9 2px, transparent 2px),
+    radial-gradient(circle at 75% 30%, #4a90d9 2px, transparent 2px),
+    radial-gradient(circle at 25% 70%, #4a90d9 2px, transparent 2px),
+    radial-gradient(circle at 75% 70%, #4a90d9 2px, transparent 2px);
+  background-size:60px 60px;
+  mask-image:repeating-conic-gradient(#000 0% 25%,transparent 0% 50%) 0 0/40px 40px;
+}
+#bg3 .frame{
+  width:82%;height:86%;
+  border:2px solid rgba(100,160,220,.25);
+  border-radius:10px;position:relative;z-index:1;
+  background:linear-gradient(180deg,rgba(8,16,30,.9),rgba(5,10,20,.95));
+  display:flex;align-items:center;justify-content:center;
+}
+#bg3 .ring{
+  width:55%;aspect-ratio:1;
+  border:2px solid rgba(100,160,220,.18);
+  border-radius:50%;position:relative;
+}
+#bg3 .ring::after{
+  content:'一筒';
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:2rem;font-weight:900;color:rgba(100,160,220,.35);
+  letter-spacing:6px;
+}
+#bg3 .ring::before{
+  content:'';
+  position:absolute;inset:-4px;
+  border:1px dashed rgba(100,160,220,.1);
+  border-radius:50%;
+  animation: spin 30s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── 设计4：极简现代 ── */
+#bg4{
+  background:linear-gradient(160deg,#111,#1a1a1a,#111);
+  display:flex;align-items:center;justify-content:center;
+}
+#bg4 .geo{
+  width:90%;height:92%;
+  position:relative;
+  background:
+    linear-gradient(45deg,transparent 48%,rgba(255,255,255,.02) 48%,rgba(255,255,255,.02) 52%,transparent 52%),
+    linear-gradient(-45deg,transparent 48%,rgba(255,255,255,.02) 48%,rgba(255,255,255,.02) 52%,transparent 52%);
+  background-size:30px 30px;
+}
+#bg4 .diamond{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(45deg);
+  width:80px;height:80px;
+  border:1.5px solid rgba(255,255,255,.06);
+}
+#bg4 .diamond::after{
+  content:'';position:absolute;inset:8px;
+  border:1px solid rgba(255,255,255,.04);
+}
+#bg4 .diamond::before{
+  content:'';position:absolute;inset:16px;
+  border:1px solid rgba(255,255,255,.02);
+}
+#bg4 .riichi-text{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:1.6rem;font-weight:900;color:rgba(255,255,255,.06);
+  letter-spacing:6px;
+}
+#bg4 .accent{
+  position:absolute;width:60%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);
+}
+#bg4 .accent.top{top:18%;left:20%}
+#bg4 .accent.bot{bottom:18%;left:20%}
+#bg4 .dots{
+  position:absolute;
+  width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.1);
+}
+#bg4 .d1{top:10%;left:10%}#bg4 .d2{top:10%;right:10%}
+#bg4 .d3{bottom:10%;left:10%}#bg4 .d4{bottom:10%;right:10%}
+
+/* ── 对比展示带 ── */
+.comparison{
+  margin-top:48px;text-align:center;
+}
+.comparison h2{
+  font-size:1.2rem;color:#999;margin-bottom:24px;font-weight:500;
+  letter-spacing:2px;
+}
+.comparison-grid{
+  display:flex;gap:16px;justify-content:center;flex-wrap:wrap;
+  max-width:1000px;margin:0 auto;
+}
+
+/* ── 迷你应用卡 ── */
+.mini-card{
+  width:100px;aspect-ratio:2.5/3.5;
+  border-radius:6px;overflow:hidden;position:relative;
+  border:1.5px solid transparent;
+  transition:all .3s;
+}
+.mini-card:hover{transform:scale(1.15);z-index:2}
+
+/* 应用到5张角色卡的效果预览 */
+.app-bg1{background:linear-gradient(145deg,#0a2a1a,#0d1f14)}.app-bg1 .mc{width:60%;aspect-ratio:1;border:1.5px solid rgba(212,175,55,.15);border-radius:50%;margin:35% auto;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:rgba(212,175,55,.4);font-weight:900}
+.app-bg2{background:linear-gradient(135deg,#1a0a0a,#0d0505)}.app-bg2 .mc{margin:35% auto;width:40px;height:48px;background:linear-gradient(180deg,rgba(245,230,200,.3),rgba(232,213,168,.2));border-radius:3px;border:1px solid rgba(196,160,96,.3);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:rgba(255,255,255,.2)}
+.app-bg3{background:#0a1a2a}.app-bg3 .mc{margin:35% auto;width:50%;aspect-ratio:1;border:1.5px solid rgba(100,160,220,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:rgba(100,160,220,.3);font-weight:700}
+.app-bg4{background:linear-gradient(160deg,#111,#1a1a1a,#111)}.app-bg4 .mc{margin:35% auto;width:40px;height:40px;border:1px solid rgba(255,255,255,.06);transform:rotate(45deg);position:relative}.app-bg4 .mc::after{content:'立';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:.7rem;color:rgba(255,255,255,.08)}
+
+.usage-note{
+  margin-top:36px;text-align:center;color:#555;font-size:.8rem;
+  max-width:700px;margin-left:auto;margin-right:auto;line-height:1.8;
+}
+.usage-note code{
+  background:rgba(255,255,255,.05);padding:2px 8px;border-radius:4px;
+  font-size:.75rem;color:#aaa;
+}
+.usage-note strong{color:#d4af37}
+
+</style>
+</head>
+<body>
+<h1>立直麻将 · 卡背设计</h1>
+<p class="sub">CARD BACK DESIGN COLLECTION</p>
+
+<div class="grid">
+
+  <!-- 设计1 -->
+  <div class="design-card" onclick="applyToCards('bg1-css')">
+    <div class="design-preview" id="bg1">
+      <div class="corners"><div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div></div>
+      <span class="pin p1">🀇</span><span class="pin p2">🀀</span><span class="pin p3">🀙</span><span class="pin p4">🀐</span>
+      <div class="stick"></div>
+      <div class="inner">
+        <div class="emblem"><div class="riichi">立直</div></div>
+      </div>
+    </div>
+    <div class="design-info"><h3>和风金纹</h3><span>T0 · Legend</span></div>
+  </div>
+
+  <!-- 设计2 -->
+  <div class="design-card">
+    <div class="design-preview" id="bg2">
+      <div class="table">
+        <div class="grid-line gl-h gl-1"></div><div class="grid-line gl-h gl-2"></div><div class="grid-line gl-h gl-3"></div>
+        <div class="grid-line gl-v gl-4"></div><div class="grid-line gl-v gl-2-5"></div><div class="grid-line gl-v gl-6"></div>
+        <div class="center-tile"><span>發</span></div>
+        <div class="tile-small ts1">🀀</div><div class="tile-small ts2">🀇</div>
+        <div class="tile-small ts3">🀐</div><div class="tile-small ts4">🀙</div>
+        <div class="tile-small ts5">🀫</div><div class="tile-small ts6">🀫</div>
+        <div class="tile-small ts7">🀫</div><div class="tile-small ts8">🀫</div>
+      </div>
+    </div>
+    <div class="design-info"><h3>牌桌暗纹</h3><span>T1 · Rare</span></div>
+  </div>
+
+  <!-- 设计3 -->
+  <div class="design-card">
+    <div class="design-preview" id="bg3">
+      <div class="waves"></div>
+      <div class="frame"><div class="ring"></div></div>
+    </div>
+    <div class="design-info"><h3>青海波 · 一筒</h3><span>T1 · Rare</span></div>
+  </div>
+
+  <!-- 设计4 -->
+  <div class="design-card">
+    <div class="design-preview" id="bg4">
+      <div class="geo">
+        <div class="accent top"></div><div class="accent bot"></div>
+        <div class="diamond"></div>
+        <div class="dots d1"></div><div class="dots d2"></div><div class="dots d3"></div><div class="dots d4"></div>
+        <div class="riichi-text">立直</div>
+      </div>
+    </div>
+    <div class="design-info"><h3>极简现代</h3><span>T2 · Modern</span></div>
+  </div>
+
+  <!-- 设计5：AI 生成 -->
+  <div class="design-card">
+    <div class="design-preview" style="background:#000;display:flex;align-items:center;justify-content:center">
+      <img src="webp/A_premium_playing_card_back_de_2026-06-08T00-27-30.png"
+           alt="AI生成卡背" style="width:100%;height:100%;object-fit:cover"
+           loading="lazy">
+    </div>
+    <div class="design-info"><h3>AI 生成 · 立直金纹</h3><span>🤖 AI Art</span></div>
+  </div>
+
+</div>
+
+<!-- ── 应用到卡片预览 ── -->
+<div class="comparison">
+  <h2>▸ 应用到角色卡预览 ◂</h2>
+  <div class="comparison-grid">
+    <div class="mini-card app-bg1" title="和风金纹"><div class="mc">🀄</div></div>
+    <div class="mini-card app-bg2" title="牌桌暗纹"><div class="mc">發</div></div>
+    <div class="mini-card app-bg3" title="青海波"><div class="mc">一筒</div></div>
+    <div class="mini-card app-bg4" title="极简"><div class="mc"></div></div>
+  </div>
+</div>
+
+<div class="usage-note">
+  <strong>设计思路</strong>：四款卡背分别对应不同稀有度的角色卡 ——<br>
+  <code>和风金纹</code> T0 传说卡 · 金色立直字 + 多重金框 <br>
+  <code>牌桌暗纹</code> T1 稀有卡 · 麻将牌背 + 牌桌格线 <br>
+  <code>青海波</code> T1 稀有卡 · 日本传统纹样 + 一筒标识 <br>
+  <code>极简现代</code> T2 精良卡 · 几何线条 + 低对比暗纹 <br>
+  <br>
+  <strong>使用方式</strong>：CSS 背景可直接复制到 <code>cards.html</code> 的 <code>.card-top</code> 样式中
+</div>
+
+</body>
+</html>
