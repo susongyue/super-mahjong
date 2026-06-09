@@ -90,7 +90,7 @@ window.Utils = {
       const pngSrc = '/png/' + img;
       return '<picture>' +
         '<source srcset="' + webpSrc + '" type="image/webp">' +
-        '<img class="' + cls + '" src="' + pngSrc + '" alt="' + this.escHTML(name) + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.nextElementSibling.style.display=\'flex\';">' +
+        '<img class="' + cls + '" src="' + pngSrc + '" alt="' + this.escHTML(name) + '" loading="lazy" decoding="async" onerror="this.style.display=\'none\';this.parentElement.nextElementSibling.style.display=\'flex\';">' +
         '</picture>';
     }
     const cls = size === 'big' ? 'fs-avatar-placeholder' : 'char-avatar-placeholder';
@@ -103,7 +103,7 @@ window.Utils = {
     if (!avatar) return '';
     // 任何可显示图片的 URL（本地路径或远程 CDN）→ 渲染 <img>
     if (avatar.startsWith('/') || avatar.startsWith('http://') || avatar.startsWith('https://')) {
-      return '<img src="' + avatar + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" loading="lazy">';
+      return '<img src="' + avatar + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" loading="lazy" decoding="async">';
     }
     // cloud:// fileID（兜底：后端已解析，不应走到这里）
     if (avatar.startsWith('cloud://')) return '';

@@ -11,14 +11,14 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <script>(function(){try{var t=localStorage.getItem('mahjong-theme')||'spotify';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
-    .container { max-width: 800px; }
+    .container { max-width: 860px; }
 
     .page-header {
-      text-align: center; margin-bottom: 20px;
+      text-align: center; margin-bottom: 18px;
     }
     .page-header h1 {
-      font-size: 28px; color: var(--accent-blue); font-weight: 800;
-      margin-bottom: 6px; letter-spacing: -1px;
+      font-size: 26px; color: var(--text-primary); font-weight: 900;
+      margin-bottom: 6px; letter-spacing: 0;
     }
     .page-header .info {
       color: var(--ink-muted); font-size: 14px; line-height: 1.6;
@@ -27,9 +27,10 @@
     /* 进度条 */
     .selection-progress {
       background: var(--surface-1);
-      border-radius: var(--r-xl);
+      border-radius: var(--r-lg);
       padding: 16px 20px; margin-bottom: 18px;
-      border: 2px solid var(--hairline);
+      border: 1px solid var(--hairline);
+      box-shadow: var(--shadow-sm);
       display: flex; align-items: center; justify-content: space-between;
       flex-wrap: wrap; gap: 10px;
     }
@@ -39,7 +40,7 @@
     .progress-bar-wrap {
       flex: 1; min-width: 150px; height: 14px;
       background: var(--surface-2); border-radius: 7px;
-      overflow: hidden; border: 2px solid var(--hairline);
+      overflow: hidden; border: 1px solid var(--hairline);
     }
     .progress-bar-fill {
       height: 100%;
@@ -53,7 +54,7 @@
 
     /* ── 出战页 3列卡片 ── */
     .char-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .char-card { padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; overflow: hidden; border-radius: 15%; }
+    .char-card { padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: stretch; overflow: hidden; border-radius: var(--r-lg); min-height: 184px; }
 
     /* 头像区域 */
     .char-card-header {
@@ -64,7 +65,7 @@
     .char-card .char-name {
       font-size: 16px; font-weight: 800; color: var(--text-primary);
       text-align: center; padding: 10px 8px 2px;
-      letter-spacing: -0.5px;
+      letter-spacing: 0; line-height: 1.25;
     }
     .char-card .char-tier {
       font-size: 12px; color: var(--ink-muted); font-weight: 600;
@@ -77,14 +78,14 @@
     }
     .char-card .btn-deploy {
       flex: 1; padding: 11px 10px;
-      border-radius: 0 0 15% 15%; font-size: 13px;
+      border-radius: 0; font-size: 13px;
       font-weight: 700; cursor: pointer;
       border: none;
-      background: #09ff0081; color: var(--on-primary);
+      background: var(--accent-blue); color: var(--on-primary);
       transition: all .2s; text-align: center;
     }
     .char-card .btn-deploy:hover:not(:disabled) {
-      background: #09ff00; filter: brightness(1.1);
+      background: var(--btn-accent-hover); filter: brightness(1.05);
     }
     .char-card .btn-deploy:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
     .char-card .btn-deploy.deployed { background: var(--green); color: var(--on-primary); }
@@ -114,7 +115,7 @@
       transform: translateY(-50%);
       width: 200px;
       background: var(--surface-1);
-      border: 2px solid var(--hairline);
+      border: 1px solid var(--hairline);
       border-radius: var(--r-lg);
       padding: 16px;
       box-shadow: var(--shadow-md);
@@ -159,18 +160,17 @@
     }
     @media (max-width: 1420px) {
       .vote-panel {
-        left: 2%;
-        width: 96%;
+        width: min(860px, calc(100% - 20px));
         position: relative;
         z-index: 1;
         transform: none;
         max-width: 600px;
-        margin-top: 10px;
+        margin: 10px auto 24px;
         box-sizing: border-box;
-        padding: 0;
-        border: none;
-        background: transparent;
-        box-shadow: none;
+        padding: 10px;
+        border: 1px solid var(--hairline);
+        background: var(--surface-1);
+        box-shadow: var(--shadow-sm);
         gap: 6px;
       }
       .vote-panel-body { flex-direction: row; gap: 8px; }

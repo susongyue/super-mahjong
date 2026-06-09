@@ -20,11 +20,11 @@
     .refresh-btn-inline {
       padding: 6px 14px; border-radius: var(--r-pill);
       font-size: 12px; font-weight: 600; cursor: pointer;
-      border: 1px solid var(--accent-green); color: var(--green);
-      background: rgba(0,200,83,.08); transition: all .2s;
+      border: 1px solid var(--green-border); color: var(--green);
+      background: var(--green-bg); transition: all .2s;
       user-select: none; white-space: nowrap;
     }
-    .refresh-btn-inline:hover { background: rgba(0,200,83,.16); }
+    .refresh-btn-inline:hover { background: var(--accent-blue-glow); }
 
     /* 排序下拉按钮 */
     .sort-dropdown {
@@ -86,7 +86,7 @@
       background: var(--surface-2);
       border-radius: var(--r-md);
       padding: 12px 18px; margin: 8px 0;
-      border: 2px solid var(--hairline);
+      border: 1px solid var(--hairline);
       display: flex; justify-content: space-between; align-items: center;
       gap: 10px; cursor: pointer; transition: box-shadow .2s, border-color .2s;
     }
@@ -108,10 +108,10 @@
     /* ── 历史详情弹窗 ── */
     .history-popup {
       background: var(--surface-1);
-      border-radius: var(--r-xl);
+      border-radius: var(--r-lg);
       padding: 24px; max-width: 560px; width: 90%;
       box-shadow: var(--shadow-lg);
-      border: 2px solid var(--hairline);
+      border: 1px solid var(--hairline);
       max-height: 85vh; overflow-y: auto;
     }
     .history-popup h3 {
@@ -128,7 +128,7 @@
     .history-popup .draft-char-avatar {
       width: 28px; height: 28px; border-radius: 50%;
       object-fit: cover; vertical-align: middle; margin-right: 4px;
-      border: 2px solid var(--hairline);
+      border: 1px solid var(--hairline);
     }
     .history-popup .draft-char-placeholder {
       display: inline-flex; width: 28px; height: 28px; border-radius: 50%;

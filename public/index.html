@@ -29,7 +29,7 @@
   /* ── 区域标题 ── */
   .section-title {
     font-size: 15px; font-weight: 700; color: var(--text-primary);
-    margin-bottom: 10px; letter-spacing: -0.3px;
+    margin-bottom: 10px; letter-spacing: 0;
   }
 
   /* ── 玩家卡片 ── */
@@ -41,7 +41,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    border: 2px solid var(--hairline);
+    border: 1px solid var(--hairline);
   }
   .player-card.self {
     border-color: var(--accent-blue);
@@ -65,9 +65,9 @@
   #voteArea {
     margin-top: var(--sp-lg);
     background: var(--surface-1);
-    border-radius: var(--r-xl);
+    border-radius: var(--r-lg);
     padding: var(--sp-lg);
-    border: 2px solid var(--hairline);
+    border: 1px solid var(--hairline);
   }
   #voteArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; font-weight: 700; }
   #voteTip { margin-top: 10px; font-size: 13px; color: var(--ink-muted); }
@@ -77,9 +77,9 @@
   #draftArea {
     margin-top: var(--sp-lg);
     background: var(--surface-1);
-    border-radius: var(--r-xl);
+    border-radius: var(--r-lg);
     padding: var(--sp-lg);
-    border: 2px solid var(--hairline);
+    border: 1px solid var(--hairline);
   }
   #draftArea h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; font-weight: 700; }
 
@@ -98,7 +98,7 @@
     background: var(--surface-2);
     border-radius: var(--r-lg);
     padding: 14px 18px; margin-bottom: 14px;
-    border: 2px solid var(--hairline);
+    border: 1px solid var(--hairline);
     text-align: center;
     transition: all .3s;
   }
@@ -120,7 +120,7 @@
   .turn-badge.waiting-turn {
     background: var(--surface-1);
       color: var(--ink-muted);
-      border: 2px solid var(--hairline);
+      border: 1px solid var(--hairline);
   }
   @keyframes pulse-turn {
     0%, 100% { transform: scale(1); }
@@ -152,7 +152,7 @@
     background: var(--surface-2);
     padding: 10px 12px;
     border-radius: var(--r-md);
-    border: 2px solid var(--hairline);
+    border: 1px solid var(--hairline);
   }
   .draft-char-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
   .draft-char .faction-badge { color: var(--gold); font-size: 11px; font-weight: 700; margin-bottom: 2px; }
@@ -170,7 +170,7 @@
     background: linear-gradient(135deg, var(--avatar-bg-1), var(--avatar-bg-2));
     display: flex; align-items: center; justify-content: center;
     font-size: 17px; font-weight: 800; color: var(--ink-muted);
-    border: 2px solid var(--hairline); flex-shrink: 0;
+    border: 1px solid var(--hairline); flex-shrink: 0;
   }
 
   /* 池网格中更小的头像 */
@@ -196,7 +196,7 @@
     margin-bottom: 12px; padding: 10px 14px;
     background: var(--surface-2);
     border-radius: var(--r-md);
-    border: 2px solid var(--hairline);
+    border: 1px solid var(--hairline);
   }
   .draft-player-hand.my-hand {
     background: var(--accent-blue-glow);
@@ -213,7 +213,7 @@
     background: var(--surface-2);
     border-radius: var(--r-md);
     padding: 10px 14px;
-    border: 2px solid var(--hairline);
+    border: 1px solid var(--hairline);
   }
   .draft-pick-preview { display: flex; flex-wrap: wrap; gap: 6px; }
   .pick-order-item {
@@ -221,7 +221,7 @@
     padding: 4px 12px; border-radius: var(--r-pill);
     font-size: 12px; font-weight: 500;
     background: var(--surface-1); color: var(--ink-muted);
-    border: 2px solid var(--hairline);
+    border: 1px solid var(--hairline);
   }
 
   /* 隐藏卡片 */
@@ -243,7 +243,7 @@
     font-size: 13px; margin-top: 20px; padding: 12px;
     background: var(--surface-2);
     border-radius: var(--r-md);
-    border: 2px solid var(--hairline);
+    border: 1px solid var(--hairline);
   }
 
   /* 旧版 draft-grid（非池选模式用） */

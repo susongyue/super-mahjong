@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>超能力麻将 · 角色卡牌</title>
+<link rel="icon" type="image/png" href="dong.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  /* 深灰暖调背景 — 让金色边框更突出 */
+  background:#2a2520;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  font-family:'Noto Serif SC','SimSun','STSong',serif;
+  padding:40px 24px;color:#333;
+}
+
+h1{
+  font-family:'Ma Shan Zheng',cursive;
+  font-size:2rem;font-weight:900;
+  letter-spacing:8px;margin-bottom:4px;
+  color:#d4a854;
+  text-shadow:0 2px 12px rgba(212,168,84,.3);
+}
+.subtitle{
+  color:#8a7a66;font-size:.82rem;
+  letter-spacing:4px;margin-bottom:40px;
+  font-weight:300;
+}
+
+/* ══════ 卡片网格 ══════ */
+.cards-grid{
+  display:flex;flex-wrap:wrap;justify-content:center;
+  gap:32px;max-width:1500px;width:100%;
+}
+
+/* ═══════════════════════════════════════════
+   卡片 — 无信息版底板 + 左对齐布局
+   ═══════════════════════════════════════════ */
+.card{
+  width:300px;height:450px;
+  position:relative;
+  cursor:pointer;
+  overflow:hidden;
+
+  /* 底板：无信息版（带四角金/青卷草纹边框） */
+  background:url("png/无信息版.png") no-repeat center/cover;
+
+  /* 微妙浮起阴影 */
+  box-shadow:
+    0 4px 20px rgba(0,0,0,.35),
+    0 1px 6px rgba(0,0,0,.2);
+  transition:transform .35s cubic-bezier(.22,.61,.36,1), box-shadow .35s ease;
+}
+.card:hover{
+  transform:translateY(-6px) scale(1.02);
+  box-shadow:
+    0 16px 48px rgba(0,0,0,.45),
+    0 4px 16px rgba(212,168,84,.15);
+}
+
+/* ── 上半区：头像 + 名字 + 阵营（左对齐） ── */
+.card-header{
+  position:absolute;top:52px;left:28px;right:24px;
+  z-index:3;display:flex;gap:16px;align-items:flex-start;
+}
+
+/* 圆形头像 */
+.card-avatar{
+  width:110px;height:110px;border-radius:50%;
+  flex-shrink:0;
+  background:#fff;
+  padding:3px;
+  box-shadow:
+    0 6px 20px rgba(30,18,10,.35),
+    0 2px 6px rgba(30,18,10,.2),
+    inset 0 1px 0 rgba(255,255,255,.9);
+}
+.card-avatar img{
+  width:100%;height:100%;border-radius:50%;
+  object-fit:cover;object-position:center top;
+  display:block;background:#f0ead8;
+}
+
+/* 右侧信息列：名字 + 阵营 */
+.card-info{
+  display:flex;flex-direction:column;gap:6px;
+  padding-top:10px;
+}
+
+/* 姓名 */
+.card-name{
+  font-family:'Ma Shan Zheng','ZCOOL KuaiLe',cursive;
+  font-size:1.7rem;font-weight:900;
+  color:#f5efe5;
+  letter-spacing:5px;
+  text-shadow:
+    0 2px 8px rgba(0,0,0,.6),
+    0 0 24px rgba(0,0,0,.3);
+  white-space:nowrap;
+  line-height:1.2;
+}
+
+/* 阵营名 */
+.card-faction{
+  font-size:.72rem;font-weight:600;
+  color:#d4c4a8;
+  letter-spacing:2px;
+  padding:3px 14px;border-radius:4px;
+  align-self:flex-start;
+  border:1px solid rgba(200,180,140,.2);
+  background:rgba(40,30,20,.55);
+  backdrop-filter:blur(4px);
+}
+
+/* ── 技能区（红色大面板） ── */
+.card-skills{
+  position:absolute;bottom:16px;left:14px;right:14px;
+  z-index:3;
+  background:#c62f2f;
+  border-radius:4px;
+  padding:10px 12px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 3px 12px rgba(180,40,30,.35);
+
+  display:flex;flex-direction:column;
+  gap:4px;
+}
+
+.skill-block{
+  display:flex;gap:0;min-height:34px;
+  border-radius:3px;overflow:hidden;
+  background:rgba(0,0,0,.22);
+  border:1px solid rgba(255,255,255,.06);
+  transition:background .2s;
+}
+.skill-block:hover{background:rgba(0,0,0,.32)}
+
+/* 竖排标签 */
+.skill-tag{
+  min-width:26px;display:flex;align-items:center;justify-content:center;
+  writing-mode:vertical-rl;
+  font-size:.54rem;font-weight:700;letter-spacing:3px;
+  padding:3px 2px;flex-shrink:0;
+  border-right:1px solid rgba(255,255,255,.1);
+}
+.tag-limit{background:linear-gradient(180deg,#8b2020,#500808);color:#ffd8d8}
+.tag-innate{background:linear-gradient(180deg,#8b7018,#504008);color:#fff0b8}
+.tag-passive{background:linear-gradient(180deg,#207828,#104010);color:#b8e8b8}
+.tag-extra{background:linear-gradient(180deg,#205098,#0c1860);color:#b8c8f0}
+
+/* 技能内容 */
+.skill-content{
+  flex:1;padding:3px 7px;
+  display:flex;flex-direction:column;justify-content:center;gap:1px;
+}
+.skill-name{
+  font-size:.58rem;font-weight:700;color:#fff5e8;
+  letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+.skill-desc{
+  font-size:.47rem;color:#ffddd0;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+/* ── 底部编号 ── */
+.card-footer{
+  position:absolute;bottom:4px;left:18px;right:18px;z-index:4;
+  height:16px;
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;
+  font-size:.44rem;color:rgba(220,210,190,.4);letter-spacing:2px;
+}
+
+
+/* ═══════════ 放大弹窗 ═══════════ */
+.zoom-overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(25,18,12,.92);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .35s ease;
+}
+.zoom-overlay.active{opacity:1;pointer-events:auto}
+.zoom-card-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+
+.zoom-card{
+  width:420px;height:630px;
+  position:relative;overflow:hidden;
+  background:url("png/无信息版.png") no-repeat center/cover;
+  box-shadow:0 20px 80px rgba(0,0,0,.6);
+  transform:scale(.92) translateY(12px);transition:transform .4s cubic-bezier(.22,.61,.36,1);
+}
+.zoom-overlay.active .zoom-card{transform:scale(1) translateY(0)}
+
+/* 放大尺寸 */
+.zoom-card .card-header{top:64px;left:38px;right:32px;gap:22px}
+.zoom-card .card-avatar{width:160px;height:160px}
+.zoom-card .card-name{font-size:2.4rem;letter-spacing:7px}
+.zoom-card .card-faction{font-size:.95rem;letter-spacing:3px;padding:5px 20px;border-radius:6px}
+.zoom-card .card-skills{bottom:22px;left:20px;right:20px;gap:5px;padding:14px 16px;border-radius:6px}
+.zoom-card .skill-block{min-height:48px;border-radius:4px}
+.zoom-card .skill-tag{min-width:38px;font-size:.75rem;letter-spacing:4px;padding:4px 3px}
+.zoom-card .skill-name{font-size:.78rem}
+.zoom-card .skill-desc{font-size:.65rem;-webkit-line-clamp:3}
+.zoom-card .card-footer{bottom:6px;left:26px;right:26px;height:22px;font-size:.56rem}
+
+
+.zoom-close{
+  position:absolute;top:-48px;right:0;
+  width:38px;height:38px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.15);border-radius:50%;
+  color:#ccc;font-size:1.2rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+  transition:background .2s,color .2s;
+}
+.zoom-close:hover{background:rgba(255,255,255,.22);color:#fff}
+
+.zoom-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:42px;height:42px;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);border-radius:50%;
+  color:#aaa;font-size:1.2rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s,color .2s;
+}
+.zoom-nav:hover{background:rgba(255,255,255,.18);color:#fff}
+.zoom-nav.prev{left:-58px}.zoom-nav.next{right:-58px}
+
+
+/* ═══════════ 响应式 ═══════════ */
+@media(max-width:700px){
+  body{padding:28px 16px}
+  h1{font-size:1.55rem;letter-spacing:5px}
+  .subtitle{font-size:.7rem;margin-bottom:28px}
+  .cards-grid{gap:24px}
+
+  .card{width:260px;height:390px}
+  .card-header{top:42px;left:22px;right:18px;gap:12px}
+  .card-avatar{width:90px;height:90px}
+  .card-info{padding-top:6px}
+  .card-name{font-size:1.4rem;letter-spacing:3px}
+  .card-faction{font-size:.6rem;padding:2px 10px}
+  .card-skills{bottom:12px;left:10px;right:10px;padding:8px 9px;gap:3px}
+  .skill-block{min-height:28px}
+  .skill-tag{min-width:22px;font-size:.46rem;letter-spacing:2px}
+  .skill-name{font-size:.5rem}
+  .skill-desc{font-size:.41rem}
+  .card-footer{bottom:3px;left:14px;right:14px;font-size:.38rem}
+
+  .zoom-card{width:310px;height:465px}
+  .zoom-card .card-header{top:48px;left:26px;right:22px;gap:16px}
+  .zoom-card .card-avatar{width:130px;height:130px}
+  .zoom-card .card-name{font-size:1.9rem}
+  .zoom-card .card-faction{font-size:.78rem;padding:4px 16px}
+  .zoom-card .card-skills{bottom:16px;left:14px;right:14px;padding:11px 12px}
+  .zoom-card .skill-block{min-height:40px}
+  .zoom-card .skill-tag{min-width:32px;font-size:.63rem}
+  .zoom-card .skill-name{font-size:.68rem}
+  .zoom-card .skill-desc{font-size:.56rem}
+  .zoom-nav.prev{left:-42px}.zoom-nav.next{right:-42px}
+}
+
+/* ── 返回按钮 ── */
+.nav-back{
+  position:fixed;top:16px;left:16px;z-index:20;
+  color:#a09480;text-decoration:none;font-size:.76rem;
+  padding:7px 14px;border-radius:5px;
+  background:rgba(60,50,38,.7);
+  border:1px solid rgba(150,130,90,.25);letter-spacing:1px;
+  transition:color .2s,background .2s;
+}
+.nav-back:hover{color:#d4c4a8;background:rgba(80,68,50,.85)}
+
+/* ── 图例 ── */
+.legend{display:flex;gap:24px;margin-top:40px;flex-wrap:wrap;justify-content:center}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.7rem;color:#8a7a66}
+</style>
+</head>
+<body>
+
+<a class="nav-back" href="/">← 返回主页</a>
+
+<h1>超 能 力 麻 将</h1>
+<p class="subtitle">SUPER REACH MAHJONG · 角色卡</p>
+
+<div class="cards-grid" id="cardsGrid">
+
+  <!-- ══════ 卡 1：原村和 · 清澄 ══════ -->
+  <div class="card" data-index="0">
+    <div class="card-header">
+      <div class="card-avatar"><img src="webp/Haramura_Nodoka.webp" alt="原村和" loading="lazy"></div>
+      <div class="card-info">
+        <div class="card-name">原村和</div>
+        <div class="card-faction">清澄高中</div>
+      </div>
+    </div>
+    <div class="card-skills">
+      <div class="skill-block">
+        <div class="skill-tag tag-innate">固有</div>
+        <div class="skill-content">
+          <div class="skill-name">断幺平和</div>
+          <div class="skill-desc">你的断幺/平和可以副露</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-passive">被动</div>
+        <div class="skill-content">
+          <div class="skill-name">复合番数</div>
+          <div class="skill-desc">副露断幺/平和1番，复合3番；门清2番，复合5番</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-limit">限定</div>
+        <div class="skill-content">
+          <div class="skill-name">暗置牌河</div>
+          <div class="skill-desc">舍牌时倒置一枚舍牌；立直玩家巡目无视次数</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer"><span>SRM 0001</span></div>
+  </div>
+
+  <!-- ══════ 卡 2：天江衣 · 龙门渊 ══════ -->
+  <div class="card" data-index="1">
+    <div class="card-header">
+      <div class="card-avatar"><img src="webp/Amae_Koromo.webp" alt="天江衣" loading="lazy"></div>
+      <div class="card-info">
+        <div class="card-name">天江衣</div>
+        <div class="card-faction">龙门渊高中</div>
+      </div>
+    </div>
+    <div class="card-skills">
+      <div class="skill-block">
+        <div class="skill-tag tag-innate">固有</div>
+        <div class="skill-content">
+          <div class="skill-name">海底移动</div>
+          <div class="skill-desc">舍牌前可移动海底牌到王牌；立直时可移2张</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-passive">被动</div>
+        <div class="skill-content">
+          <div class="skill-name">海底河底</div>
+          <div class="skill-desc">海底/河底为2番役</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-limit">限定</div>
+        <div class="skill-content">
+          <div class="skill-name">强制胡牌</div>
+          <div class="skill-desc">听牌时海底/河底牌视为胡牌，无视振听</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-extra">附加</div>
+        <div class="skill-content">
+          <div class="skill-name">同色交换</div>
+          <div class="skill-desc">移动前可用摸牌交换同花色/点数牌</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer"><span>SRM 0007</span></div>
+  </div>
+
+  <!-- ══════ 卡 3：宫永咲 · 清澄 ══════ -->
+  <div class="card" data-index="2">
+    <div class="card-header">
+      <div class="card-avatar"><img src="webp/Miyanaga_Saki.webp" alt="宫永咲" loading="lazy"></div>
+      <div class="card-info">
+        <div class="card-name">宫永咲</div>
+        <div class="card-faction">清澄高中</div>
+      </div>
+    </div>
+    <div class="card-skills">
+      <div class="skill-block">
+        <div class="skill-tag tag-innate">固有</div>
+        <div class="skill-content">
+          <div class="skill-name">任意西风</div>
+          <div class="skill-desc">手牌中任意字牌可当做西风</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-passive">被动</div>
+        <div class="skill-content">
+          <div class="skill-name">暗刻追加</div>
+          <div class="skill-desc">胡牌时每组暗刻追加1番</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-limit">限定</div>
+        <div class="skill-content">
+          <div class="skill-name">岭上开花</div>
+          <div class="skill-desc">听牌时开杠，岭上牌视为胡牌</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer"><span>SRM 0003</span></div>
+  </div>
+
+  <!-- ══════ 卡 4：园城寺怜 · 千里山 ══════ -->
+  <div class="card" data-index="3">
+    <div class="card-header">
+      <div class="card-avatar"><img src="webp/Onjouji_Toki.webp" alt="园城寺怜" loading="lazy"></div>
+      <div class="card-info">
+        <div class="card-name">园城寺怜</div>
+        <div class="card-faction">千里山女子</div>
+      </div>
+    </div>
+    <div class="card-skills">
+      <div class="skill-block">
+        <div class="skill-tag tag-innate">固有</div>
+        <div class="skill-content">
+          <div class="skill-name">备牌预知</div>
+          <div class="skill-desc">首舍牌前额外摸2张，将2张手牌作为备牌</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-passive">被动</div>
+        <div class="skill-content">
+          <div class="skill-name">备牌交换</div>
+          <div class="skill-desc">巡目舍牌前可交换手牌与备牌；备牌听牌打点+100%</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-limit">限定</div>
+        <div class="skill-content">
+          <div class="skill-name">海底重摸</div>
+          <div class="skill-desc">4位时可置入2张备牌入海底重摸2张（限2次）</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer"><span>SRM 0041</span></div>
+  </div>
+
+  <!-- ══════ 卡 5：时崎狂三 · 客串 ══════ -->
+  <div class="card" data-index="4">
+    <div class="card-header">
+      <div class="card-avatar"><img src="webp/Tokisaki_Kurumi.webp" alt="时崎狂三" loading="lazy"></div>
+      <div class="card-info">
+        <div class="card-name">时崎狂三</div>
+        <div class="card-faction">时崎狂三 · 客串</div>
+      </div>
+    </div>
+    <div class="card-skills">
+      <div class="skill-block">
+        <div class="skill-tag tag-innate">固有</div>
+        <div class="skill-content">
+          <div class="skill-name">四之弹</div>
+          <div class="skill-desc">摸牌前交换1张手牌与自家牌河</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-extra">附加</div>
+        <div class="skill-content">
+          <div class="skill-name">八之弹</div>
+          <div class="skill-desc">手切后交换牌河中两张牌位置</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-passive">被动</div>
+        <div class="skill-content">
+          <div class="skill-name">子弹充能</div>
+          <div class="skill-desc">适当时机射出四之弹或八之弹</div>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-tag tag-limit">限定</div>
+        <div class="skill-content">
+          <div class="skill-name">子弹蓄发</div>
+          <div class="skill-desc">舍出4/8数牌蓄发子弹（每弹上限1枚）</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer"><span>SRM 0076</span></div>
+  </div>
+
+</div>
+
+<!-- 图例 -->
+<div class="legend">
+  <div class="legend-item" style="color:#e85050">■ 限定技</div>
+  <div class="legend-item" style="color:#d4aa20">■ 固有技</div>
+  <div class="legend-item" style="color:#50b858">■ 被动技</div>
+  <div class="legend-item" style="color:#5080d0">■ 附加技</div>
+</div>
+
+<!-- 放大弹窗 -->
+<div class="zoom-overlay" id="zoomOverlay">
+  <div class="zoom-card-wrap">
+    <button class="zoom-nav prev" id="zoomPrev">&#9664;</button>
+    <div class="zoom-card" id="zoomCard"></div>
+    <button class="zoom-close" id="zoomClose">&#10005;</button>
+    <button class="zoom-nav next" id="zoomNext">&#9654;</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const cards = Array.from(document.querySelectorAll('#cardsGrid .card'));
+  const overlay = document.getElementById('zoomOverlay');
+  const zoomCard = document.getElementById('zoomCard');
+  let currentIndex = 0;
+
+  function showZoom(idx){
+    currentIndex = idx;
+    zoomCard.innerHTML = cards[idx].innerHTML;
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function hideZoom(){
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  cards.forEach((card,i)=>card.addEventListener('click',()=>showZoom(i)));
+  document.getElementById('zoomClose').addEventListener('click',hideZoom);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)hideZoom()});
+
+  document.getElementById('zoomPrev').addEventListener('click',function(e){
+    e.stopPropagation();
+    currentIndex=(currentIndex-1+cards.length)%cards.length;
+    zoomCard.innerHTML=cards[currentIndex].innerHTML;
+  });
+  document.getElementById('zoomNext').addEventListener('click',function(e){
+    e.stopPropagation();
+    currentIndex=(currentIndex+1)%cards.length;
+    zoomCard.innerHTML=cards[currentIndex].innerHTML;
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(!overlay.classList.contains('active'))return;
+    if(e.key==='Escape')hideZoom();
+    if(e.key==='ArrowLeft'){currentIndex=(currentIndex-1+cards.length)%cards.length;zoomCard.innerHTML=cards[currentIndex].innerHTML}
+    if(e.key==='ArrowRight'){currentIndex=(currentIndex+1)%cards.length;zoomCard.innerHTML=cards[currentIndex].innerHTML}
+  });
+})();
+</script>
+
+</body>
+</html>
